@@ -1,0 +1,97 @@
+{
+  "name": "pl-vasp-blockscout",
+  "description": "Adresy polskich giełd i kantorów kryptowalut (Zonda, BitBay, Kanga Exchange, Egera, Ari10, BitClude, Coinroom, Kriptomat, Bitcan, Cashify, Walutomat) według publicznych tagów eksploratora Blockscout (m.in. Open Labels Initiative). Wysyłka na taki adres to wskaźnik wyjścia do PLN.",
+  "license": "Publiczne tagi eksploratora Blockscout / Open Labels Initiative (CC0) – dane faktograficzne",
+  "updatedAt": "2026-11-21T20:52:43.654Z",
+  "sourceUrl": "https://eth.blockscout.com/api/v2/search",
+  "labels": [
+    {
+      "chain": "ETH",
+      "address": "0x2e6CFaF577EbE16B57CE5A3AfF2eeD4C658F1CE2",
+      "entity": "Kanga Exchange",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Kanga Exchange”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x42D17b7f3532Ec2f7C4E4e5E239BAA476846E2CD",
+      "entity": "Kanga Exchange 1",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Kanga Exchange 1”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xBbDe368C6b67D8d28bdC8129217ec8521b8A3fC4",
+      "entity": "Zonda (BitBay): Deposit Address",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda (BitBay): Deposit Address”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xf646CBe3B030fb6c2569215F0117dbA58baDB95E",
+      "entity": "Zonda 1",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 1”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x781229c7a798c33EC788520a6bBe12a79eD657FC",
+      "entity": "Zonda 2",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 2”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x0FF24158220A14398F047a80a513617Ddc4f5289",
+      "entity": "Zonda 3",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 3”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x2b645268E2fbb384B423e50089657395F749763a",
+      "entity": "Zonda 4",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 4”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6EDF968DA408a9640b8865826429a977a11C5048",
+      "entity": "Zonda 5",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 5”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xd388009f01bbE5e6D2Cb6bA8525ca50B56308046",
+      "entity": "Zonda 6",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda 6”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x5BfF49EeC8F76C066F979A818187b9732AC69503",
+      "entity": "Zonda Gas Supplier 1",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda Gas Supplier 1”",
+      "note": "polska giełda / kantor krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x818ab3c61f66e975b8E6290c20999d6749F60d8D",
+      "entity": "Zonda Gas Supplier 2",
+      "category": "CEX",
+      "source": "Blockscout eth.blockscout.com – tag „Zonda Gas Supplier 2”",
+      "note": "polska giełda / kantor krypto"
+    }
+  ]
+}

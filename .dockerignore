@@ -4,3 +4,7 @@ node_modules
 .git
 docs
 .env
+# sekrety i dane lokalne – nie mogą trafić do obrazu
+data/keys
+data/users*.json
+data/prices

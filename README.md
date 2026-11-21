@@ -65,14 +65,18 @@ KryptoTrop automatyzuje tę pracę dla analityków **Krajowej Administracji Skar
 
 **Kluczowe możliwości:**
 
-- **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias; strona `<login>.github.io` → konto GitHub `<login>`)
+- **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Bluesky, Bitcointalk, Nostr NIP-05, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba), także **kody QR w obrazach** (adres opublikowany jako grafika) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias; strona `<login>.github.io` → konto GitHub `<login>`)
 - **Ekstrakcja adresów** – BTC, ETH/EVM, TRON, LTC, SOL z walidacją sum kontrolnych i odtwarzaniem zapisów celowo zaciemnionych
+- **Etykiety z otwartych rejestrów** – lista sankcyjna **OFAC SDN** (1030 adresów BTC/ETH/TRON/LTC/SOL) i adresy **polskich giełd** (Zonda, Kanga) z publicznych tagów Blockscout; aktualizacja jednym poleceniem `npm run labels:update`
 - **Wskaźnik Pewności** – deterministyczne, wersjonowane reguły; każdy punkt ma przesłankę i źródło
 - **Odrzucanie fałszywych trafień** – giełdy, kontrakty (Ethereum i TRON), miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia, adresy o aktywności instytucjonalnej bez etykiety, fałszywe tokeny („USDT” z nieznanego kontraktu)
-- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery, wolumen w PLN; Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x)
-- **Wycena pod PIT-38** – cena krypto z dnia transakcji i kurs średni NBP z ostatniego dnia roboczego przed transakcją (art. 11a ust. 1 ustawy o PIT), z numerem tabeli NBP przy każdej pozycji
+- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery i podmioty sankcjonowane, wolumen w PLN; Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x), Bitcoin, TRON, **Solana** (SOL i tokeny SPL)
+- **Klastrowanie adresów BTC** – adresy współwydawane z badanym adresem (heurystyka wspólnego wejścia, z pominięciem CoinJoin) jako wniosek do weryfikacji
+- **Wycena pod PIT-38** – cena krypto z dnia transakcji (także starszych niż rok – notowania dzienne Binance i lokalne archiwum cen) i kurs średni NBP z ostatniego dnia roboczego przed transakcją (art. 11a ust. 1 ustawy o PIT), z numerem tabeli NBP przy każdej pozycji
 - **Analizy cykliczne** – harmonogram, porównanie przebiegów, wykrywanie podmiany adresu w czasie (także z archiwum Internetu)
 - **Raport** – rozdzielenie **faktów źródłowych**, **wyników obliczeń** i **wniosków do weryfikacji**, kopie dowodów z SHA-256, chronologia przepływu środków
+- **Opieczętowany pakiet dowodowy** – manifest SHA-256, podpis Ed25519 i kwalifikowany znacznik czasu RFC 3161 (Certum); weryfikacja `npm run verify:package`
+- **Konta analityków i role** (opcjonalnie) – logowanie, role analityk / przegląd / administrator, każda operacja w dzienniku audytu z loginem
 
 ```
 Identyfikatory ──► Konektory Web2 ──► Dowody (URL, czas, SHA-256, kopia) ──► Pivot (nowe identyfikatory)
@@ -262,6 +266,41 @@ npm run cli -- nick=<login> email=<adres> phone=<numer> --html raport.html --jso
 
 Ustaw harmonogram analizy (np. co 5 min) i zmień coś na koncie testowym, np. podmień adres w bio. Kolejny przebieg pokaże kartę **Zmiany względem poprzedniego przebiegu**.
 
+### Gdzie są zapisywane dane
+
+| Dane | Bez `DATABASE_URL` (`npm run dev`) | Z PostgreSQL (`docker compose`) |
+|---|---|---|
+| Analizy, przebiegi, wyniki, kopie dowodów, dziennik audytu | **w pamięci – znikają po restarcie API** | tabele PostgreSQL, wolumen `pgdata` |
+| Archiwum dziennych cen krypto | `data/prices/*.json` | `data/prices/` (wolumen) |
+| Klucz podpisu pakietów | `data/keys/signing-ed25519.pem` (tworzony przy pierwszym użyciu) | `data/keys/` (wolumen) |
+| Konta analityków | `data/users.json` (gdy istnieje – logowanie włączone) | jw. |
+| Nagrania trybu offline | `OLCYS_RECORD_DIR` | `data/recordings/` (wolumen) |
+
+Do testów z zachowaniem wyników ustaw w `.env` `DATABASE_URL` (np. `docker compose up -d db`).
+
+### Pakiet dowodowy: podpis i znacznik czasu
+
+Przycisk **Pakiet dowodowy** pobiera JSON z wynikiem, surowymi kopiami dowodów i parametrami, uzupełniony o sekcję `integrity`:
+
+- manifest SHA-256 każdej kopii dowodu, wyniku i całego pakietu,
+- podpis Ed25519 skrótu pakietu kluczem instancji (klucz publiczny: `GET /api/signing-key`),
+- znacznik czasu RFC 3161 z urzędu Certum (do TSA trafia wyłącznie skrót SHA-256).
+
+```sh
+npm run verify:package -- kryptotrop-run_xxx.json    # skróty i podpis; zapisuje też token TSA (.tsr) do weryfikacji openssl
+openssl ts -reply -in kryptotrop-run_xxx.json.tsr -text
+```
+
+### Konta analityków i role (opcjonalnie)
+
+Domyślnie logowanie jest wyłączone (szybki start, testy jury). Pierwsze konto je włącza:
+
+```sh
+npm run user:add -- jkowalski analityk "Jan Kowalski"   # hasło podawane w terminalu (min. 10 znaków)
+```
+
+Role: `analityk` (analizy, raporty, pakiety), `przeglad` (tylko odczyt), `admin` (dodatkowo dziennik audytu). Hasła: scrypt; sesja: ciasteczko HttpOnly podpisane HMAC; po 5 nieudanych próbach logowania z adresu IP – blokada na 5 minut. W docelowym wdrożeniu KAS w to miejsce wchodzi SSO (OIDC / Kerberos).
+
 ### Produkcja (Docker, PostgreSQL)
 
 ```sh
@@ -316,6 +355,10 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | Reddit | posty i komentarze na profilu użytkownika | oficjalne API OAuth z kluczem zarejestrowanej aplikacji (`REDDIT_CLIENT_ID/SECRET`); bez klucza anonimowe listingi `.json`, których Reddit zwykle odmawia (403) – raportowane, nie obchodzone |
 | Keybase | **kryptograficznie podpisane** adresy krypto i dowody kont (GitHub, X, Reddit, WWW) | publiczne API |
 | Gravatar v3 | e-mail (hash) → profil i zweryfikowane konta | publiczne API |
+| Bluesky (AppView) | profil i posty (nick → `<nick>.bsky.social` lub handle w domenie), obrazy z kodem QR | publiczne API, bez klucza |
+| Bitcointalk | profil (podpis, strona WWW) i 50 ostatnich postów, **bez cytatów innych osób** | publiczna strona profilu + publiczne archiwum postów ninjastic.space |
+| Nostr (njump.me) | e-mail w domenie własnej jako identyfikator NIP-05 → profil (opis, strona, adres Lightning) i notatki | otwarta bramka HTTP; pomijane skrzynki ogólnodostępne (gmail, wp.pl…) |
+| Kody QR | obrazy ze stron WWW, README GitHuba i postów Bluesky dekodowane lokalnie (PNG/JPEG) – osobny dowód z SHA-256 kopii obrazu | GET z ochroną SSRF |
 | Telegram `t.me/s/` | publiczny podgląd kanału | bez logowania |
 | ENS (RPC) | nazwa `.eth` → adres i rekordy tekstowe | publiczny RPC lub własny węzeł |
 | SearXNG (self-hosted) | wyszukiwanie identyfikatorów i adresów w otwartym Internecie, pobranie stron wyników (bez eksploratorów blockchain) | własna instancja |
@@ -326,12 +369,33 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | `eth_getCode` | flaga kontraktu (bytecode ≠ `0x`) | publiczny RPC |
 | Esplora (Blockstream, zapasowo mempool.space) | historia BTC (do 100 tx), łączna liczba transakcji | bez klucza; ponowienie przy limicie 429 |
 | TronGrid | transfery TRC20 i natywne TRX, flaga kontraktu (`/wallet/getcontract`) | bez klucza |
+| Solana JSON-RPC | przelewy SOL i tokenów SPL (USDC, USDT; konto tokenowe → właściciel), konto-program jako odpowiednik kontraktu | publiczny węzeł `api.mainnet-beta.solana.com` lub własny (`SOLANA_RPC_URL`); domyślnie 40 ostatnich transakcji |
 | NBP | kurs USD/PLN: bieżący i **historyczny** (tabele A z okresu transakcji) | bez klucza; przy awarii kurs zapasowy z adnotacją |
 | CoinGecko | ceny krypto: bieżące i dzienne z ostatnich 365 dni | bez klucza |
+| Binance (dane rynkowe) | dzienne ceny zamknięcia starsze niż 365 dni (para do USDT ≈ USD; POL przed 2024-09-13 jako MATIC) | publiczne API `data-api.binance.vision`, bez klucza |
+| OFAC SDN | adresy kryptowalut z listy sankcyjnej USA → etykieta `SANCTIONED` | `npm run labels:update` (domena publiczna) |
+| Blockscout – tagi publiczne | adresy polskich giełd i kantorów (Zonda, Kanga) → etykieta `CEX` | `npm run labels:update` |
 
 > **Ograniczenia:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP, a wyszukiwanie kodu działa tylko z tokenem i obejmuje pliki dopiero po zaindeksowaniu przez GitHub. Reddit odmawia zapytań anonimowych z wielu sieci (403) – do scenariuszy z Redditem potrzebna jest zarejestrowana aplikacja tylko do odczytu (`REDDIT_CLIENT_ID/SECRET`), a wdrożenie w KAS – zgody wynikającej z Reddit Data API Terms. NBP bywa chwilowo niedostępne. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
 
 **Warianty nicku między serwisami:** GitHub nie dopuszcza znaku `_` w loginie, więc nick `jan_kowal` jest sprawdzany na GitHubie także jako `jan-kowal` (a na dev.to odwrotnie). Konto wariantowe liczy się jako konto podmiotu tylko wtedy, gdy jego treść wymienia oryginalny nick (np. `TG: @jan_kowal` w bio). W przeciwnym razie dostaje powiązanie słabe (−35), bo taki login mógł założyć ktokolwiek.
+
+### Zbiory etykiet i ich aktualizacja
+
+Etykiety leżą w `data/labels/*.json` (ładowane przy starcie API, widoczne w zakładce *Źródła i zgodność*):
+
+| Plik | Zawartość | Pochodzenie |
+|---|---|---|
+| `known-public-entities.json` | giełdy, kontrakty DEX/tokenów, miksery, zbiórki (49) | zestawienie zespołu |
+| `ofac-sdn.json` | adresy z listy sankcyjnej OFAC SDN (1030) – kontakt z takim adresem to wskaźnik wysokiego ryzyka | `sdn.xml` U.S. Treasury, każdy adres z walidacją sumy kontrolnej |
+| `pl-vasp-blockscout.json` | polskie giełdy i kantory (11 adresów Zonda/BitBay, Kanga) | publiczne tagi Blockscout / Open Labels Initiative |
+
+```sh
+npm run labels:update          # oba zbiory z aktualnych źródeł
+npm run labels:update -- ofac  # tylko OFAC (plik ~30 MB; OFAC_SDN_FILE=sdn.xml – plik pobrany wcześniej)
+```
+
+Lista kryptowalut i tokenów nie pochodzi z rejestru zewnętrznego: obsługiwane sieci i zweryfikowane kontrakty stablecoinów (także mint USDC/USDT na Solanie) są wpisane w [`packages/core/src/tokens.ts`](packages/core/src/tokens.ts) i sprawdzone w eksploratorach. Token spoza tej listy (np. fałszywy „USDT”) nie jest wyceniany.
 
 ### Tryb offline (nagrywanie i odtwarzanie)
 
@@ -419,7 +483,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 npm test
 ```
 
-61 testów automatycznych, działających bez dostępu do sieci:
+91 testów automatycznych, działających bez dostępu do sieci:
 
 - walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne)
 - Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów)
@@ -429,6 +493,8 @@ npm test
 - poprawność sum kontrolnych wszystkich adresów w zbiorze etykiet
 - numer telefonu
 - bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, ponawianie zapytań po błędzie sieci, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów), trop GitHub Pages → konto GitHub, konwersja adresów TRON hex → Base58
+- parsowanie OFAC SDN, transferów Solany (SOL i SPL przez konto tokenowe), profilu i postów Bitcointalk (bez cytatów), profilu Nostr z bramki njump, kody QR (PNG/JPEG), klastrowanie BTC z pominięciem CoinJoin, ceny Binance (MATIC → POL)
+- pieczęć pakietu dowodowego (wykrycie zmiany wyniku, podmiany dowodu i podrobionego podpisu, żądanie RFC 3161), logowanie i role (hasła scrypt, podrobiony token, wygaśnięcie sesji)
 - plan kont testowych zespołu (GitHub + dev.to + Reddit) od wejścia do wyniku, odtworzony z nagrań: synergia GitHub + dev.to, pułapki USDT i Binance = 0%, giveaway na Reddicie = szum bez synergii, wyszukiwanie po samym adresie, warianty nicku
 
 **Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na dwóch fikcyjnych personach z kontami w GitHub, Gravatar, na stronie WWW i w Telegramie: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md) – co wpisać i jaki wynik powinien się pojawić.
@@ -455,6 +521,13 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `ESPLORA_URL` | | `https://blockstream.info/api` | Esplora dla BTC |
 | `ESPLORA_FALLBACK_URLS` | | `https://mempool.space/api` | Zapasowe instancje Esplora (przy limicie 429 lub awarii) |
 | `TRONGRID_URL` | | `https://api.trongrid.io` | TronGrid dla TRON |
+| `SOLANA_RPC_URL` | | `https://api.mainnet-beta.solana.com` | JSON-RPC Solany (publiczny węzeł ma niskie limity – w KAS własny węzeł) |
+| `SOLANA_MAX_TX` | | `40` | Liczba ostatnich transakcji Solany pobieranych dla adresu |
+| `PRICE_ARCHIVE_DIR` | | `data/prices` | Archiwum dziennych cen krypto (pusta wartość wyłącza) |
+| `OLCYS_TSA_URL` | | `http://time.certum.pl` | Urząd znacznika czasu RFC 3161 dla pakietu dowodowego (pusta wartość wyłącza) |
+| `OLCYS_SIGNING_KEY_FILE` | | `data/keys/signing-ed25519.pem` | Klucz Ed25519 podpisu pakietów (tworzony, gdy brak) |
+| `OLCYS_USERS_FILE` | | `data/users.json` | Konta analityków (`npm run user:add`); brak pliku = logowanie wyłączone |
+| `OLCYS_SESSION_SECRET` | w produkcji | losowy | Sekret podpisu sesji (bez niego sesje wygasają przy restarcie API) |
 | `OLCYS_MAX_DEPTH` | | `6` | Domyślna głębokość pivotowania |
 | `OLCYS_PIVOT_BUDGET_MS` | | `180000` | Budżet czasu na zbieranie i pivotowanie w jednym przebiegu; po przekroczeniu analiza ocenia zebrane dowody |
 | `OLCYS_MAX_PIVOTS_PER_DOC` | | `12` | Maks. liczba nowych tropów z jednego dokumentu (najpierw nicki, komunikatory, e-maile, na końcu strony WWW) |
@@ -477,7 +550,8 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 - Zapytania API zawierające identyfikatory trafiają **wyłącznie** do zatwierdzonych hostów; pozostałe są blokowane i logowane.
 - Pobieranie stron odkrytych w dowodach blokuje adresy prywatne, pętli zwrotnej i link-local (ochrona SSRF w sieci wewnętrznej); każde przekierowanie jest sprawdzane **przed** wykonaniem.
 - Kopie dowodów serwowane są jako `text/plain` z CSP `sandbox` – żaden skrypt ze źródła się nie wykona.
-- Każda operacja (utworzenie analizy, przebieg, podgląd, raport, eksport) trafia do dziennika audytu; nagłówek `x-olcys-user` to miejsce na integrację z SSO/RBAC KAS.
+- Każda operacja (logowanie, utworzenie analizy, przebieg, podgląd, raport, eksport) trafia do dziennika audytu; przy włączonych kontach z loginem analityka, bez nich – z nagłówka `x-olcys-user` (miejsce na SSO KAS).
+- Pakiet dowodowy jest podpisany (Ed25519) i opatrzony znacznikiem czasu RFC 3161 – zmiana dowodu, wyniku lub parametrów po eksporcie jest wykrywalna.
 - Wyszukiwarka SearXNG przekazuje zapytania **wyłącznie** do zatwierdzonej listy silników (`infra/searxng/settings.yml`: DuckDuckGo, Bing, Brave, Wikipedia), z adresu serwera, bez cookies i danych analityka. Obraz SearXNG jest przypięty do konkretnej wersji, a jego sekret pochodzi ze zmiennej `SEARXNG_SECRET`.
 - Brak telemetrii i zależności od chmury publicznej.
 
@@ -508,6 +582,8 @@ Wszystkie zależności są Open Source. Bezpośrednie zależności:
 | cheerio | MIT | | @noble/hashes, @scure/base | MIT |
 | TypeScript | Apache-2.0 | | tsx, Vitest, concurrently | MIT |
 | PostgreSQL (obraz Docker) | PostgreSQL License | | SearXNG (obraz Docker) | AGPL-3.0 |
+| jsQR | Apache-2.0 | | pngjs | MIT |
+| jpeg-js | BSD-3-Clause | | qrcode (tylko testy) | MIT |
 | Ollama (opcjonalnie) | MIT | | | |
 
 Zależności przechodnie: MIT, ISC, BSD-2/3-Clause, Apache-2.0, BlueOak-1.0.0, 0BSD, CC-BY-4.0 (dane). Pełny raport: `npm run licenses`.
@@ -518,11 +594,10 @@ Zależności przechodnie: MIT, ISC, BSD-2/3-Clause, Apache-2.0, BlueOak-1.0.0, 0
 
 ## Dalszy rozwój
 
-- Kolejne konektory: X/Bluesky, Nostr (NIP-05), OLX/Allegro, Bitcointalk
-- Dekodowanie kodów QR z obrazów (adresy publikowane jako grafika)
-- Pełne zbiory etykiet (OFAC SDN, etykiety giełd z licencjonowanych źródeł, polskie giełdy i kantory) i ich automatyczna aktualizacja
-- Klastrowanie adresów BTC (common-input-ownership), ceny historyczne krypto starsze niż 365 dni (własne archiwum notowań)
-- Eksport raportu do PDF po stronie serwera, podpis elektroniczny pakietu dowodowego
+- Kolejne konektory: X (wymaga płatnego API), OLX/Allegro (tylko przez oficjalne API partnerskie – regulaminy zabraniają automatycznego pobierania)
+- Etykiety giełd z licencjonowanych źródeł (np. Arkham, Chainalysis) i pełniejsza lista polskich VASP z rejestru działalności w zakresie walut wirtualnych
+- Klastrowanie także po adresie reszty (change address) i dla Litecoina; historia Solany powyżej 1000 transakcji (indeksator lub własny węzeł)
+- SSO KAS (OIDC / Kerberos) zamiast lokalnych kont, podpis kwalifikowany pakietu (HSM / karta kwalifikowana) zamiast klucza instancji
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 

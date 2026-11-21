@@ -5,6 +5,7 @@ import * as cheerio from 'cheerio';
 import type { Identifier } from '@olcys/core';
 import { familyOf } from '../config';
 import { extractIdentifiers, pagesOwner, type CollectedDocument } from '../evidence';
+import { collectQrEvidence, pickQrCandidates } from '../qr';
 import type { ConnectorContext, SourceConnector } from './types';
 
 export const webConnector: SourceConnector = {
@@ -32,19 +33,23 @@ export const webConnector: SourceConnector = {
       links.unshift({ type: 'nick', value: owner.login });
       ctx.log(`${q.value}: strona hostowana na GitHub Pages – właściciel konta GitHub „${owner.login}”`);
     }
-    return [
-      {
-        family: familyOf(q.value),
-        sourceKind: 'OWN_WEBSITE',
-        url: q.value,
-        title: $('title').text().trim() || q.value,
-        fetchedAt: res.fetchedAt,
-        contentType: res.contentType,
-        segments: [{ id: 'page', text }],
-        links,
-        meta: { finalUrl: res.url, ownedByQuery: true, ...(owner ? { pagesOwner: `${owner.service}:${owner.login}` } : {}) },
-        raw: res.body,
-      },
-    ];
+    const page: CollectedDocument = {
+      family: familyOf(q.value),
+      sourceKind: 'OWN_WEBSITE',
+      url: q.value,
+      title: $('title').text().trim() || q.value,
+      fetchedAt: res.fetchedAt,
+      contentType: res.contentType,
+      segments: [{ id: 'page', text }],
+      links,
+      meta: { finalUrl: res.url, ownedByQuery: true, ...(owner ? { pagesOwner: `${owner.service}:${owner.login}` } : {}) },
+      raw: res.body,
+    };
+    // adresy portfeli publikowane jako kod QR (obraz)
+    const images = $('img[src]')
+      .map((_, im) => ({ src: $(im).attr('src') ?? '', alt: [$(im).attr('alt'), $(im).attr('title'), $(im).attr('class'), $(im).attr('id')].filter(Boolean).join(' ') }))
+      .get();
+    const qr = await collectQrEvidence(pickQrCandidates(images, res.url), page, ctx);
+    return [page, ...qr];
   },
 };

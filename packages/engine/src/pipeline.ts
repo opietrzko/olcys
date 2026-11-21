@@ -13,6 +13,7 @@ import {
   LabelRegistry,
   analyzeChain,
   assessContext,
+  clusterCommonInputs,
   classifyAddress,
   computeConfidence,
   detectProfileChanges,
@@ -402,8 +403,8 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     const subjectOcc = g.occ.filter((o) => o.identityLink);
     const foreignOcc = g.occ.filter((o) => !o.identityLink);
     if (!subjectOcc.length && !inputKeys.has(key)) continue;
-    // KROK 3.2: flaga kontraktu – Ethereum (eth_getCode) i TRON (/wallet/getcontract)
-    const code = g.chain === 'ETH' || g.chain === 'TRON' ? await chain.getCode(g.chain, g.address) : null;
+    // KROK 3.2: flaga kontraktu – Ethereum (eth_getCode), TRON (/wallet/getcontract), Solana (konto wykonywalne = program)
+    const code = g.chain === 'ETH' || g.chain === 'TRON' || g.chain === 'SOL' ? await chain.getCode(g.chain, g.address) : null;
     let isContract = code === null ? null : !/^0x0*$/.test(code);
     // KROK 3.1: etykiety z API eksploratora (gdy brak w lokalnym rejestrze)
     if (!labels.get(g.chain, g.address)) {
@@ -442,7 +443,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       if (config.chain.liveRates) {
         const times = transfers.map((x) => x.timestamp).sort();
         const assets = [...new Set(transfers.map((x) => resolveAsset(x)).filter((a) => a.verified && a.priceKey).map((a) => a.priceKey!))];
-        const h = await extendHistoricalRates(fetch, rates, { from: times[0], to: times[times.length - 1], assets });
+        const h = await extendHistoricalRates(fetch, rates, { from: times[0], to: times[times.length - 1], assets }, config.recording?.mode === 'replay' ? undefined : config.priceArchiveDir);
         rates = h.rates;
         if (h.fetched.length) t('rates', `Kursy historyczne: ${h.fetched.join(', ')}`);
         for (const e of h.errors) t('rates', `Uwaga: ${e}`);
@@ -450,7 +451,8 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       const neighbours = new Map<string, Transfer[]>();
       const outCps = [...new Set(transfers.filter((x) => (x.network ?? 'ethereum') === 'ethereum' || g.chain !== 'ETH').filter((x) => addressKey(g.chain, x.from) === key).map((x) => x.to))].filter((a) => !labels.get(g.chain, a)).slice(0, 8);
       for (const n of outCps) {
-        const nt = await chain.getTransfers(g.chain, n, { mainOnly: true });
+        // kontrahent: tylko sieć główna i krótka historia (wystarcza do wykrycia „sweep” na giełdę)
+        const nt = await chain.getTransfers(g.chain, n, { mainOnly: true, maxTx: 15 });
         if (nt) neighbours.set(n, nt);
       }
       chain.takeNotes(g.chain);
@@ -458,7 +460,11 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       if (activity.ignoredTokenTransfers) t('chain', `${key}: pominięto ${activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny)`);
       if (transfers.length >= 1000) t('chain', `${key}: pobrano pierwsze ${transfers.length} transferów – historia może być niepełna`);
     }
-    findings.push({ key, chain: g.chain, address: g.address, classification, attribution, occurrences: subjectOcc, foreignOccurrences: foreignOcc, activity, explorerUrl: chain.explorerUrl(g.chain, g.address) });
+    // BTC: klaster adresów współwydawanych (common-input-ownership) – wniosek do weryfikacji, bez wpływu na wynik
+    const utxo = !excluded && transfers ? chain.utxoTxs(g.chain, g.address) : undefined;
+    const cluster = utxo ? clusterCommonInputs(g.address, utxo, labels) : undefined;
+    if (cluster) t('cluster', `${key}: ${cluster.members.length} adres(ów) współwydawanych w ${cluster.multiInputTxs} transakcjach${cluster.coinjoinSkipped.length ? `, pominięto ${cluster.coinjoinSkipped.length} tx o cechach CoinJoin` : ''}${cluster.labeledMembers ? `, ${cluster.labeledMembers} z etykietą instytucji` : ''}`);
+    findings.push({ key, chain: g.chain, address: g.address, classification, attribution, occurrences: subjectOcc, foreignOccurrences: foreignOcc, activity, cluster, explorerUrl: chain.explorerUrl(g.chain, g.address) });
     t('score', `${key}: ${classification.category}${classification.inferred ? ' (wniosek)' : ''} → ${attribution.score}% (${attribution.band})${activity ? `, ${activity.indicators.length} wskaźnik(ów) aktywności` : ''}`);
   }
   findings.sort((a, b) => Number(a.attribution.gated) - Number(b.attribution.gated) || b.attribution.score - a.attribution.score);

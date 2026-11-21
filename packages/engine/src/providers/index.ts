@@ -1,8 +1,9 @@
 /**
- * Dostawcy danych blockchain: Etherscan (API v2, wiele sieci EVM), Esplora (BTC – możliwy self-hosting, np. mempool.space), TronGrid.
+ * Dostawcy danych blockchain: Etherscan (API v2, wiele sieci EVM), Esplora (BTC – możliwy self-hosting, np. mempool.space), TronGrid,
+ * JSON-RPC Solany (publiczny węzeł lub własny).
  * Interfejs pozwala podmienić źródło na węzeł własny KAS bez zmian w logice analizy.
  */
-import { addressKey, base58checkEncode, toChecksumAddress, EVM_NETWORKS, type Chain, type Transfer } from '@olcys/core';
+import { addressKey, base58checkEncode, toChecksumAddress, resolveAsset, EVM_NETWORKS, type Chain, type Transfer, type UtxoTx } from '@olcys/core';
 import type { EngineConfig } from '../config';
 import type { SafeFetch } from '../http';
 
@@ -10,7 +11,7 @@ export interface ChainProvider {
   id: string;
   supports(chain: Chain): boolean;
   /** null = brak danych / błąd dostawcy (adres niezweryfikowany). `mainOnly` – tylko sieć główna (np. dla kontrahentów). */
-  getTransfers(chain: Chain, address: string, opts?: { mainOnly?: boolean }): Promise<Transfer[] | null>;
+  getTransfers(chain: Chain, address: string, opts?: { mainOnly?: boolean; maxTx?: number }): Promise<Transfer[] | null>;
   /** Łączna liczba transakcji adresu (cała historia), gdy dostawca ją udostępnia – do heurystyki adresu instytucjonalnego. */
   getStats?(chain: Chain, address: string): Promise<{ txCount?: number } | null>;
   /** Uwagi z ostatniego zapytania (np. sieć EVM niedostępna) – trafiają do przebiegu analizy. */
@@ -22,6 +23,8 @@ export interface ChainProvider {
   /** Etykieta / nazwa adresu z API eksploratora (KROK 3.1 załącznika). */
   getInfo?(chain: Chain, address: string): Promise<AddressInfo | null>;
   explorerUrl(chain: Chain, address: string): string | undefined;
+  /** UTXO (BTC): transakcje adresu z pełną listą wejść i wyjść z ostatniego getTransfers – do klastrowania adresów. */
+  utxoTxs?(chain: Chain, address: string): UtxoTx[] | undefined;
 }
 
 export interface AddressInfo {
@@ -147,6 +150,10 @@ export class EtherscanProvider implements ChainProvider {
 export class EsploraProvider implements ChainProvider {
   id = 'esplora';
   lastError?: string;
+  private utxo = new Map<string, UtxoTx[]>();
+  utxoTxs(_chain: Chain, address: string) {
+    return this.utxo.get(address);
+  }
   constructor(private cfg: EngineConfig, private fetch: SafeFetch) {}
   supports(chain: Chain) {
     return chain === 'BTC';
@@ -199,6 +206,15 @@ export class EsploraProvider implements ChainProvider {
         txs.push(...more);
       }
       const out: Transfer[] = [];
+      this.utxo.set(
+        address,
+        txs.map((tx) => ({
+          txid: tx.txid,
+          timestamp: new Date((tx.status.block_time ?? Date.now() / 1000) * 1000).toISOString(),
+          inputs: tx.vin.map((v) => ({ address: v.prevout?.scriptpubkey_address, value: v.prevout?.value ?? 0 })),
+          outputs: tx.vout.map((o) => ({ address: o.scriptpubkey_address, value: o.value })),
+        })),
+      );
       for (const tx of txs) {
         const ts = new Date((tx.status.block_time ?? Date.now() / 1000) * 1000).toISOString();
         const isOut = tx.vin.some((v) => v.prevout?.scriptpubkey_address === address);
@@ -290,6 +306,131 @@ export class TronGridProvider implements ChainProvider {
   explorerUrl = explorer;
 }
 
+/* ---------- Solana ---------- */
+
+interface SolParsedIx {
+  program?: string;
+  parsed?: { type?: string; info?: Record<string, any> } | string;
+}
+interface SolTokenBalance {
+  accountIndex: number;
+  mint: string;
+  owner?: string;
+  uiTokenAmount: { decimals: number };
+}
+interface SolTx {
+  blockTime?: number | null;
+  meta: { err: unknown; preTokenBalances?: SolTokenBalance[]; postTokenBalances?: SolTokenBalance[]; innerInstructions?: { instructions: SolParsedIx[] }[] } | null;
+  transaction: { message: { accountKeys: ({ pubkey: string } | string)[]; instructions: SolParsedIx[] } };
+}
+
+/**
+ * Transfery adresu z jednej transakcji Solany (kodowanie jsonParsed): przelewy SOL (System Program) i tokenów SPL
+ * (Token / Token-2022, także w instrukcjach wewnętrznych). Konto tokenowe zamieniane na właściciela z pre/postTokenBalances,
+ * bo wpłata USDC trafia na konto tokenowe, a nie bezpośrednio na adres portfela.
+ */
+export function parseSolanaTransfers(address: string, signature: string, tx: SolTx): Transfer[] {
+  if (!tx.meta || tx.meta.err) return [];
+  const keys = tx.transaction.message.accountKeys.map((k) => (typeof k === 'string' ? k : k.pubkey));
+  const tokenAcc = new Map<string, { owner?: string; mint: string; decimals: number }>();
+  for (const b of [...(tx.meta.preTokenBalances ?? []), ...(tx.meta.postTokenBalances ?? [])]) {
+    const acc = keys[b.accountIndex];
+    if (acc) tokenAcc.set(acc, { owner: b.owner, mint: b.mint, decimals: b.uiTokenAmount.decimals });
+  }
+  const timestamp = new Date((tx.blockTime ?? Date.now() / 1000) * 1000).toISOString();
+  const ixs = [...tx.transaction.message.instructions, ...(tx.meta.innerInstructions ?? []).flatMap((i) => i.instructions)];
+  const out: Transfer[] = [];
+  for (const ix of ixs) {
+    if (!ix.parsed || typeof ix.parsed === 'string') continue;
+    const { type, info } = ix.parsed;
+    if (!info) continue;
+    if (ix.program === 'system' && (type === 'transfer' || type === 'transferWithSeed')) {
+      const from = info.source as string;
+      const to = info.destination as string;
+      if (from !== address && to !== address) continue;
+      out.push({ chain: 'SOL', hash: signature, timestamp, from, to, asset: 'SOL', amount: Number(info.lamports) / 1e9, network: 'sol' });
+    } else if ((ix.program === 'spl-token' || ix.program === 'spl-token-2022') && (type === 'transfer' || type === 'transferChecked')) {
+      const src = tokenAcc.get(info.source);
+      const dst = tokenAcc.get(info.destination);
+      const from = src?.owner ?? (info.authority as string | undefined) ?? (info.multisigAuthority as string | undefined) ?? info.source;
+      const to = dst?.owner ?? info.destination;
+      if (from !== address && to !== address) continue;
+      const mint = (info.mint as string | undefined) ?? src?.mint ?? dst?.mint;
+      if (!mint) continue;
+      const decimals = info.tokenAmount?.decimals ?? src?.decimals ?? dst?.decimals ?? 0;
+      const amount = info.tokenAmount ? Number(info.tokenAmount.uiAmountString ?? info.tokenAmount.uiAmount) : Number(info.amount) / 10 ** decimals;
+      const t: Transfer = { chain: 'SOL', hash: signature, timestamp, from, to, asset: `SPL ${mint.slice(0, 6)}…`, amount, tokenContract: mint, network: 'sol' };
+      const known = resolveAsset(t);
+      if (known.verified) t.asset = known.symbol;
+      out.push(t);
+    }
+  }
+  return out;
+}
+
+/** Solana – publiczny JSON-RPC (getSignaturesForAddress + getTransaction jsonParsed); można wskazać własny węzeł (SOLANA_RPC_URL). */
+export class SolanaRpcProvider implements ChainProvider {
+  id: string;
+  lastError?: string;
+  notes: string[] = [];
+  constructor(private cfg: EngineConfig, private fetch: SafeFetch) {
+    this.id = `solana-rpc (${new URL(cfg.chain.solanaRpcUrl).host})`;
+  }
+  supports(chain: Chain) {
+    return chain === 'SOL';
+  }
+  /** Wywołanie JSON-RPC z ponowieniem przy limicie (HTTP 429): 3 próby, odstęp 1,5 s / 3 s / 4,5 s. */
+  private async rpc<T>(method: string, params: unknown[]): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      const r = await this.fetch(this.cfg.chain.solanaRpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+      if (r.status === 429 && attempt < 3) {
+        await new Promise((res) => setTimeout(res, 1500 * (attempt + 1)));
+        continue;
+      }
+      if (r.status !== 200) throw new Error(`Solana RPC ${method}: HTTP ${r.status}${r.status === 429 ? ' (limit zapytań publicznego węzła – ustaw SOLANA_RPC_URL)' : ''}`);
+      const d = JSON.parse(r.body) as { result?: T; error?: { message: string } };
+      if (d.error) throw new Error(`Solana RPC ${method}: ${d.error.message}`);
+      return d.result as T;
+    }
+  }
+  async getTransfers(_chain: Chain, address: string, opts?: { maxTx?: number }): Promise<Transfer[] | null> {
+    this.lastError = undefined;
+    const limit = Math.min(opts?.maxTx ?? this.cfg.chain.solanaMaxTx, 1000);
+    let sigs: { signature: string; err: unknown }[];
+    try {
+      sigs = await this.rpc<{ signature: string; err: unknown }[]>('getSignaturesForAddress', [address, { limit }]);
+    } catch (e) {
+      this.lastError = (e as Error).message;
+      return null;
+    }
+    const out: Transfer[] = [];
+    let failed = 0;
+    for (const s of sigs.filter((x) => !x.err)) {
+      try {
+        const tx = await this.rpc<SolTx | null>('getTransaction', [s.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'finalized' }]);
+        if (tx) out.push(...parseSolanaTransfers(address, s.signature, tx));
+      } catch (e) {
+        failed++;
+        this.lastError = (e as Error).message;
+        if (failed >= 3) break; // węzeł odmawia – nie zasypujemy go dalszymi zapytaniami
+      }
+    }
+    if (sigs.length >= limit) this.notes.push(`Solana: pobrano ${limit} ostatnich transakcji adresu (SOLANA_MAX_TX) – historia może być niepełna`);
+    if (failed) this.notes.push(`Solana: ${failed} transakcji nie pobrano (${this.lastError})`);
+    return out;
+  }
+  /** Konto wykonywalne (program) = odpowiednik smart kontraktu. */
+  async getCode(_chain: Chain, address: string): Promise<string | null> {
+    try {
+      const r = await this.rpc<{ value: { executable?: boolean } | null }>('getAccountInfo', [address, { encoding: 'base64', dataSlice: { offset: 0, length: 0 } }]);
+      return r.value?.executable ? '0xff' : '0x';
+    } catch {
+      return null;
+    }
+  }
+  explorerUrl = explorer;
+}
+
 /** Wybiera pierwszego dostawcę obsługującego sieć. */
 export class CompositeProvider implements ChainProvider {
   id: string;
@@ -302,11 +443,14 @@ export class CompositeProvider implements ChainProvider {
   supports(chain: Chain) {
     return Boolean(this.pick(chain));
   }
-  async getTransfers(chain: Chain, address: string, opts?: { mainOnly?: boolean }) {
+  async getTransfers(chain: Chain, address: string, opts?: { mainOnly?: boolean; maxTx?: number }) {
     return (await this.pick(chain)?.getTransfers(chain, address, opts)) ?? null;
   }
   async getStats(chain: Chain, address: string) {
     return (await this.pick(chain)?.getStats?.(chain, address)) ?? null;
+  }
+  utxoTxs(chain: Chain, address: string) {
+    return this.pick(chain)?.utxoTxs?.(chain, address);
   }
   /** Uwagi dostawcy dla sieci (np. niedostępna sieć EVM) – zbierane i czyszczone przy odczycie. */
   takeNotes(chain: Chain): string[] {
@@ -380,5 +524,5 @@ export function createChainProvider(cfg: EngineConfig, fetch: SafeFetch): Compos
     .filter((n) => EVM_NETWORKS[n] && n !== 'ethereum')
     .map((network) => ({ network, provider: new EtherscanProvider(cfg, fetch, EVM_NETWORKS[network].chainId, network) }));
   const evm = new MultiEvmProvider(new EtherscanProvider(cfg, fetch), extra);
-  return new CompositeProvider([evm, new EsploraProvider(cfg, fetch), new TronGridProvider(cfg, fetch)]);
+  return new CompositeProvider([evm, new EsploraProvider(cfg, fetch), new TronGridProvider(cfg, fetch), new SolanaRpcProvider(cfg, fetch)]);
 }

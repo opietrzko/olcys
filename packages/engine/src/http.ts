@@ -28,7 +28,8 @@ export interface FetchedResource {
 
 export type FetchKind = 'api' | 'page';
 
-export type SafeFetch = (url: string, init?: { method?: string; body?: string; headers?: Record<string, string>; kind?: FetchKind; timeoutMs?: number }) => Promise<FetchedResource>;
+/** `binary: true` – treść odpowiedzi (np. obraz) zwracana w base64 zamiast jako tekst. */
+export type SafeFetch = (url: string, init?: { method?: string; body?: string; headers?: Record<string, string>; kind?: FetchKind; timeoutMs?: number; binary?: boolean }) => Promise<FetchedResource>;
 
 export interface EgressLogEntry {
   at: string;
@@ -162,8 +163,15 @@ function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void
           current = new URL(loc, current).toString();
           continue;
         }
-        let body = await res.text();
-        if (body.length > MAX_BODY) body = body.slice(0, MAX_BODY);
+        let body: string;
+        if (init?.binary) {
+          const buf = Buffer.from(await res.arrayBuffer());
+          // obraz ucięty w połowie jest bezużyteczny – zbyt duży plik zwracamy pusty
+          body = buf.length > MAX_BODY ? '' : buf.toString('base64');
+        } else {
+          body = await res.text();
+          if (body.length > MAX_BODY) body = body.slice(0, MAX_BODY);
+        }
         log?.({ at: new Date().toISOString(), url, status: res.status, ms: Date.now() - t0, kind });
         return { url: current, status: res.status, contentType: res.headers.get('content-type') ?? 'application/octet-stream', body, fetchedAt: new Date().toISOString() };
       }

@@ -4,3 +4,6 @@ dist/
 *.log
 coverage/
 .vite/
+data/prices/
+data/keys/
+data/users*.json

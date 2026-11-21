@@ -54,10 +54,19 @@ export interface Meta {
     bands: { min: number; band: string; label: string }[];
   };
   activityThresholds: Record<string, number>;
+  signing?: { keyId: string; algorithm: string; tsa: string | null };
+}
+
+export interface AuthUser {
+  login: string;
+  role: 'analityk' | 'przeglad' | 'admin';
+  name: string | null;
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(path, { ...init, headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
+  const r = await fetch(path, { ...init, credentials: 'same-origin', headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
+  // sesja wygasła / brak logowania – aplikacja pokazuje ekran logowania
+  if (r.status === 401 && !path.startsWith('/api/auth/')) dispatchEvent(new Event('olcys:unauthorized'));
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json() as Promise<T>;
 }
@@ -72,5 +81,8 @@ export const api = {
   schedule: (id: string, scheduleMinutes: number | null) => req<{ ok: true }>(`/api/analyses/${id}`, { method: 'PATCH', body: JSON.stringify({ scheduleMinutes }) }),
   run: (id: string) => req<Run>(`/api/runs/${id}`),
   diff: (id: string, base?: string) => req<{ diff: RunDiff | null; message?: string }>(`/api/runs/${id}/diff${base ? `?base=${encodeURIComponent(base)}` : ''}`),
+  me: () => req<{ enabled: boolean; user: AuthUser | null }>('/api/auth/me'),
+  login: (login: string, password: string) => req<{ user: AuthUser }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ login, password }) }),
+  logout: () => req<{ ok: true }>('/api/auth/logout', { method: 'POST', body: '{}' }),
   audit: () => req<{ at: string; actor: string; action: string; target: string; details: Record<string, unknown> }[]>('/api/audit'),
 };

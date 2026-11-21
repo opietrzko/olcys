@@ -6,6 +6,7 @@
  * A variant account counts as the subject's only when its own content mentions the original nickname.
  */
 import type { Identifier } from '@olcys/core';
+import { collectQrEvidence, imagesInMarkdown, pickQrCandidates } from '../qr';
 import { extractIdentifiers, type CollectedDocument } from '../evidence';
 import { confirmVariant, nickVariants } from './nick';
 import { type ConnectorContext, type SourceConnector } from './types';
@@ -102,7 +103,7 @@ export const githubConnector: SourceConnector = {
         const url = `${githubRaw}/${encodeURIComponent(login)}/${encodeURIComponent(repo)}/HEAD/${file}`;
         const r = await ctx.fetch(url);
         if (r.status !== 200) continue;
-        docs.push({
+        const doc: CollectedDocument = {
           family,
           sourceKind: 'OWN_PROFILE',
           url,
@@ -114,7 +115,10 @@ export const githubConnector: SourceConnector = {
           links: extractIdentifiers(r.body),
           meta: { repo, file, ownedByQuery: true },
           raw: r.body,
-        });
+        };
+        docs.push(doc);
+        // kody QR w obrazach README (ścieżki względne – względem repozytorium)
+        if (file.endsWith('.md')) docs.push(...(await collectQrEvidence(pickQrCandidates(imagesInMarkdown(r.body), url), doc, ctx)));
       }
     }
 
