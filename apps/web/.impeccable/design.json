@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T12:00:00Z",
+  "title": "Design System: OŁCyŚ",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Niebieski Śledczy", "canonical": "#0062d1", "dark": "#4d9cff", "tonalRamp": ["#0a2a55", "#0b4fa8", "#0052b0", "#0062d1", "#2f6fcf", "#74b2ff", "#b9d3f6", "#eaf2fd"] },
+      "accent-hover": { "role": "primary", "displayName": "Niebieski Śledczy – hover", "canonical": "#0052b0", "dark": "#74b2ff" },
+      "accent-text": { "role": "primary", "displayName": "Tekst na akcencie", "canonical": "#ffffff", "dark": "#08121f" },
+      "accent-soft": { "role": "primary", "displayName": "Mgła Akcentu", "canonical": "#eaf2fd", "dark": "#0e2340" },
+      "accent-border": { "role": "primary", "displayName": "Ramka Akcentu", "canonical": "#b9d3f6", "dark": "#1d4277" },
+      "confidence-4": { "role": "secondary", "displayName": "Pewność: Bardzo wysokie", "canonical": "#0b4fa8", "dark": "#5ea6ff", "text": "#ffffff", "darkText": "#08121f" },
+      "confidence-3": { "role": "secondary", "displayName": "Pewność: Prawdopodobne", "canonical": "#2f6fcf", "dark": "#2f6fcf", "text": "#ffffff", "darkText": "#ffffff" },
+      "confidence-2": { "role": "secondary", "displayName": "Pewność: Średnie", "canonical": "#a9c7f0", "dark": "#1e4378", "text": "#0d2a52", "darkText": "#d6e6ff" },
+      "confidence-1": { "role": "secondary", "displayName": "Pewność: Niskie / szum", "canonical": "#e1ebf9", "dark": "#15263f", "text": "#1f3a63", "darkText": "#a9c5ee" },
+      "confidence-0": { "role": "neutral", "displayName": "Wykluczone", "canonical": "#efefef", "dark": "#1f1f1f", "text": "#4d4d4d", "darkText": "#a3a3a3" },
+      "confidence-0-border": { "role": "neutral", "displayName": "Kreska Wykluczenia", "canonical": "#bdbdbd", "dark": "#4a4a4a" },
+      "danger": { "role": "tertiary", "displayName": "Czerwień Cash-out", "canonical": "#c4291c", "dark": "#ff7a6e", "tonalRamp": ["#3d0d08", "#6e1810", "#9e2016", "#c4291c", "#e0584c", "#f3c1bc", "#f8d9d6", "#fdeceb"] },
+      "danger-soft": { "role": "tertiary", "displayName": "Czerwień – tło", "canonical": "#fdeceb", "dark": "#2c1210" },
+      "danger-border": { "role": "tertiary", "displayName": "Czerwień – ramka", "canonical": "#f3c1bc", "dark": "#5c2420" },
+      "warn": { "role": "tertiary", "displayName": "Bursztyn Ostrzeżenia", "canonical": "#9a4d00", "dark": "#f0a648", "tonalRamp": ["#2e1700", "#5a3d12", "#7a3d00", "#9a4d00", "#c7740f", "#f0a648", "#f2d29f", "#fff4e2"] },
+      "warn-soft": { "role": "tertiary", "displayName": "Bursztyn – tło", "canonical": "#fff4e2", "dark": "#2a1c08" },
+      "warn-border": { "role": "tertiary", "displayName": "Bursztyn – ramka", "canonical": "#f2d29f", "dark": "#5a3d12" },
+      "bg": { "role": "neutral", "displayName": "Papier", "canonical": "#fafafa", "dark": "#0a0a0a", "tonalRamp": ["#0a0a0a", "#171717", "#3a3a3a", "#666666", "#d1d1d1", "#e5e5e5", "#f5f5f5", "#fafafa"] },
+      "surface": { "role": "neutral", "displayName": "Karta", "canonical": "#ffffff", "dark": "#111111" },
+      "surface-2": { "role": "neutral", "displayName": "Szarość 2", "canonical": "#f5f5f5", "dark": "#171717" },
+      "surface-3": { "role": "neutral", "displayName": "Szarość 3", "canonical": "#ededed", "dark": "#1f1f1f" },
+      "border": { "role": "neutral", "displayName": "Linia", "canonical": "#e5e5e5", "dark": "#262626" },
+      "border-strong": { "role": "neutral", "displayName": "Linia mocna", "canonical": "#d1d1d1", "dark": "#3a3a3a" },
+      "text": { "role": "neutral", "displayName": "Tusz", "canonical": "#171717", "dark": "#ededed" },
+      "text-2": { "role": "neutral", "displayName": "Tusz 2", "canonical": "#4d4d4d", "dark": "#b3b3b3" },
+      "text-3": { "role": "neutral", "displayName": "Tusz 3", "canonical": "#666666", "dark": "#949494" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Wielki Wskaźnik Pewności w inspektorze i szczególe adresu. Tylko liczby." },
+      "headline": { "displayName": "Headline", "purpose": "Tytuł strony i sprawy (h1)." },
+      "title": { "displayName": "Title", "purpose": "Sekcje strony (h2); nagłówki paneli 14px/600." },
+      "metric": { "displayName": "Metric", "purpose": "Wartości w pasku etapów; wariant kompaktowy 16px." },
+      "body": { "displayName": "Body", "purpose": "Treść interfejsu; gęste wiersze 13–13.5px." },
+      "label": { "displayName": "Label", "purpose": "Nagłówki tabel, etykiety etapów, podpisy; pigułki 12px." },
+      "mono": { "displayName": "Mono", "purpose": "Adresy, identyfikatory, hashe, sieci; zero przekreślone." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(0, 0, 0, 0.05)", "dark": "0 1px 2px rgba(0, 0, 0, 0.4)", "purpose": "Wybrana pozycja w grupie przełączników: nawigacja, segmenty, motyw." },
+      { "name": "focus-ring-field", "value": "0 0 0 3px var(--accent-soft)", "purpose": "Fokus inputów i selectów razem z ramką w akcencie." },
+      { "name": "row-selected", "value": "inset 0 0 0 1px var(--accent-border)", "purpose": "Wybrany adres na liście adresów." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "0.12s–0.15s ease (background-color, border-color, color, box-shadow)", "purpose": "Hover i fokus kontrolek, wierszy i tabel." },
+      { "name": "graph-fade", "value": "150ms opacity / line-color", "purpose": "Przygaszanie i podświetlanie ścieżki w grafie." },
+      { "name": "pulse", "value": "1.2s ease-in-out infinite (opacity 0.35)", "purpose": "Kropka statusu trwającej analizy." },
+      { "name": "shimmer", "value": "1.4s ease-in-out infinite", "purpose": "Szkielet ładowania." },
+      { "name": "reduced-motion", "value": "animation/transition 0.01ms", "purpose": "prefers-reduced-motion wyłącza ruch globalnie." }
+    ],
+    "breakpoints": [
+      { "name": "pipeline-4col", "value": "1200px" },
+      { "name": "single-column", "value": "1100px" },
+      { "name": "sidebar-to-topbar", "value": "900px" },
+      { "name": "pipeline-scroll", "value": "640px" },
+      { "name": "graph-rows", "value": "600px (szerokość kontenera grafu)" },
+      { "name": "phone", "value": "560px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Przycisk główny",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Jedyna kolorowa akcja widoku, np. uruchomienie analizy.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg>Uruchom analizę</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); border-radius: 6px; font-family: var(--sans); font-weight: 500; font-size: 13.5px; cursor: pointer; transition: background-color 0.15s, border-color 0.15s, color 0.15s; } .ds-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; } .ds-btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }"
+    },
+    {
+      "name": "Przycisk domyślny",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Akcje drugorzędne: raport, pełne uzasadnienie, eksport.",
+      "html": "<button class=\"ds-btn-default\">Pełne uzasadnienie i dowody</button>",
+      "css": ".ds-btn-default { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); border-radius: 6px; font-family: var(--sans); font-weight: 500; font-size: 13.5px; cursor: pointer; transition: background-color 0.15s; } .ds-btn-default:hover { background: var(--surface-2); } .ds-btn-default:active { background: var(--surface-3); } .ds-btn-default:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Przycisk ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ciche akcje w nagłówkach paneli i kopiowanie.",
+      "html": "<button class=\"ds-btn-ghost\">Eksplorator</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid transparent; background: transparent; color: var(--text-2); border-radius: 6px; font-family: var(--sans); font-weight: 500; font-size: 12.5px; cursor: pointer; transition: background-color 0.15s, color 0.15s; } .ds-btn-ghost:hover { background: var(--surface-3); color: var(--text); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Pole tekstowe",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Pole identyfikatora i wartości formularza.",
+      "html": "<input class=\"ds-input\" placeholder=\"np. jan.kowalski@example.com\" />",
+      "css": ".ds-input { font-family: var(--sans); font-size: 13.5px; height: 34px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text); transition: border-color 0.15s, box-shadow 0.15s; } .ds-input::placeholder { color: var(--text-3); } .ds-input:hover { border-color: var(--text-3); } .ds-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }"
+    },
+    {
+      "name": "Nawigacja boczna",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Pionowa lista sekcji w pasku bocznym 232px.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Analizy</a><a href=\"#\">Metodyka</a><a href=\"#\">Źródła i zgodność</a><a href=\"#\">Audyt</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 208px; padding: 12px; background: var(--surface-2); font-family: var(--sans); font-size: 14px; } .ds-nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; color: var(--text-2); font-weight: 500; text-decoration: none; } .ds-nav a:hover { background: var(--surface-3); color: var(--text); } .ds-nav a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-nav a[aria-current='page'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: 1px solid var(--border); }"
+    },
+    {
+      "name": "Tagi",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Neutralne, akcentowe, ostrzegawcze i błędu; typy powiązań.",
+      "html": "<span class=\"ds-tag\">Wyłączony</span> <span class=\"ds-tag ds-tag-accent\">Aktywny</span> <span class=\"ds-tag ds-tag-warn\">Zapis zaciemniony</span> <span class=\"ds-tag ds-tag-mention\">Wzmianka</span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-family: var(--sans); font-size: 12px; font-weight: 500; background: var(--surface-3); color: var(--text-2); border: 1px solid transparent; } .ds-tag-accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); } .ds-tag-warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn-border); } .ds-tag-mention { background: transparent; border-color: var(--border-strong); border-style: dashed; }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Podstawowy kontener: ramka 1px, narożnik 8px, bez cienia.",
+      "html": "<section class=\"ds-panel\"><header class=\"ds-panel-head\"><h2>Adresy (3)</h2></header><div class=\"ds-panel-body\">Treść panelu</div></section>",
+      "css": ".ds-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-family: var(--sans); color: var(--text); } .ds-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); min-height: 49px; } .ds-panel-head h2 { margin: 0; font-size: 14px; font-weight: 600; } .ds-panel-body { padding: 16px; font-size: 14px; }"
+    },
+    {
+      "name": "Wskaźnik Pewności",
+      "kind": "custom",
+      "refersTo": "band-likely",
+      "description": "Liczba + 4-segmentowy miernik + etykieta słowna; pasmo jako pigułka.",
+      "html": "<span class=\"ds-score\"><span class=\"ds-score-val\">72%</span><span class=\"ds-meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i></span><span class=\"ds-score-label\">Prawdopodobne</span></span> <span class=\"ds-band\">Prawdopodobne</span> <span class=\"ds-band ds-band-excl\">Wykluczone</span>",
+      "css": ".ds-score { display: inline-flex; align-items: center; gap: 8px; font-family: var(--sans); font-feature-settings: 'tnum' 1; } .ds-score-val { font-weight: 600; min-width: 3.2ch; text-align: right; color: var(--text); } .ds-meter { display: inline-grid; grid-template-columns: repeat(4, 6px); gap: 2px; } .ds-meter i { height: 12px; border-radius: 1.5px; background: var(--surface-3); outline: 1px solid var(--border); outline-offset: -1px; } .ds-meter i.on { background: var(--c3); outline: 0; } .ds-score-label { font-size: 12.5px; color: var(--text-2); } .ds-band { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-family: var(--sans); font-size: 12px; font-weight: 600; background: var(--c3); color: var(--c3-text); } .ds-band-excl { background: var(--c0); color: var(--c0-text); border: 1px dashed var(--c0-border); }"
+    },
+    {
+      "name": "Pasek etapów",
+      "kind": "custom",
+      "description": "Siedem etapów analizy z kluczowymi liczbami w jednej ramce.",
+      "html": "<ol class=\"ds-pipeline\"><li><div class=\"step\">Wykryte adresy</div><div class=\"val\">12</div><div class=\"sub\">31 wystąpień</div></li><li><div class=\"step\">Pewność ≥60%</div><div class=\"val accent\">4</div><div class=\"sub\">5 o niższej pewności</div></li><li><div class=\"step\">Cash-out</div><div class=\"val danger\">2</div><div class=\"sub\">2 wskaźniki</div></li><li class=\"skipped\"><div class=\"step\">Blockchain</div><div class=\"val\">—</div><div class=\"sub\">nie sprawdzano</div></li></ol>",
+      "css": ".ds-pipeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 8px; background: var(--surface); margin: 0; padding: 0; list-style: none; overflow: hidden; font-family: var(--sans); font-feature-settings: 'tnum' 1; } .ds-pipeline li { padding: 9px 14px; border-right: 1px solid var(--border); } .ds-pipeline li:last-child { border-right: 0; } .ds-pipeline .step { font-size: 12.5px; color: var(--text-2); } .ds-pipeline .val { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; color: var(--text); } .ds-pipeline .val.accent { color: var(--accent); } .ds-pipeline .val.danger { color: var(--danger); } .ds-pipeline .sub { font-size: 12px; color: var(--text-3); } .ds-pipeline li.skipped .val, .ds-pipeline li.skipped .step { color: var(--text-3); }"
+    },
+    {
+      "name": "Wskaźnik cash-out",
+      "kind": "custom",
+      "description": "Flaga wyjścia do fiat w inspektorze i szczególe adresu.",
+      "html": "<div class=\"ds-indicator\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"/><line x1=\"4\" x2=\"4\" y1=\"22\" y2=\"15\"/></svg><span class=\"ds-indicator-title\">Przepływ do giełdy scentralizowanej</span></div>",
+      "css": ".ds-indicator { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 4px 10px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--danger-border); background: var(--danger-soft); font-family: var(--sans); font-size: 14px; color: var(--text); } .ds-indicator > svg { color: var(--danger); margin-top: 2px; } .ds-indicator-title { font-weight: 600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Stół analityka",
+    "overview": "Narzędzie śledcze w standardzie kategorii (poziom Vercel/Geist i Chainalysis Reactor): jasne, spokojne, gęste tam, gdzie analityk czyta liczby, i ciche wszędzie indziej. Powierzchnie to neutralna skala szarości oddzielona obramowaniami 1px; kolor pojawia się tylko wtedy, gdy coś znaczy. Jeden niebieski akcent prowadzi akcję, zaznaczenie i fokus, a ta sama rodzina niebieskiego, rozpisana na rampę, niesie Wskaźnik Pewności.\n\nGraf powiązań jest narzędziem, nie ilustracją: deterministyczne kolumny (podmiot → identyfikatory według głębokości pivotu → adresy według pewności), panel inspektora po prawej, a wybór adresu podświetla ścieżkę dowodową akcentem i przygasza resztę. Wszystkie barwy grafu są czytane z tych samych zmiennych CSS co interfejs, więc motyw ciemny działa także na płótnie.\n\nŚwiat odrzuca kostium „hakerski” (ciemny neon, terminal, zielone cyfry) i tęczę kolorowych pigułek. Motyw ciemny nie jest osobną estetyką, tylko tymi samymi tokenami w innych wartościach.",
+    "keyCharacteristics": [
+      "Geist i Geist Mono (lokalnie, @fontsource), cyfry tabelaryczne globalnie.",
+      "Neutralne szarości, obramowania 1px, płaskie powierzchnie, prawie bez cieni.",
+      "Jeden akcent niebieski; pewność jako sekwencyjna rampa tego samego odcienia zawsze z etykietą słowną.",
+      "Czerwień wyłącznie dla cash-out i błędów, bursztyn dla ostrzeżeń i niepewności.",
+      "Ikony lucide w jednej grubości kreski, rozmiary 12–16px.",
+      "Motyw jasny, ciemny i systemowy z jednego zestawu tokenów."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Akcent niebieski oznacza wyłącznie akcję, zaznaczenie, fokus i pewność. Nie używa się go do dekoracji, nagłówków ani ikon ozdobnych.", "section": "colors" },
+      { "name": "The Meaning Never Rides on Color Alone Rule", "body": "Pewność zawsze idzie trójką: liczba, 4-segmentowy miernik i etykieta słowna (lub pigułka z nazwą pasma). Wykluczone dostaje dodatkowo kreskę przerywaną.", "section": "colors" },
+      { "name": "The Red Is Cash-out Rule", "body": "Czerwień jest zarezerwowana dla wskaźników cash-out i błędów. Liczby dodatnie i ujemne są neutralne (Tusz / Tusz 2), nie zielone i nie czerwone.", "section": "colors" },
+      { "name": "The Tabular Everywhere Rule", "body": "`font-feature-settings: 'tnum' 1` jest ustawione na `:root`; kolumny liczbowe wyrównuje się do prawej (`.num`). Żadnych cyfr proporcjonalnych w danych.", "section": "typography" },
+      { "name": "The No Shouting Rule", "body": "Nie ma wersalików, etykiet nad tytułami ani rozstrzelonych liter. Hierarchię robi waga 600 i rozmiar, nie dekoracja.", "section": "typography" },
+      { "name": "The Flat By Default Rule", "body": "Panele, karty, tabele i graf nie mają cienia. Cień oznacza tylko stan wyboru w grupie.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do czytać kolory grafu i każdego nowego płótna z tych samych zmiennych CSS co interfejs, żeby motyw ciemny działał bez osobnej palety.",
+      "Do pokazywać pewność zawsze z etykietą słowną lub nazwą pasma, nigdy samym kolorem.",
+      "Do utrzymywać obramowania 1px i warstwy tonalne zamiast cieni; `shadow-sm` tylko dla wyboru w grupie przełączników.",
+      "Do pisać adresy, hashe i identyfikatory w Geist Mono, a liczby w cyfrach tabelarycznych wyrównanych do prawej.",
+      "Do używać ikon lucide w domyślnej grubości kreski, 12–16px, zawsze z `aria-hidden` obok tekstu.",
+      "Do oznaczać stan pustego lub pominiętego etapu „—” w Tuszu 3, a nie zerem w kolorze."
+    ],
+    "donts": [
+      "Don't używać ciemnego neonu, estetyki terminala ani „hakerskiej” zieleni; motyw ciemny to te same tokeny.",
+      "Don't kolorować liczb dodatnich na zielono ani ujemnych na czerwono; czerwień należy do cash-out i błędów.",
+      "Don't wprowadzać drugiego akcentu ani tęczy kolorowych pigułek dla kategorii; kategorie są tekstem lub neutralnym tagiem.",
+      "Don't barwić wykluczonych adresów rampą niebieską; wykluczone są szare i przerywane.",
+      "Don't dodawać etykiet nad tytułami, wersalików ani rozstrzelonych liter."
+    ]
+  }
+}
