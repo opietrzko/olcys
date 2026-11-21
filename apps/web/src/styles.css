@@ -1,4 +1,4 @@
-/* OŁCyŚ – system wizualny: standard kategorii (poziom Vercel/Geist), motyw jasny i ciemny z jednych tokenów. */
+/* KryptoTrop – system wizualny: standard kategorii (poziom Vercel/Geist), motyw jasny i ciemny z jednych tokenów. */
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
 
@@ -142,6 +142,53 @@ main { padding: 22px 32px 48px; max-width: 1480px; margin: 0 auto; }
 .crumbs a { color: var(--text-2); }
 .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .meta-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 10px; font-size: 13px; color: var(--text-2); }
+
+/* ---------- Pulpit: nagłówek z falą sygnału ---------- */
+.hero { position: relative; isolation: isolate; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.hero-body { position: relative; min-height: 252px; padding: 34px 32px 40px; }
+/* siatka punktów jak tło grafu – system ją już ma, tu wzmocniona i wygaszona ku tekstowi */
+.hero-body::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 20px 20px; -webkit-mask-image: linear-gradient(to right, transparent 30%, #000 85%); mask-image: linear-gradient(to right, transparent 30%, #000 85%); opacity: 0.7; }
+.hero-wave { position: absolute; inset: 0; width: 100%; height: 100%; display: block; -webkit-mask-image: linear-gradient(to right, transparent 22%, rgba(0, 0, 0, 0.28) 42%, #000 66%); mask-image: linear-gradient(to right, transparent 22%, rgba(0, 0, 0, 0.28) 42%, #000 66%); }
+.hero-copy { position: relative; max-width: 580px; }
+.hero h1 { font-size: 34px; line-height: 1.1; letter-spacing: -0.03em; }
+.hero .lede { margin: 12px 0 0; max-width: 56ch; font-size: 15px; line-height: 1.55; color: var(--text-2); text-wrap: pretty; }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 20px; font-size: 12.5px; color: var(--text-3); }
+.hero-meta code { font-size: 12px; color: var(--text-2); }
+.live { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-2); font-weight: 500; transition: color 0.3s, background-color 0.3s, border-color 0.3s; }
+.live-dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.live.on { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent); }
+.live.on .live-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid var(--accent); animation: ping 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+@keyframes ping { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+.hero-stats { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--border); background: var(--surface); }
+.hero-stat { min-width: 0; padding: 14px 20px 16px; border-right: 1px solid var(--border); }
+.hero-stat:last-child { border-right: 0; }
+.hero-stat dt { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-stat dt svg { color: var(--text-3); }
+.hero-stat dd { margin: 0; }
+.hero-stat-value { display: block; margin-top: 4px; font-size: 28px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; text-align: left; }
+.hero-stat-value .skel { display: inline-block; vertical-align: middle; }
+.hero-stat-sub { display: block; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-stat.accent .hero-stat-value { color: var(--accent); }
+.hero-stat.danger .hero-stat-value { color: var(--danger); }
+.hero-stat.danger dt svg { color: var(--danger); }
+@media (max-width: 1100px) {
+  .hero-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-stat { border-bottom: 1px solid var(--border); }
+  .hero-stat:nth-child(3n) { border-right: 0; }
+}
+@media (max-width: 640px) {
+  .hero-body { min-height: 0; padding: 22px 16px 128px; }
+  .hero h1 { font-size: 28px; }
+  .hero .lede { font-size: 14px; }
+  .hero-wave { -webkit-mask-image: linear-gradient(to bottom, transparent 45%, #000 78%); mask-image: linear-gradient(to bottom, transparent 45%, #000 78%); }
+  .hero-body::before { -webkit-mask-image: linear-gradient(to bottom, transparent 45%, #000 90%); mask-image: linear-gradient(to bottom, transparent 45%, #000 90%); }
+  .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-stat { padding: 12px 14px; }
+  .hero-stat:nth-child(3n) { border-right: 1px solid var(--border); }
+  .hero-stat:nth-child(2n) { border-right: 0; }
+  .hero-stat:last-child { grid-column: 1 / -1; border-bottom: 0; }
+  .hero-stat-value { font-size: 24px; }
+}
 
 /* ---------- Panele ---------- */
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
@@ -423,7 +470,7 @@ mark { background: var(--accent-soft); color: var(--accent); padding: 1px 3px; b
 
 @media print {
   :root { --bg: #fff; --surface: #fff; --surface-2: #f5f5f5; }
-  .side, .tabbar .actions, .actions, .graph-toolbar, .skip, .theme { display: none !important; }
+  .side, .tabbar .actions, .actions, .graph-toolbar, .skip, .theme, .hero-wave { display: none !important; }
   .app { display: block; }
   main { padding: 0; max-width: none; }
   .panel, .stats, .pipeline, .graph-shell { break-inside: avoid; box-shadow: none; }

@@ -13,7 +13,7 @@ web
 
 ## Product Purpose
 
-OŁCyŚ (Osintowy Łapacz Cyfrowych Śladów) na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) przeszukuje publiczne źródła, wyodrębnia adresy kryptowalutowe, liczy Wskaźnik Pewności powiązania adresu z osobą, odrzuca fałszywe trafienia (giełdy, kontrakty, miksery, zbiórki) i analizuje aktywność adresów pod kątem wyjścia do fiat (cash-out). Sukces: analityk szybko widzi, które adresy należą do podmiotu i czy jest cash-out, i może ten wynik obronić dowodami.
+KryptoTrop na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) przeszukuje publiczne źródła, wyodrębnia adresy kryptowalutowe, liczy Wskaźnik Pewności powiązania adresu z osobą, odrzuca fałszywe trafienia (giełdy, kontrakty, miksery, zbiórki) i analizuje aktywność adresów pod kątem wyjścia do fiat (cash-out). Sukces: analityk szybko widzi, które adresy należą do podmiotu i czy jest cash-out, i może ten wynik obronić dowodami.
 
 ## Positioning
 
@@ -37,7 +37,7 @@ Wynik i cash-out są na pierwszym planie, a uzasadnienie zawsze o jedno kliknię
 
 ## Brand Commitments
 
-- Nazwa „OŁCyŚ” i rozwinięcie „Osintowy Łapacz Cyfrowych Śladów”; motyw sowy w nazwie.
+- Nazwa „KryptoTrop” (trop prowadzący od śladów w sieci do portfeli krypto). Odpowiedź na zadanie Ministerstwa Finansów „OŁCyŚ”.
 - Narzędzie dla administracji publicznej (KAS / Ministerstwo Finansów); stały komunikat: wyłącznie źródła publiczne, Wskaźnik Pewności nie przesądza o własności adresu i wymaga weryfikacji analityka.
 - Wybór świadomy (2026-11-21): standard kategorii, czyli jasny dashboard analityczny wykonany bez ironii i bez przemycanych ozdobników. Poprzeczka jakości: Vercel (Geist) oraz Chainalysis Reactor. Unikać estetyki „hakerskiej” (neon, terminal, cyber) i nadmiaru kolorów: kolor niesie wyłącznie znaczenie.
 

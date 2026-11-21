@@ -10,11 +10,11 @@
 
 <br />
 <div align="center">
-  <h2 align="center">🦉 OŁCyŚ – Osintowy Łapacz Cyfrowych Śladów</h2>
+  <h2 align="center">🔎 KryptoTrop – od śladów w sieci do portfeli krypto</h2>
   <p align="center">
     Narzędzie OSINT łączące publiczne ślady cyfrowe (Web2) z adresami kryptowalutowymi (Web3) – z wyjaśnialnym Wskaźnikiem Pewności i wykrywaniem wyjścia do walut tradycyjnych.
     <br />
-    HackNation 2026 · zadanie Ministerstwa Finansów / KAS
+    HackNation 2026 · zadanie Ministerstwa Finansów / KAS „OŁCyŚ”
     <br />
     <a href="https://github.com/opietrzko/olcys/issues">Zgłoś błąd</a>
     &middot;
@@ -61,7 +61,7 @@
 
 Podatnicy publikują adresy portfeli na forach, w ogłoszeniach P2P, na profilach programistycznych i w komunikatorach. Ręczne łączenie tych śladów z historią transakcji jest czasochłonne i trudne do powtórzenia.
 
-OŁCyŚ automatyzuje tę pracę dla analityków **Krajowej Administracji Skarbowej**. Na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) przeszukuje publiczne źródła Internetu, wyodrębnia adresy kryptowalutowe i liczy, jak bardzo prawdopodobne jest, że adres należy do badanej osoby. Wynikiem jest raport z pełnym łańcuchem dowodowym.
+KryptoTrop automatyzuje tę pracę dla analityków **Krajowej Administracji Skarbowej**. Na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) przeszukuje publiczne źródła Internetu, wyodrębnia adresy kryptowalutowe i liczy, jak bardzo prawdopodobne jest, że adres należy do badanej osoby. Wynikiem jest raport z pełnym łańcuchem dowodowym.
 
 **Kluczowe możliwości:**
 

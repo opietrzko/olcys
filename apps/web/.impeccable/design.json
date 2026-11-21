@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-21T12:00:00Z",
-  "title": "Design System: OŁCyŚ",
+  "title": "Design System: KryptoTrop",
   "extensions": {
     "colorMeta": {
       "accent": { "role": "primary", "displayName": "Niebieski Śledczy", "canonical": "#0062d1", "dark": "#4d9cff", "tonalRamp": ["#0a2a55", "#0b4fa8", "#0052b0", "#0062d1", "#2f6fcf", "#74b2ff", "#b9d3f6", "#eaf2fd"] },

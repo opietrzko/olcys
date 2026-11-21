@@ -1,5 +1,5 @@
 /**
- * Wspólny model domenowy OŁCyŚ.
+ * Wspólny model domenowy KryptoTrop.
  * Nazewnictwo kategorii odpowiada załącznikowi pojęciowo-metodycznemu KAS (KROK 1–3).
  */
 

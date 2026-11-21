@@ -1,5 +1,5 @@
 ---
-name: OŁCyŚ
+name: KryptoTrop
 description: Spokojny, jasny dashboard śledczy OSINT, w którym graf powiązań jest głównym narzędziem.
 colors:
   accent: "#0062d1"
@@ -180,7 +180,7 @@ components:
     textColor: "{colors.text}"
 ---
 
-# Design System: OŁCyŚ
+# Design System: KryptoTrop
 
 ## Overview
 

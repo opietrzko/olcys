@@ -1,4 +1,4 @@
-# SearXNG – self-hosted wyszukiwarka meta dla OŁCyŚ.
+# SearXNG – self-hosted wyszukiwarka meta dla KryptoTrop.
 # Identyfikatory z analiz trafiają WYŁĄCZNIE do wyszukiwarek wymienionych w `keep_only` (zatwierdzona lista usług
 # zewnętrznych, wymóg 5.7 zadania). Wyszukiwarka nie dostaje informacji o analizie ani użytkowniku – tylko treść zapytania,
 # z adresu IP serwera SearXNG (bez cookies, bez nagłówków przeglądarki analityka). Zmiana listy = decyzja administratora KAS.
@@ -10,7 +10,7 @@ use_default_settings:
       - brave
       - wikipedia
 general:
-  instance_name: "OLCyS search"
+  instance_name: "KryptoTrop search"
   enable_metrics: false
 server:
   # nadpisywany zmienną środowiskową SEARXNG_SECRET (docker-compose); wartość poniżej tylko dla uruchomienia lokalnego

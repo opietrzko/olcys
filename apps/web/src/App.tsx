@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Identifier, IdentifierType } from '@olcys/core';
 import {
+  Activity,
+  Banknote,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
   ClipboardList,
+  Filter,
   FolderSearch,
   LoaderCircle,
   Monitor,
@@ -17,10 +20,13 @@ import {
   ShieldCheck,
   Sun,
   TriangleAlert,
+  Wallet,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { api, type Analysis, type Meta, type Run } from './api';
 import { RunView } from './RunView';
+import { Wave } from './Wave';
 import { Band, Empty, ErrorNote, IdTag, Panel, Skeleton, ThemeCtx, dt, plural, useTheme, type ThemePref } from './ui';
 
 function useHash() {
@@ -60,7 +66,7 @@ export function App() {
   const section = parts[0] === '' || parts[0] === 'a' ? 'analizy' : parts[0];
   useEffect(() => {
     const titles: Record<string, string> = { analizy: 'Analizy', metodyka: 'Metodyka', zrodla: 'Źródła i zgodność', audyt: 'Audyt' };
-    document.title = `${titles[section] ?? 'OŁCyŚ'} · OŁCyŚ`;
+    document.title = `${titles[section] ?? 'KryptoTrop'} · KryptoTrop`;
   }, [section]);
   const needsMeta = section === 'metodyka' || section === 'zrodla';
   return (
@@ -70,14 +76,14 @@ export function App() {
       </a>
       <div className="app">
         <aside className="side">
-          <a href="#/" className="brand" aria-label="OŁCyŚ – strona główna">
+          <a href="#/" className="brand" aria-label="KryptoTrop – strona główna">
             <span className="brand-mark" aria-hidden="true">
               <Search size={16} strokeWidth={2.4} />
             </span>
             <span>
-              <span className="brand-name">OŁCyŚ</span>
+              <span className="brand-name">KryptoTrop</span>
               <span className="brand-sub" style={{ display: 'block' }}>
-                Osintowy Łapacz Cyfrowych Śladów
+                Od śladów w sieci do portfeli krypto
               </span>
             </span>
           </a>
@@ -116,7 +122,7 @@ export function App() {
           <main id="main" tabIndex={-1}>
             {parts[0] === '' && <Home meta={meta} />}
             {parts[0] === 'a' && parts[1] && <AnalysisPage key={parts[1]} id={parts[1]} runId={parts[3]} />}
-            {needsMeta && metaErr && <ErrorNote title="Nie można pobrać konfiguracji z API">Sprawdź, czy serwer OŁCyŚ działa (domyślnie port 4000), i odśwież stronę.</ErrorNote>}
+            {needsMeta && metaErr && <ErrorNote title="Nie można pobrać konfiguracji z API">Sprawdź, czy serwer KryptoTrop działa (domyślnie port 4000), i odśwież stronę.</ErrorNote>}
             {needsMeta && !meta && !metaErr && (
               <Panel>
                 <Skeleton rows={6} />
@@ -173,14 +179,45 @@ function Home({ meta }: { meta: Meta | null }) {
     const t = setInterval(load, 4000);
     return () => clearInterval(t);
   }, [load]);
+  const active = list?.filter((a) => a.lastRun && (a.lastRun.status === 'running' || a.lastRun.status === 'queued')).length ?? 0;
+  const sum = (f: (a: Analysis) => number) => (list ? list.reduce((n, a) => n + f(a), 0) : null);
+  const runs = sum((a) => a.runCount ?? 0);
+  const attributed = sum((a) => a.lastRun?.summary?.attributed ?? 0);
+  const rejected = sum((a) => a.lastRun?.summary?.rejected ?? 0);
+  const indicators = sum((a) => a.lastRun?.summary?.indicators ?? 0);
+  const withCashout = list?.filter((a) => (a.lastRun?.summary?.indicators ?? 0) > 0).length ?? 0;
+  const scheduled = list?.filter((a) => a.scheduleMinutes).length ?? 0;
+  const sources = meta?.sources.connectors.filter((c) => c.enabled && c.kind === 'source').length;
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>Analizy</h1>
-          <p className="lede">Podaj co najmniej jeden identyfikator podmiotu. OŁCyŚ przeszuka publiczne źródła, wskaże adresy krypto z Wskaźnikiem Pewności i sprawdzi wyjście środków do walut tradycyjnych.</p>
+      <section className="hero" aria-labelledby="home-title">
+        <div className="hero-body">
+          <Wave energy={active ? 1 : 0} />
+          <div className="hero-copy">
+            <h1 id="home-title">Analizy</h1>
+            <p className="lede">Podaj co najmniej jeden identyfikator podmiotu. KryptoTrop przeszuka publiczne źródła, wskaże adresy krypto z Wskaźnikiem Pewności i sprawdzi wyjście środków do walut tradycyjnych.</p>
+            <div className="hero-meta" role="status">
+              <span className={`live ${active ? 'on' : ''}`}>
+                <span className="live-dot" aria-hidden="true" />
+                {active ? `Trwa analiza: ${plural(active, 'sprawa', 'sprawy', 'spraw')}` : 'Silnik gotowy'}
+              </span>
+              {sources != null && <span>{plural(sources, 'źródło publiczne', 'źródła publiczne', 'źródeł publicznych')}</span>}
+              {meta && (
+                <span>
+                  Reguły <code>{meta.rulesVersion}</code>
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+        <dl className="hero-stats">
+          <HeroStat icon={FolderSearch} label="Sprawy" value={list?.length ?? null} sub={scheduled ? `${scheduled} z harmonogramem` : 'bez harmonogramu'} />
+          <HeroStat icon={Activity} label="Przebiegi" value={runs} sub={active ? `${active} w toku` : 'wszystkie zakończone'} />
+          <HeroStat icon={Wallet} label="Adresy ≥60%" value={attributed} sub="w ostatnich przebiegach" tone="accent" />
+          <HeroStat icon={Filter} label="Odrzucone trafienia" value={rejected} sub="giełdy, kontrakty, miksery" />
+          <HeroStat icon={Banknote} label="Wskaźniki cash-out" value={indicators} sub={withCashout ? `w ${plural(withCashout, 'sprawie', 'sprawach', 'sprawach')}` : 'brak wyjścia do fiat'} tone={indicators ? 'danger' : undefined} />
+        </dl>
+      </section>
       <div className="grid-home">
         <NewAnalysis meta={meta} />
         <Panel title={`Sprawy${list?.length ? ` (${list.length})` : ''}`} flush>
@@ -263,6 +300,48 @@ function Home({ meta }: { meta: Meta | null }) {
         </Panel>
       </div>
     </>
+  );
+}
+
+/** Liczba, która dojeżdża do nowej wartości (ease-out), gdy dane się zmieniają; bez ruchu przy prefers-reduced-motion. */
+function useCountUp(target: number | null, ms = 700) {
+  const [shown, setShown] = useState(target);
+  const from = useRef(target ?? 0);
+  useEffect(() => {
+    if (target == null) return setShown(null);
+    const start = from.current;
+    if (start === target || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      from.current = target;
+      return setShown(target);
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      const v = Math.round(start + (target - start) * (1 - Math.pow(2, -10 * k)));
+      setShown(k >= 1 ? target : v);
+      from.current = k >= 1 ? target : v;
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return shown;
+}
+
+function HeroStat({ icon: Icon, label, value, sub, tone }: { icon: LucideIcon; label: string; value: number | null; sub: string; tone?: 'accent' | 'danger' }) {
+  const shown = useCountUp(value);
+  return (
+    <div className={`hero-stat ${tone ?? ''}`}>
+      <dt>
+        <Icon size={14} aria-hidden="true" />
+        {label}
+      </dt>
+      <dd>
+        <span className="hero-stat-value num">{shown == null ? <span className="skel" style={{ width: 48, height: 26 }} /> : shown}</span>
+        <span className="hero-stat-sub">{value == null ? ' ' : sub}</span>
+      </dd>
+    </div>
   );
 }
 

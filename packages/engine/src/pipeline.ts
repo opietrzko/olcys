@@ -1,5 +1,5 @@
 /**
- * Pipeline analizy OŁCyŚ:
+ * Pipeline analizy KryptoTrop:
  *  1. Identyfikatory wejściowe → konektory Web2 → dokumenty-dowody (URL, czas, SHA-256, surowa treść)
  *  2. Pivotowanie: identyfikatory odkryte na profilach podmiotu (Telegram, WWW, e-mail…) → kolejne źródła
  *  3. Historia zasobów (archiwum) → wykrywanie podmiany adresów

@@ -5,7 +5,7 @@ primary_target: "src/App.tsx"
 related_targets: ["src/RunView.tsx","src/Graph.tsx"]
 ---
 
-# OŁCyŚ web app (całość: Analizy, widok analizy, Metodyka, Źródła, Audyt)
+# KryptoTrop web app (całość: Analizy, widok analizy, Metodyka, Źródła, Audyt)
 
 Mode: Operate. Audience: analitycy KAS (codzienna praca) i jury HackNation (pokaz na projektorze). Task: uruchomić analizę z identyfikatorów, ocenić adresy (Wskaźnik Pewności + reguły + dowody), wykryć cash-out, wyeksportować raport. Most important view: graf powiązań. Constraints: on-prem (fonty i ikony w paczce), WCAG 2.1 AA, motyw jasny i ciemny, druk. Must stay: wszystkie funkcje, trasy, polskie treści, terminologia.
 

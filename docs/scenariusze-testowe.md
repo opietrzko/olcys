@@ -1,4 +1,4 @@
-# OŁCyŚ – instrukcja testowania dla jury
+# KryptoTrop – instrukcja testowania dla jury
 
 Ta instrukcja prowadzi przez pełny scenariusz z treści zadania: od wpisania identyfikatora, przez ślady OSINT i Wskaźnik Pewności, po aktywność w blockchainie i raport. Każdy krok podaje, co wpisać i jaki wynik powinien się pojawić.
 

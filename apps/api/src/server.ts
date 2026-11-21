@@ -1,5 +1,5 @@
 /**
- * OŁCyŚ API – zarządzanie analizami, przebiegami (także cyklicznymi), dowodami, raportami i dziennikiem audytu.
+ * KryptoTrop API – zarządzanie analizami, przebiegami (także cyklicznymi), dowodami, raportami i dziennikiem audytu.
  */
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -173,7 +173,7 @@ app.get<{ Params: { id: string } }>('/api/runs/:id/export.json', async (req, rep
   if (!r?.result) return reply.code(404).send({ error: 'not found' });
   const evidence = await store.listEvidence(r.id);
   await store.audit({ actor: actorOf(req.headers), action: 'run.export', target: r.id, details: {} });
-  return reply.header('content-disposition', `attachment; filename="olcys-${r.id}.json"`).send({ run: { ...r, result: undefined }, result: r.result, evidence });
+  return reply.header('content-disposition', `attachment; filename="kryptotrop-${r.id}.json"`).send({ run: { ...r, result: undefined }, result: r.result, evidence });
 });
 
 app.get('/api/audit', async () => store.listAudit(200));
@@ -198,4 +198,4 @@ if (existsSync(webDist)) {
 await store.init();
 setInterval(() => void schedulerTick().catch((e) => app.log.error(e)), Number(process.env.SCHEDULER_TICK_MS ?? 30_000));
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: process.env.HOST ?? '0.0.0.0' });
-app.log.info(`OŁCyŚ API – magazyn ${store.kind}`);
+app.log.info(`KryptoTrop API – magazyn ${store.kind}`);

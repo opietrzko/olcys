@@ -106,7 +106,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
   return {
     egressAllowlist: [...new Set(allow)],
     webFetch: env.OLCYS_WEB_FETCH === 'allowlist' ? 'allowlist' : 'public',
-    userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.3 (+analiza danych publicznych)',
+    userAgent: env.OLCYS_USER_AGENT ?? 'KryptoTrop-OSINT/0.3 (+analiza danych publicznych)',
     requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 15000),
     maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 6),
     pivotBudgetMs: Number(env.OLCYS_PIVOT_BUDGET_MS ?? 180_000),

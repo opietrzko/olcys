@@ -2,7 +2,7 @@
   "name": "olcys",
   "private": true,
   "version": "0.1.0",
-  "description": "OŁCyŚ – Osintowy Łapacz Cyfrowych Śladów (HackNation 2026, zadanie MF/KAS)",
+  "description": "KryptoTrop – od śladów w sieci do portfeli krypto (HackNation 2026, zadanie MF/KAS „OŁCyŚ”)",
   "type": "module",
   "workspaces": [
     "packages/*",
