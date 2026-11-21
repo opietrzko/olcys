@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { ArrowRight, AtSign, Ban, FileText, Globe, Mail, Search, Send, Server, ShieldCheck, UserRoundCheck } from 'lucide-react';
+import { ArrowRight, AtSign, Ban, FileText, Globe, Mail, Send, Server, ShieldCheck, UserRoundCheck } from 'lucide-react';
 import type { Meta } from './api';
 import { Score, plural } from './ui';
 import { Wave } from './Wave';
@@ -82,10 +82,7 @@ export function Landing({ meta, themeToggle }: { meta: Meta | null; themeToggle:
       </a>
       <header className="lp-top">
         <a href="#/" className="brand" aria-label="KryptoTrop – strona główna">
-          <span className="brand-mark" aria-hidden="true">
-            <Search size={16} strokeWidth={2.4} />
-          </span>
-          <span className="brand-name">KryptoTrop</span>
+          <img className="brand-logo" src="/logo.png" alt="KryptoTrop" width="1240" height="320" />
         </a>
         <nav className="lp-links" aria-label="Sekcje strony">
           <a href="#lp-trop" onClick={jump('lp-trop')}>

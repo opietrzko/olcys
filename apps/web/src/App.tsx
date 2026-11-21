@@ -106,15 +106,8 @@ export function App() {
       <div className="app">
         <aside className="side">
           <a href="#/" className="brand" aria-label="KryptoTrop - strona główna">
-            <span className="brand-mark" aria-hidden="true">
-              <Search size={16} strokeWidth={2.4} />
-            </span>
-            <span>
-              <span className="brand-name">KryptoTrop</span>
-              <span className="brand-sub" style={{ display: 'block' }}>
-                Od śladów w sieci do portfeli krypto
-              </span>
-            </span>
+            <img className="brand-logo" src="/logo.png" alt="KryptoTrop" width="1240" height="320" />
+            <span className="brand-sub">Od śladów w sieci do portfeli krypto</span>
           </a>
           <nav className="nav" aria-label="Główna nawigacja">
             {NAV.map(({ href, key, label, icon: Icon }) => (
