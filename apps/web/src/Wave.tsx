@@ -31,11 +31,14 @@ const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] 
 const LINES = 10;
 const PARTICLES = 14;
 
-export function Wave({ energy = 0 }: { energy?: number }) {
+/** Only the flowing lines by default; `dots` adds the points travelling along them. */
+export function Wave({ energy = 0, dots = false }: { energy?: number; dots?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const theme = useContext(ThemeCtx);
   const energyRef = useRef(energy);
   energyRef.current = energy;
+  const dotsRef = useRef(dots);
+  dotsRef.current = dots;
   const risen = useRef(false);
 
   useEffect(() => {
@@ -136,7 +139,7 @@ export function Wave({ energy = 0 }: { energy?: number }) {
         ctx.stroke();
       }
 
-      for (const pt of particles) {
+      for (const pt of dotsRef.current ? particles : []) {
         const x = pt.u * w;
         const y = yAt(pt.line, x);
         const fade = smooth(pt.u / 0.1) * smooth((1 - pt.u) / 0.1) * amp;

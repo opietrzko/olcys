@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { api, type Analysis, type Meta, type Run } from './api';
+import { Landing } from './Landing';
 import { RunView } from './RunView';
 import { Wave } from './Wave';
 import { Band, Empty, ErrorNote, ID_TYPE, IdTag, Panel, Skeleton, ThemeCtx, dt, plural, useTheme, type ThemePref } from './ui';
@@ -40,7 +41,7 @@ function useHash() {
 }
 
 /** Praca analityka – w głównej nawigacji tylko sprawy. */
-const NAV = [{ href: '#/', key: 'analizy', label: 'Analizy', icon: FolderSearch }];
+const NAV = [{ href: '#/analizy', key: 'analizy', label: 'Analizy', icon: FolderSearch }];
 
 /** Treści dla administratora / IT i jury – poza codzienną ścieżką analityka. Metodyka jest linkowana przy wyniku adresu. */
 const ADMIN_NAV = [
@@ -63,15 +64,43 @@ export function App() {
     api.meta().then(setMeta).catch(() => setMetaErr(true));
   }, []);
   const parts = hash.replace(/^#\//, '').split('/');
-  const section = parts[0] === '' || parts[0] === 'a' ? 'analizy' : parts[0];
+  const section = parts[0] === '' ? 'start' : parts[0] === 'analizy' || parts[0] === 'a' ? 'analizy' : parts[0];
   useEffect(() => {
     const titles: Record<string, string> = { analizy: 'Analizy', metodyka: 'Metodyka', zrodla: 'Źródła i zgodność', audyt: 'Audyt' };
-    document.title = `${titles[section] ?? 'KryptoTrop'} · KryptoTrop`;
+    document.title = section === 'start' ? 'KryptoTrop – od śladów w sieci do portfeli krypto' : `${titles[section] ?? 'KryptoTrop'} · KryptoTrop`;
+  }, [section]);
+  // Moving between the landing page and the panel starts at the top, not at the previous scroll position.
+  useEffect(() => {
+    scrollTo(0, 0);
   }, [section]);
   const needsMeta = section === 'metodyka' || section === 'zrodla';
+  const themeToggle = (
+    <div className="theme" role="group" aria-label="Motyw">
+      {THEMES.map(({ v, label, icon: Icon }) => (
+        <button key={v} type="button" aria-pressed={pref === v} aria-label={label} title={label} onClick={() => setPref(v)}>
+          <Icon size={14} aria-hidden="true" />
+        </button>
+      ))}
+    </div>
+  );
+  // The landing page lives outside the analyst shell; its calls to action lead to #/analizy.
+  if (section === 'start')
+    return (
+      <ThemeCtx.Provider value={resolved}>
+        <Landing meta={meta} themeToggle={themeToggle} />
+      </ThemeCtx.Provider>
+    );
   return (
     <ThemeCtx.Provider value={resolved}>
-      <a className="skip" href="#main">
+      <a
+        className="skip"
+        href="#main"
+        onClick={(e) => {
+          // The app routes on location.hash, so '#main' must not replace the current route.
+          e.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+      >
         Przejdź do treści
       </a>
       <div className="app">
@@ -109,18 +138,12 @@ export function App() {
               ))}
             </nav>
             <p className="side-note">Wyłącznie publicznie dostępne źródła (OSINT). Wskaźnik Pewności nie przesądza o własności adresu i wymaga weryfikacji analityka.</p>
-            <div className="theme" role="group" aria-label="Motyw">
-              {THEMES.map(({ v, label, icon: Icon }) => (
-                <button key={v} type="button" aria-pressed={pref === v} aria-label={label} title={label} onClick={() => setPref(v)}>
-                  <Icon size={14} aria-hidden="true" />
-                </button>
-              ))}
-            </div>
+            {themeToggle}
           </div>
         </aside>
         <div className="content">
           <main id="main" tabIndex={-1}>
-            {parts[0] === '' && <Home meta={meta} />}
+            {parts[0] === 'analizy' && <Home meta={meta} />}
             {parts[0] === 'a' && parts[1] && <AnalysisPage key={parts[1]} id={parts[1]} runId={parts[3]} />}
             {needsMeta && metaErr && <ErrorNote title="Nie można pobrać konfiguracji z API">Sprawdź, czy serwer KryptoTrop działa (domyślnie port 4000), i odśwież stronę.</ErrorNote>}
             {needsMeta && !meta && !metaErr && (
@@ -517,7 +540,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
     return (
       <ErrorNote title={err.startsWith('404') ? 'Nie znaleziono sprawy' : 'Nie można wczytać sprawy'}>
         {err.startsWith('404') ? 'Sprawa mogła zostać utworzona w innej sesji serwera (magazyn w pamięci). ' : ''}
-        <a href="#/">Wróć do listy analiz</a>
+        <a href="#/analizy">Wróć do listy analiz</a>
       </ErrorNote>
     );
   if (!data)
@@ -536,7 +559,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
       <div className="page-head">
         <div style={{ minWidth: 0 }}>
           <nav className="crumbs" aria-label="Ścieżka">
-            <a href="#/">Analizy</a>
+            <a href="#/analizy">Analizy</a>
             <ChevronRight size={14} aria-hidden="true" />
             <span aria-current="page">Sprawa</span>
           </nav>
@@ -639,7 +662,7 @@ function Methodology({ meta }: { meta: Meta }) {
     <>
       <div className="page-head">
         <div>
-          <button type="button" className="back" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/'))}>
+          <button type="button" className="back" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/analizy'))}>
             <ChevronLeft size={14} aria-hidden="true" />
             Wróć do sprawy
           </button>

@@ -206,7 +206,21 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
 
 ### Analiza w interfejsie
 
-Otwórz http://localhost:5173, wpisz co najmniej jeden identyfikator i kliknij **Uruchom analizę**. Widok przebiegu pokazuje etapy analizy, adresy z rozpisaniem wyniku na reguły, graf powiązań, fakty/obliczenia/wnioski oraz źródła z sumami SHA-256. Raport do druku / PDF i pakiet dowodowy JSON są dostępne z widoku przebiegu.
+Otwórz http://localhost:5173 i kliknij **Rozpocznij analizę**.
+
+| Ekran | Adres | Co zawiera |
+|---|---|---|
+| Strona startowa | `#/` | Czym jest KryptoTrop, przykład prawdziwego tropu (e-mail → Gravatar → GitHub → WWW → Telegram) z wynikami adresów, cztery etapy analizy, rozpisanie Wskaźnika Pewności i odrzucone pułapki. Przyciski **Rozpocznij analizę** i **Otwórz panel** prowadzą do panelu. |
+| Panel analiz | `#/analizy` | Nagłówek z falą sygnału (przyspiesza, gdy w tle trwa analiza) i licznikami: sprawy, przebiegi, adresy ≥60%, odrzucone trafienia, wskaźniki cash-out. Formularz **Nowa analiza** i lista spraw. |
+| Nowa analiza | panel | Jeden lub kilka identyfikatorów (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto), głębokość pivotowania (domyślnie „do wyczerpania tropów”), harmonogram, wersje archiwalne. Przycisk **Uruchom analizę**. |
+| Widok przebiegu | `#/a/<sprawa>` | Pasek etapów z ich stanem (ukończony, brak danych, pominięty), lista przebiegów i karta **Zmiany względem poprzedniego przebiegu**. |
+| ↳ Graf powiązań | zakładka | Układ kolumnowy: podmiot → identyfikatory (według głębokości tropu) → adresy. Kliknięcie węzła podświetla jego ścieżkę dowodową, a panel obok pokazuje wynik, reguły, wskaźniki cash-out i sekcję **Skąd pochodzi**. |
+| ↳ Adresy | zakładka | Wskaźnik Pewności z tabelą „Jak powstał wynik”, wystąpienia z cytatem i kopią dowodu, aktywność w blockchainie z chronologią przepływów i wartościami w PLN. |
+| ↳ Fakty, obliczenia, wnioski / Źródła / Przebieg i parametry | zakładki | Twierdzenia rozdzielone na trzy rodzaje; każdy dowód z URL, czasem pobrania i SHA-256; parametry, tożsamości, dziennik kroków i ruch wychodzący. |
+| Raport PDF i pakiet dowodowy | przyciski w widoku przebiegu | PDF generowany na serwerze (`/api/runs/<id>/report.pdf`) oraz JSON z wynikiem, surowymi dowodami i parametrami. |
+| Administracja | menu po lewej | **Źródła i zgodność** (konektory, podstawa prawna, allowlista hostów) i **Audyt** (kto, kiedy, co). Metodyka jest linkowana przy wyniku adresu. |
+
+Interfejs ma motyw jasny, ciemny i systemowy (przełącznik w menu), działa na telefonie i obsługuje klawiaturę (zakładki i lista adresów strzałkami, link „Przejdź do treści”).
 
 ### Przykład: przebieg na personie testowej
 

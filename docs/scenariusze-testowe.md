@@ -65,12 +65,12 @@ Bez klucza Etherscan aplikacja korzysta z publicznego Blockscout. Gdy ten odrzuc
 npm run dev
 ```
 
-Otwórzcie **http://localhost:5173**.
+Otwórzcie **http://localhost:5173**. Zobaczycie stronę startową KryptoTrop z przykładem tropu i opisem działania.
 
 ## 2. Jak uruchomić analizę
 
-1. W menu po lewej wybierzcie **Analizy**.
-2. W panelu **Nowa analiza** wybierzcie z listy rodzaj identyfikatora (np. *E-mail*, *Nick / login*) i wpiszcie wartość.
+1. Na stronie startowej kliknijcie **Rozpocznij analizę**. Otworzy się panel analiz (później wrócicie do niego przez **Analizy** w menu po lewej).
+2. W formularzu **Nowa analiza** wybierzcie z listy rodzaj identyfikatora (np. *E-mail*, *Nick / login*) i wpiszcie wartość.
 3. Pozostałe ustawienia zostawcie domyślne.
 4. Kliknijcie **Uruchom analizę**.
 
