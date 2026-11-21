@@ -82,7 +82,8 @@ export function Landing({ meta, themeToggle }: { meta: Meta | null; themeToggle:
       </a>
       <header className="lp-top">
         <a href="#/" className="brand" aria-label="KryptoTrop – strona główna">
-          <img className="brand-logo" src="/logo.png" alt="KryptoTrop" width="1240" height="320" />
+          <img className="brand-logo logo-on-light" src="/logo-czarny.png" alt="KryptoTrop" width="1088" height="320" />
+          <img className="brand-logo logo-on-dark" src="/logo-bialy.png" alt="" width="1088" height="320" />
         </a>
         <nav className="lp-links" aria-label="Sekcje strony">
           <a href="#lp-trop" onClick={jump('lp-trop')}>

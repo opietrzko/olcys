@@ -111,9 +111,14 @@ svg.lucide { flex: none; }
 .brand:hover { text-decoration: none; }
 .side .brand { flex-direction: column; align-items: flex-start; gap: 7px; }
 .brand-logo { display: block; height: 34px; width: auto; }
-/* PNG ma ciemny napis: w ciemnym motywie odwracamy jasność, a odcień niebieskiego wraca hue-rotate */
-:root[data-theme='dark'] .brand-logo { filter: invert(1) hue-rotate(180deg); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .brand-logo { filter: invert(1) hue-rotate(180deg); } }
+.logo-on-dark { display: none; }
+/* negatyw bez kafla: czarny kapelusz na jasnym tle, biały na ciemnym */
+:root[data-theme='dark'] .logo-on-light { display: none; }
+:root[data-theme='dark'] .logo-on-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .logo-on-light { display: none; }
+  :root:not([data-theme='light']) .logo-on-dark { display: block; }
+}
 .brand-sub { font-size: 11.5px; color: var(--text-3); line-height: 1.25; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-sm); color: var(--text-2); font-weight: 500; }

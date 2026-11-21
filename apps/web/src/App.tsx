@@ -203,7 +203,8 @@ function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void
       <div className="app">
         <aside className="side">
           <a href="#/" className="brand" aria-label="KryptoTrop - strona główna">
-            <img className="brand-logo" src="/logo.png" alt="KryptoTrop" width="1240" height="320" />
+            <img className="brand-logo logo-on-light" src="/logo-czarny.png" alt="KryptoTrop" width="1088" height="320" />
+            <img className="brand-logo logo-on-dark" src="/logo-bialy.png" alt="" width="1088" height="320" />
             <span className="brand-sub">Od śladów w sieci do portfeli krypto</span>
           </a>
           <nav className="nav" aria-label="Główna nawigacja">
