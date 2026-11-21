@@ -6,7 +6,7 @@
 export type Chain = 'BTC' | 'ETH' | 'TRON' | 'LTC' | 'SOL';
 
 /** Typ identyfikatora wejściowego / odkrytego podczas pivotowania. */
-export type IdentifierType = 'name' | 'nick' | 'email' | 'telegram' | 'url' | 'address';
+export type IdentifierType = 'name' | 'nick' | 'email' | 'phone' | 'telegram' | 'url' | 'address';
 
 /** Siła powiązania identyfikatora z badanym podmiotem. */
 export type LinkStrength = 'DIRECT' | 'PIVOT' | 'WEAK';

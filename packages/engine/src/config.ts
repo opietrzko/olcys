@@ -33,6 +33,8 @@ export interface EngineConfig {
     ethRpcUrl?: string;
   };
   labelsDir: string;
+  /** Token GitHub (tylko odczyt danych publicznych) – podnosi limit API z 60 do 5000 zapytań/h. */
+  githubToken?: string;
   llm?: { baseUrl: string; model: string; apiKey?: string };
 }
 
@@ -52,7 +54,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
     egressAllowlist: [...new Set([mockHost, 'localhost', '127.0.0.1', ...list(env.EGRESS_ALLOWLIST)])],
     userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.1 (+analiza danych publicznych)',
     requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 10000),
-    maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 2),
+    maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 3),
     urls: {
       githubApi: env.GITHUB_API_URL ?? (demo ? `${mock}/github/api` : 'https://api.github.com'),
       githubRaw: env.GITHUB_RAW_URL ?? (demo ? `${mock}/github/raw` : 'https://raw.githubusercontent.com'),
@@ -73,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
       ethRpcUrl: env.ETH_RPC_URL,
     },
     labelsDir: env.LABELS_DIR ?? join(REPO_ROOT, 'data', 'labels'),
+    githubToken: env.GITHUB_TOKEN || undefined,
     llm: env.LLM_BASE_URL ? { baseUrl: env.LLM_BASE_URL.replace(/\/$/, ''), model: env.LLM_MODEL ?? 'llama3.1', apiKey: env.LLM_API_KEY } : undefined,
   };
 }

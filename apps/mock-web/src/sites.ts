@@ -75,7 +75,7 @@ export const websiteHtml = (base: string, version: 'current' | '2024' | '2025') 
   return `<!doctype html><html><head><title>Jan Testowy – freelance developer</title></head><body>
 <header><h1>Jan Testowy</h1><p>Freelance developer, Bydgoszcz</p></header>
 <main>
-<p>Tworzę aplikacje webowe i automatyzacje. Kontakt: <a href="mailto:${PERSONA.email}">${PERSONA.email}</a>,
+<p>Tworzę aplikacje webowe i automatyzacje. Kontakt: <a href="mailto:${PERSONA.email}">${PERSONA.email}</a>, tel. ${PERSONA.phone},
 GitHub: <a rel="me" href="${base}/github/${PERSONA.nick}">${PERSONA.nick}</a>.</p>
 <h2>Wesprzyj mnie</h2>
 <p>Mój portfel ETH: ${eth}</p>
@@ -125,6 +125,15 @@ export const THREADS: Thread[] = [
     ],
   },
   {
+    id: '106',
+    title: 'Ile trzymacie na hot wallecie?',
+    board: 'Portfele',
+    posts: [
+      { id: '1', author: PERSONA.aliasNick, display: 'JT', date: '2025-06-20T21:00:00Z', text: `Na hot wallecie trzymam mało, mój adres do drobnych: ${A.ETH_ALIAS}` },
+      { id: '2', author: 'satoshi_fan', display: 'SF', date: '2025-06-20T21:30:00Z', text: 'Rozsądnie.' },
+    ],
+  },
+  {
     id: '105',
     title: 'Sprzedam rower szosowy',
     board: 'Ogłoszenia',
@@ -141,6 +150,7 @@ export interface Listing {
   title: string;
   desc: string;
   telegram?: string;
+  phone?: string;
 }
 
 export const LISTINGS: Listing[] = [
@@ -151,6 +161,14 @@ export const LISTINGS: Listing[] = [
     title: 'Sprzedam USDT (TRC20) za PLN – BLIK / przelew',
     desc: `Sprzedam USDT, kurs 4,05 PLN. Płatność BLIK lub przelew. Po zaksięgowaniu wysyłam z mojego portfela, rozliczenie zwrotne na ${A.TRON_P2P}. Szybko i bezpiecznie.`,
     telegram: PERSONA.telegram,
+  },
+  {
+    id: '5503',
+    seller: PERSONA.aliasNick,
+    date: '2025-06-18T08:00:00Z',
+    title: 'Sprzedam ETH za gotówkę / BLIK – Bydgoszcz',
+    desc: `Sprzedam ETH, kurs giełdowy. Odbiór osobiście lub BLIK. Rozliczenie zwrotne na mój adres ${A.ETH_ALIAS}.`,
+    phone: '+48 600-123-456',
   },
   {
     id: '5502',

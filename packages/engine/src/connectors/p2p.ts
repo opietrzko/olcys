@@ -11,7 +11,7 @@ export const p2pConnector: SourceConnector = {
   id: 'p2p',
   title: 'Portal ogłoszeń P2P',
   compliance: 'Publiczne ogłoszenia dostępne bez logowania; wyszukiwarka serwisu.',
-  accepts: ['nick', 'telegram', 'address'],
+  accepts: ['nick', 'telegram', 'phone', 'address'],
   isLive: () => false,
   enabled: (c) => Boolean(c.urls.p2p),
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
@@ -33,8 +33,8 @@ export const p2pConnector: SourceConnector = {
           fetchedAt: res.fetchedAt,
           contentType: res.contentType,
           owner: { handle: seller },
-          segments: [{ id, author: { handle: seller }, text: `${$(el).find('h2').text()}\n${$(el).find('.desc').text()}`, publishedAt: $(el).attr('data-date') }],
-          links: tg ? [{ type: 'telegram', value: tg }] : [],
+          segments: [{ id, author: { handle: seller }, text: `${$(el).find('h2').text()}\n${$(el).find('.desc').text()}\n${$(el).find('.contact').text()}`, publishedAt: $(el).attr('data-date') }],
+          links: [...(seller ? [{ type: 'nick' as const, value: seller }] : []), ...(tg ? [{ type: 'telegram' as const, value: tg }] : [])],
           meta: { searchUrl: res.url },
           raw: $.html(el),
         };

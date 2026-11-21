@@ -7,6 +7,8 @@ export interface ConnectorContext {
   config: EngineConfig;
   fetch: SafeFetch;
   log: (message: string) => void;
+  /** Problem ze źródłem (limit API, błąd HTTP) – trafia do raportu jako błąd konektora, analiza trwa dalej. */
+  warn: (message: string) => void;
 }
 
 /** Konektor źródła Web2. Nowe źródło = nowa klasa implementująca ten interfejs + rejestracja w registry.ts. */

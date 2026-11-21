@@ -20,7 +20,7 @@ await app.register(cors, { origin: process.env.CORS_ORIGIN ?? true });
 const newId = (p: string) => `${p}_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
 const actorOf = (headers: Record<string, unknown>) => String(headers['x-olcys-user'] ?? 'analityk'); // miejsce na SSO/RBAC KAS
 
-const IdentifierSchema = z.object({ type: z.enum(['name', 'nick', 'email', 'telegram', 'url', 'address']), value: z.string().min(1).max(300) });
+const IdentifierSchema = z.object({ type: z.enum(['name', 'nick', 'email', 'phone', 'telegram', 'url', 'address']), value: z.string().min(1).max(300) });
 const CreateSchema = z.object({
   name: z.string().min(1).max(200),
   identifiers: z.array(IdentifierSchema).min(1).max(20),

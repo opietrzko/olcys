@@ -16,8 +16,11 @@ export const waybackConnector: HistoryConnector = {
   isLive: (c) => !isMock(c.urls.wayback, c),
   async history(doc: EvidenceDocument, ctx: ConnectorContext): Promise<CollectedDocument[]> {
     const base = ctx.config.urls.wayback;
-    const cdx = await ctx.fetch(`${base}/cdx/search/cdx?url=${encodeURIComponent(doc.url)}&output=json&limit=10&filter=statuscode:200`);
-    if (cdx.status !== 200 || !cdx.body.trim().startsWith('[')) return [];
+    const cdx = await ctx.fetch(`${base}/cdx/search/cdx?url=${encodeURIComponent(doc.url)}&output=json&filter=statuscode:200&collapse=digest&limit=-5`);
+    if (cdx.status !== 200 || !cdx.body.trim().startsWith('[')) {
+      if (cdx.status !== 200) ctx.warn(`Archiwum: HTTP ${cdx.status} dla ${doc.url}`);
+      return [];
+    }
     const rows = JSON.parse(cdx.body) as string[][];
     const out: CollectedDocument[] = [];
     for (const row of rows.slice(1)) {

@@ -52,6 +52,11 @@ write('ETH', A.ETH_NEW, [
   eth('new-in', '2025-07-16T10:00:00Z', A.ETH_MAIN, A.ETH_NEW, 0.5),
   eth('new-out', '2025-07-20T10:00:00Z', A.ETH_NEW, A.KRAKEN_1, 0.45),
 ], '0x');
+write('ETH', A.ETH_ALIAS, [
+  eth('alias-in-1', '2025-06-19T10:00:00Z', A.ETH_P[4], A.ETH_ALIAS, 1.1),
+  eth('alias-in-2', '2025-06-22T10:00:00Z', A.ETH_P[5], A.ETH_ALIAS, 0.9),
+  eth('alias-out', '2025-06-25T10:00:00Z', A.ETH_ALIAS, A.BINANCE_14, 1.9),
+], '0x');
 write('ETH', A.ETH_TG, [eth('tg-in', '2025-06-03T08:00:00Z', A.ETH_P[4], A.ETH_TG, 0.3)], '0x');
 write('ETH', A.ETH_GIVEAWAY_OWN, [], '0x');
 write('ETH', A.ETH_GIVEAWAY_ORG, [

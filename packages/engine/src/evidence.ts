@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { EvidenceDocument, Identifier, IdentifierType } from '@olcys/core';
+import { extractPhones, type EvidenceDocument, type Identifier, type IdentifierType } from '@olcys/core';
 
 export type CollectedDocument = Omit<EvidenceDocument, 'id' | 'sha256' | 'sizeBytes' | 'query' | 'connector'> & { raw: string };
 
@@ -30,6 +30,7 @@ export function extractIdentifiers(text: string): Identifier[] {
     if (!out.some((o) => o.type === type && o.value.toLowerCase() === value.toLowerCase())) out.push({ type, value });
   };
   for (const m of text.matchAll(/(?:t\.me\/|telegram[^@\n]{0,24}@|\bTG:?\s*@)([A-Za-z][A-Za-z0-9_]{4,31})/gi)) add('telegram', m[1]);
+  for (const p of extractPhones(text)) add('phone', p);
   for (const m of text.matchAll(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g)) add('email', m[0]);
   for (const m of text.matchAll(/https?:\/\/[^\s"'<>)\]]+/g)) {
     const url = m[0].replace(/[.,;]+$/, '');

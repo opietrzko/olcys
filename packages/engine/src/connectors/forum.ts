@@ -12,7 +12,7 @@ export const forumConnector: SourceConnector = {
   id: 'forum',
   title: 'Forum branżowe (posty i wątki)',
   compliance: 'Publiczne wątki dostępne bez logowania; wyszukiwarka serwisu.',
-  accepts: ['nick', 'name', 'address'],
+  accepts: ['nick', 'name', 'phone', 'address'],
   isLive: () => false,
   enabled: (c) => Boolean(c.urls.forum),
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {

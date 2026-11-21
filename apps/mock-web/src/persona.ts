@@ -8,6 +8,8 @@ export const A = {
   /** Adres pojawiający się po „upływie czasu” (stan v2 scenariusza). */
   ETH_NEW: '0x4E825c53fcbB34b40830D46da1838C87c804c6C1',
   ETH_OLD: '0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8',
+  /** Adres z ogłoszeń drugiego konta (powiązanego tylko numerem telefonu). */
+  ETH_ALIAS: '0xe9B2bC106b21C877DeAE6a0B477a93bA6d16FA0C',
   ETH_TG: '0xB590354d259D3a202B7D8aD7495210a07c8475C2',
   ETH_GIVEAWAY_OWN: '0xE7Ec2108Af92779F3ebD546276EDC2D58fB4C6ed',
   ETH_GIVEAWAY_ORG: '0x363EA387C36b0C1a94fc6B841fc0CbAF4B5859D1',
@@ -37,6 +39,9 @@ export const PERSONA = {
   nick: 'krypto_janek',
   email: 'jan.testowy@example.com',
   telegram: 'janek_p2p',
+  /** Fikcyjny numer (zakres nieprzydzielany w demo) – łączy konto główne z kontem alias. */
+  phone: '600 123 456',
+  aliasNick: 'jt_handel',
   website: 'www/jan-testowy',
 };
 

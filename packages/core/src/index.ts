@@ -7,3 +7,4 @@ export * from './scoring';
 export * from './chainAnalysis';
 export * from './result';
 export * from './diff';
+export * from './phone';

@@ -18,6 +18,8 @@ import {
   extractAddresses,
   isExcluded,
   normalizeText,
+  normalizePhone,
+  extractPhones,
   validateAddress,
   RULES_VERSION,
   type AddressFinding,
@@ -68,20 +70,31 @@ export function normalizeIdentifier(i: Identifier): Identifier {
   let v = i.value.trim();
   if (i.type === 'nick' || i.type === 'telegram') v = v.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
   if (i.type === 'email') v = v.toLowerCase();
+  if (i.type === 'phone') v = normalizePhone(v) ?? v;
   return { type: i.type, value: v };
 }
 
-/** Wyznacza powiązanie autora fragmentu z tożsamościami podmiotu. */
+/** Wyznacza powiązanie autora fragmentu z tożsamościami podmiotu (najsilniejsze z możliwych). */
 export function linkFor(seg: Segment, doc: EvidenceDocument, identities: SubjectIdentity[]): Occurrence['identityLink'] {
+  const candidates: NonNullable<Occurrence['identityLink']>[] = [];
   const handle = (seg.author?.handle ?? doc.owner?.handle)?.replace(/^@/, '').toLowerCase();
   if (handle) {
     const m = identities.find((i) => (i.type === 'nick' || i.type === 'telegram') && i.value.toLowerCase() === handle);
-    if (m) return { strength: m.strength, identity: `${m.type}:${m.value}`, via: m.via };
+    if (m) candidates.push({ strength: m.strength, identity: `${m.type}:${m.value}`, via: m.via });
+  }
+  // Numer telefonu podmiotu w treści (np. kontakt w ogłoszeniu) – wiąże autora z podmiotem także przy innym nicku.
+  const phones = identities.filter((i) => i.type === 'phone');
+  if (phones.length) {
+    const inText = new Set(extractPhones(seg.text));
+    const p = phones.find((i) => inText.has(i.value));
+    if (p) candidates.push({ strength: p.strength === 'DIRECT' ? 'DIRECT' : 'PIVOT', identity: `phone:${p.value}`, via: `numer telefonu ${p.value} w treści (${p.via})` });
   }
   if (doc.meta.ownedByQuery === true) {
     const q = identities.find((i) => idKey(i) === idKey(doc.query));
-    if (q) return { strength: q.strength, identity: `${q.type}:${q.value}`, via: q.via };
+    if (q) candidates.push({ strength: q.strength, identity: `${q.type}:${q.value}`, via: q.via });
   }
+  const rank = { DIRECT: 0, PIVOT: 1, WEAK: 2 } as const;
+  if (candidates.length) return candidates.sort((a, b) => rank[a.strength] - rank[b.strength])[0];
   const display = seg.author?.displayName ?? doc.owner?.displayName;
   if (display) {
     const n = identities.find((i) => i.type === 'name' && norm(i.value) === norm(display));
@@ -139,7 +152,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   while (queue.length) {
     const id = queue.shift()!;
     for (const c of connectors.filter((x) => x.accepts.includes(id.type))) {
-      const ctx: ConnectorContext = { config, fetch, log: (m) => t(c.id, m) };
+      const ctx: ConnectorContext = { config, fetch, log: (m) => t(c.id, m), warn: (m) => { stats.get(c.id)!.errors.push(m); t(c.id, `Uwaga: ${m}`); } };
       let docs;
       try {
         docs = await c.collect({ type: id.type, value: id.value }, ctx);
@@ -179,7 +192,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     (d) => (d.sourceKind === 'OWN_PROFILE' || d.sourceKind === 'OWN_WEBSITE') && /^https?:/.test(d.url) && !d.archivedAt && d.segments.some((s) => linkFor(s, d, identities)?.strength !== 'WEAK' && linkFor(s, d, identities)),
   );
   for (const h of historyConnectors) {
-    const ctx: ConnectorContext = { config, fetch, log: (m) => t(h.id, m) };
+    const ctx: ConnectorContext = { config, fetch, log: (m) => t(h.id, m), warn: (m) => { stats.get(h.id)!.errors.push(m); t(h.id, `Uwaga: ${m}`); } };
     for (const d of ownDocs.slice(0, 15)) {
       try {
         const snaps = await h.history(d, ctx);

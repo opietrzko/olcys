@@ -1,6 +1,6 @@
 # 🦉 OŁCyŚ – Osintowy Łapacz Cyfrowych Śladów
 
-Narzędzie OSINT dla analityków **Krajowej Administracji Skarbowej**. Na podstawie co najmniej jednego identyfikatora (nick, e-mail, Telegram, imię i nazwisko, URL, adres krypto) automatycznie przeszukuje publiczne źródła, wyodrębnia adresy kryptowalutowe i liczy **Wskaźnik Pewności** powiązania adresu z osobą. Odrzuca fałszywe trafienia (giełdy, kontrakty, miksery, zbiórki). Analizuje aktywność adresów w blockchainie pod kątem **wyjścia do walut tradycyjnych (cash-out)**. Wynik to raport z pełnym łańcuchem dowodowym.
+Narzędzie OSINT dla analityków **Krajowej Administracji Skarbowej**. Na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) automatycznie przeszukuje publiczne źródła, wyodrębnia adresy kryptowalutowe i liczy **Wskaźnik Pewności** powiązania adresu z osobą. Odrzuca fałszywe trafienia (giełdy, kontrakty, miksery, zbiórki). Analizuje aktywność adresów w blockchainie pod kątem **wyjścia do walut tradycyjnych (cash-out)**. Wynik to raport z pełnym łańcuchem dowodowym.
 
 > HackNation 2026 · zadanie Ministerstwa Finansów „OŁCyŚ”. Repozytorium zawiera wyłącznie dane **syntetyczne** – fikcyjna persona „Jan Testowy” i wygenerowane adresy.
 
@@ -39,8 +39,8 @@ Identyfikatory ──► Konektory Web2 ──► Dowody (URL, czas, SHA-256, ko
 
 | Parametr | Opis | Domyślnie |
 |---|---|---|
-| Identyfikatory | `nick`, `email`, `telegram`, `name`, `url`, `address` (min. 1) | – |
-| Głębokość pivotowania | Ile „skoków” po identyfikatorach odkrytych na profilach podmiotu (GitHub → Telegram → kanał…) | 2 |
+| Identyfikatory | `nick`, `email`, `phone`, `telegram`, `name`, `url`, `address` (min. 1). Telefon normalizowany do E.164 (domyślnie +48); numer w treści ogłoszenia wiąże autora z podmiotem także przy innym nicku | – |
+| Głębokość pivotowania | Ile „skoków” po identyfikatorach odkrytych na profilach podmiotu (GitHub → WWW → telefon → konto-alias…) | 3 |
 | Historia (archiwum) | Pobiera wersje archiwalne profili i stron (Wayback CDX), żeby wykryć podmianę adresu | wł. |
 | Harmonogram | Analiza cykliczna (5 min / 1 h / dzień / tydzień) z porównaniem wyników | brak |
 | Konektory | Lista źródeł; można wyłączyć wybrane | wszystkie aktywne |
@@ -106,7 +106,11 @@ docker compose up --build
 UI i API: http://localhost:4000. Opcjonalny lokalny model AI: `docker compose --profile ai up`, a w `.env` ustaw `LLM_BASE_URL=http://ollama:11434/v1`.
 
 ### Tryb live (realne źródła)
-Skopiuj `.env.example` do `.env`, ustaw `OLCYS_MODE=live` i `CHAIN_PROVIDER=live`, dopisz zatwierdzone hosty do `EGRESS_ALLOWLIST` oraz klucze API.
+Skopiuj `.env.example` do `.env`, ustaw `OLCYS_MODE=live` i `CHAIN_PROVIDER=live`, dopisz zatwierdzone hosty do `EGRESS_ALLOWLIST` oraz klucze API. **Ustaw `GITHUB_TOKEN`**: bez niego GitHub pozwala na 60 zapytań/h na adres IP, a we wspólnej sieci limit bywa wyczerpany od razu. Narzędzie zgłasza to wtedy jako błąd konektora w raporcie i pobiera tylko pliki raw (README, FUNDING.yml).
+
+```bash
+OLCYS_MODE=live EGRESS_ALLOWLIST=api.github.com,raw.githubusercontent.com,web.archive.org npm run demo:cli -- nick=<konto_testowe>
+```
 
 ### Analiza z linii poleceń
 ```bash
@@ -126,13 +130,14 @@ W stanie v2 nowy adres pojawia się w bio GitHub i na kanale Telegram. Kolejny p
 npm test
 ```
 
-35 testów jednostkowych i akceptacyjnych. Scenariusze akceptacyjne (`packages/engine/test/scenario.test.ts`) przechodzą pełny przebieg wymagany w zadaniu na mini-internecie:
+38 testów jednostkowych i akceptacyjnych. Scenariusze akceptacyjne (`packages/engine/test/scenario.test.ts`) przechodzą pełny przebieg wymagany w zadaniu na mini-internecie:
 
 | # | Sprawdza | Oczekiwany wynik |
 |---|---|---|
 | S1 | odnajdywanie adresów i łączenie źródeł | portfel ETH z GitHub + Gravatar + WWW (zapis zaciemniony) → 100%; pivot GitHub → Telegram; TRON z P2P i kanału → 85% |
 | S2 | odrzucanie fałszywych trafień | Binance (etykieta), router Uniswap, kontrakt NFT (bytecode), zbiórka → 0%; adres organizatora giveaway → 0%; giveaway → <40%; homonim → <40% |
 | S3 | aktywność blockchain | swap ETH → USDT, wysyłka na Krakena, wnioskowany depozyt Binance; mikser na starym adresie |
+| S5 | telefon łączy konto alias | strona WWW → telefon → ogłoszenie P2P innego konta (`jt_handel`) → forum → adres 85% z synergią |
 | S4 | źródła i odtwarzalność | podmiana adresu na stronie WWW (archiwum 2024 → 2025); każdy dowód ma URL, czas i SHA-256; raport rozróżnia fakty, obliczenia i wnioski; host spoza allowlisty jest zablokowany |
 
 Przykładowy wynik (`npm run demo:cli`):

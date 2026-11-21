@@ -77,6 +77,16 @@ describe('S3 – aktywność blockchain (cash-out)', () => {
   });
 });
 
+describe('S5 – numer telefonu łączy konto alias', () => {
+  it('pivot: strona WWW → telefon → ogłoszenie innego konta → forum (synergia)', () => {
+    expect(result.identities.some((i) => i.type === 'phone' && i.value === '+48600123456')).toBe(true);
+    expect(result.identities.some((i) => i.type === 'nick' && i.value === 'jt_handel' && i.strength === 'PIVOT')).toBe(true);
+    const f = find('ETH', A.ETH_ALIAS)!;
+    expect(f.attribution.score).toBeGreaterThanOrEqual(80);
+    expect(f.attribution.rules.some((r) => r.ruleId === 'SYNERGY')).toBe(true);
+  });
+});
+
 describe('S4 – zmiany w czasie, źródła i odtwarzalność', () => {
   it('wykrywa podmianę adresu na stronie WWW między wersjami archiwalnymi', () => {
     const c = result.profileChanges.find((x) => x.url.endsWith('/www/jan-testowy'))!;

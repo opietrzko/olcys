@@ -21,6 +21,12 @@ const json = (res: ServerResponse, body: unknown, status = 200) => send(res, sta
 const page = (title: string, body: string) =>
   `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>${esc(title)}</title></head><body><p style="background:#fde68a;padding:4px">⚠️ Serwis syntetyczny OŁCyŚ – dane fikcyjne</p>${body}</body></html>`;
 
+/** Dopasowanie po cyfrach numeru telefonu (wyszukiwanie „600123456” znajduje „600-123-456”). */
+const phoneHit = (q: string, text: string) => {
+  const d = q.replace(/\D/g, '');
+  return d.length >= 9 && text.replace(/\D/g, '').includes(d.slice(-9));
+};
+
 const emailHash = (email: string) => createHash('sha256').update(email.trim().toLowerCase()).digest('hex');
 const PERSONA_EMAIL_HASH = emailHash(PERSONA.email);
 
@@ -86,7 +92,7 @@ function handler(req: IncomingMessage, res: ServerResponse) {
   if (p === '/forum/search') {
     const q = (url.searchParams.get('q') ?? '').toLowerCase().trim();
     const hits = q
-      ? THREADS.flatMap((t) => t.posts.filter((po) => po.author.toLowerCase() === q || po.display.toLowerCase() === q || po.text.toLowerCase().includes(q)).map((po) => ({ t, po })))
+      ? THREADS.flatMap((t) => t.posts.filter((po) => po.author.toLowerCase() === q || po.display.toLowerCase() === q || po.text.toLowerCase().includes(q) || phoneHit(q, po.text)).map((po) => ({ t, po })))
       : [];
     return send(
       res,
@@ -106,14 +112,14 @@ function handler(req: IncomingMessage, res: ServerResponse) {
   // --- Ogłoszenia P2P
   if (p === '/p2p/search') {
     const q = (url.searchParams.get('q') ?? '').toLowerCase().trim();
-    const hits = q ? LISTINGS.filter((l) => l.seller.toLowerCase() === q || l.telegram?.toLowerCase() === q || l.desc.toLowerCase().includes(q)) : [];
+    const hits = q ? LISTINGS.filter((l) => l.seller.toLowerCase() === q || l.telegram?.toLowerCase() === q || l.desc.toLowerCase().includes(q) || phoneHit(q, l.phone ?? '')) : [];
     return send(
       res,
       200,
       page(
         `P2P: ${q}`,
         hits
-          .map((l) => `<div class="listing" id="l-${l.id}" data-seller="${esc(l.seller)}" data-date="${l.date}"${l.telegram ? ` data-telegram="${esc(l.telegram)}"` : ''}><h2>${esc(l.title)}</h2><p class="desc">${esc(l.desc)}</p>${l.telegram ? `<p>Kontakt: Telegram @${esc(l.telegram)}</p>` : ''}</div>`)
+          .map((l) => `<div class="listing" id="l-${l.id}" data-seller="${esc(l.seller)}" data-date="${l.date}"${l.telegram ? ` data-telegram="${esc(l.telegram)}"` : ''}><h2>${esc(l.title)}</h2><p class="desc">${esc(l.desc)}</p>${l.telegram ? `<p>Kontakt: Telegram @${esc(l.telegram)}</p>` : ''}${l.phone ? `<p class="contact">Tel. ${esc(l.phone)}</p>` : ''}</div>`)
           .join('\n'),
       ),
     );

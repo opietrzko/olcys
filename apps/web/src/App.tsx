@@ -69,6 +69,7 @@ const TYPES: { v: IdentifierType; l: string; ph: string }[] = [
   { v: 'nick', l: 'Nick / login', ph: 'np. krypto_janek' },
   { v: 'email', l: 'E-mail', ph: 'np. jan@example.com' },
   { v: 'telegram', l: 'Telegram', ph: 'np. @janek_p2p' },
+  { v: 'phone', l: 'Telefon', ph: 'np. +48 600 123 456' },
   { v: 'name', l: 'Imię i nazwisko', ph: 'np. Jan Testowy' },
   { v: 'url', l: 'URL profilu / strony', ph: 'https://…' },
   { v: 'address', l: 'Adres krypto', ph: '0x… / bc1… / T…' },
@@ -120,7 +121,7 @@ function NewAnalysis() {
   const [ids, setIds] = useState<Identifier[]>([{ type: 'nick', value: '' }]);
   const [schedule, setSchedule] = useState<number | ''>('');
   const [history, setHistory] = useState(true);
-  const [depth, setDepth] = useState(2);
+  const [depth, setDepth] = useState(3);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const demo = () => {
