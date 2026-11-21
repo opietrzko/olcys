@@ -12,7 +12,7 @@ interface Props {
 
 const idKey = (i: { type: string; value: string }) => identityNodeId(i.type, i.value);
 
-/** Dlaczego tożsamość jest w grafie – słowami analityka, bez żargonu reguł. */
+/** Dlaczego tożsamość jest w grafie - słowami analityka, bez żargonu reguł. */
 function strengthNote(i: SubjectIdentity): string {
   if (i.strength === 'DIRECT') return 'Podany przez analityka na wejściu analizy.';
   if (i.strength === 'PIVOT') return 'Odkryty na profilu lub stronie należącej do podmiotu.';
@@ -123,7 +123,7 @@ export function NodeInspector({ r, nodeId, onSelectAddress, onSelectNode }: Prop
           ))}
         </div>
       ) : (
-        <p className="small muted">Brak dalszych tropów – ta gałąź się kończy.</p>
+        <p className="small muted">Brak dalszych tropów - ta gałąź się kończy.</p>
       )}
     </div>
   );

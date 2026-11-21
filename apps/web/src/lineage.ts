@@ -19,7 +19,7 @@ export interface Lineage {
 /**
  * Pochodzenie tropów w jednym miejscu (graf i inspektor czytają to samo):
  * dokument należy do konta, którego właścicielem jest (np. profil GitHub → nick), a gdy właściciela nie ma
- * w grafie – do tożsamości, o którą zapytano. Tropy z dokumentu są dziećmi tego konta.
+ * w grafie - do tożsamości, o którą zapytano. Tropy z dokumentu są dziećmi tego konta.
  */
 export function buildLineage(r: AnalysisResult): Lineage {
   const ids = new Map<string, SubjectIdentity>();
@@ -27,7 +27,7 @@ export function buildLineage(r: AnalysisResult): Lineage {
     const k = identityNodeId(i.type, i.value);
     if (!ids.has(k)) ids.set(k, i);
   }
-  // ten sam login bywa nickiem i kontem Telegram – dokument z Telegrama należy do węzła Telegram, każdy inny do nicka
+  // ten sam login bywa nickiem i kontem Telegram - dokument z Telegrama należy do węzła Telegram, każdy inny do nicka
   const nickByHandle = new Map<string, string>();
   const tgByHandle = new Map<string, string>();
   for (const [k, i] of ids) {
@@ -53,7 +53,7 @@ export function buildLineage(r: AnalysisResult): Lineage {
       continue;
     }
     let p = docNode.get(ev.id);
-    // konto odkryte na własnym profilu (np. login z wyników po imieniu) – rodzicem jest tożsamość, o którą zapytano
+    // konto odkryte na własnym profilu (np. login z wyników po imieniu) - rodzicem jest tożsamość, o którą zapytano
     if (!p || p === k) p = identityNodeId(ev.query.type, ev.query.value);
     parent.set(k, p !== k && ids.has(p) ? p : 'subject');
   }

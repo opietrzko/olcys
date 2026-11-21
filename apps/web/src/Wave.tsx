@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef } from 'react';
 import { ThemeCtx } from './ui';
 
 /**
- * Fala sygnału w nagłówku pulpitu: warstwy przebiegów w rampie akcentu, po których płyną punkty (ślady trafiające do portfeli).
+ * Fala sygnału w nagłówku pulpitu: warstwy przebiegów w rampie akcentu.
  * Energia rośnie, gdy w tle trwa analiza. Kolory czytane ze zmiennych CSS (motyw jasny i ciemny z tych samych tokenów).
  * Pętla zatrzymuje się poza ekranem i w ukrytej karcie; przy prefers-reduced-motion rysuje jedną statyczną klatkę.
  */
@@ -105,7 +105,7 @@ export function Wave({ energy = 0, dots = false }: { energy?: number; dots?: boo
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const step = 6;
-      // miękkie światło za falą – głębia bez cienia
+      // miękkie światło za falą - głębia bez cienia
       const cx = w < 640 ? w * 0.6 : w * 0.74;
       const glow = ctx.createRadialGradient(cx, h * 0.55, 0, cx, h * 0.55, Math.max(w * 0.42, 220));
       glow.addColorStop(0, rgba(accent, (0.1 + en * 0.06) * amp));
@@ -215,7 +215,7 @@ export function Wave({ energy = 0, dots = false }: { energy?: number; dots?: boo
     resize();
     if (reduced.matches) draw();
     else start();
-    // motyw przełącza atrybut data-theme po renderze – kolory czytamy w następnej klatce
+    // motyw przełącza atrybut data-theme po renderze - kolory czytamy w następnej klatce
     const themeT = setTimeout(() => {
       readColors();
       if (reduced.matches) draw();

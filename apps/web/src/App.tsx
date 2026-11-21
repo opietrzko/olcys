@@ -43,7 +43,7 @@ function useHash() {
 /** Praca analityka – w głównej nawigacji tylko sprawy. */
 const NAV = [{ href: '#/analizy', key: 'analizy', label: 'Analizy', icon: FolderSearch }];
 
-/** Treści dla administratora / IT i jury – poza codzienną ścieżką analityka. Metodyka jest linkowana przy wyniku adresu. */
+/** Treści dla administratora / IT i jury - poza codzienną ścieżką analityka. Metodyka jest linkowana przy wyniku adresu. */
 const ADMIN_NAV = [
   { href: '#/zrodla', key: 'zrodla', label: 'Źródła i zgodność', icon: ShieldCheck },
   { href: '#/audyt', key: 'audyt', label: 'Audyt', icon: ClipboardList },
@@ -105,7 +105,7 @@ export function App() {
       </a>
       <div className="app">
         <aside className="side">
-          <a href="#/" className="brand" aria-label="KryptoTrop – strona główna">
+          <a href="#/" className="brand" aria-label="KryptoTrop - strona główna">
             <span className="brand-mark" aria-hidden="true">
               <Search size={16} strokeWidth={2.4} />
             </span>
@@ -183,7 +183,61 @@ const SCHEDULES: { v: number | ''; l: string }[] = [
 
 const DEPTHS = [0, 1, 2, 3, 6];
 const depthHint = (d: number) =>
-  d === 6 ? 'Do wyczerpania tropów (maks. 6 skoków)' : d === 0 ? '0 – tylko wejście, bez pivotowania' : `${plural(d, 'skok', 'skoki', 'skoków')} od podanych identyfikatorów`;
+  d === 6 ? 'Do wyczerpania tropów (maks. 6 skoków)' : d === 0 ? '0 - tylko wejście, bez pivotowania' : `${plural(d, 'skok', 'skoki', 'skoków')} od podanych identyfikatorów`;
+
+/** Segmentowy suwak: biały znacznik można przeciągnąć albo kliknąć wybraną wartość; klawiatura: strzałki, Home, End. */
+function DepthSlider({ value, onChange }: { value: number; onChange: (d: number) => void }) {
+  const track = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<number | null>(null); // ułamkowy indeks podczas przeciągania
+  const idx = Math.max(0, DEPTHS.indexOf(value));
+  const n = DEPTHS.length;
+  const pos = drag ?? idx;
+  const fromX = (x: number) => {
+    const r = track.current!.getBoundingClientRect();
+    return Math.min(n - 1, Math.max(0, (x - r.left - 2) / ((r.width - 4) / n) - 0.5));
+  };
+  const move = (x: number) => {
+    const f = fromX(x);
+    setDrag(f);
+    const k = Math.round(f);
+    if (DEPTHS[k] !== value) onChange(DEPTHS[k]);
+  };
+  const key = (e: React.KeyboardEvent) => {
+    const k = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? idx + 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? idx - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : null;
+    if (k === null) return;
+    e.preventDefault();
+    onChange(DEPTHS[Math.min(n - 1, Math.max(0, k))]);
+  };
+  return (
+    <div
+      ref={track}
+      className={`seg-slider ${drag !== null ? 'dragging' : ''}`}
+      role="slider"
+      tabIndex={0}
+      aria-labelledby="depth-label"
+      aria-describedby="depth-hint"
+      aria-valuemin={0}
+      aria-valuemax={DEPTHS[n - 1]}
+      aria-valuenow={value}
+      aria-valuetext={value === 6 ? 'Maks.' : String(value)}
+      onKeyDown={key}
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        move(e.clientX);
+      }}
+      onPointerMove={(e) => drag !== null && move(e.clientX)}
+      onPointerUp={() => setDrag(null)}
+      onPointerCancel={() => setDrag(null)}
+    >
+      <span className="seg-thumb" aria-hidden="true" style={{ '--i': pos } as React.CSSProperties} />
+      {DEPTHS.map((d) => (
+        <span key={d} className={`seg-tick ${d === value ? 'on' : ''}`} aria-hidden="true">
+          {d === 6 ? 'Maks.' : d}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const STATUS_LABEL: Record<string, string> = { done: 'Zakończony', running: 'W toku', failed: 'Błąd', queued: 'W kolejce' };
 
@@ -225,7 +279,6 @@ function Home({ meta }: { meta: Meta | null }) {
             <p className="lede">Podaj co najmniej jeden identyfikator podmiotu. KryptoTrop przeszuka publiczne źródła, wskaże adresy krypto z Wskaźnikiem Pewności i sprawdzi wyjście środków do walut tradycyjnych.</p>
             <div className="hero-meta" role="status">
               <span className={`live ${active ? 'on' : ''}`}>
-                <span className="live-dot" aria-hidden="true" />
                 {active ? `Trwa analiza: ${plural(active, 'sprawa', 'sprawy', 'spraw')}` : 'Silnik gotowy'}
               </span>
               {sources != null && <span>{plural(sources, 'źródło publiczne', 'źródła publiczne', 'źródeł publicznych')}</span>}
@@ -295,7 +348,7 @@ function Home({ meta }: { meta: Meta | null }) {
                             {STATUS_LABEL[a.lastRun.status] ?? a.lastRun.status}
                           </span>
                         ) : (
-                          <span className="faint">—</span>
+                          <span className="faint">-</span>
                         )}
                         <div className="small faint" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                           {a.scheduleMinutes ? (
@@ -313,10 +366,10 @@ function Home({ meta }: { meta: Meta | null }) {
                             <div className="small faint">{plural(a.lastRun.summary.rejected, 'odrzucony', 'odrzucone', 'odrzuconych')}</div>
                           </>
                         ) : (
-                          <span className="faint">—</span>
+                          <span className="faint">-</span>
                         )}
                       </td>
-                      <td className="num">{a.lastRun?.summary ? <span className={a.lastRun.summary.indicators ? 'danger-text' : 'faint'}>{a.lastRun.summary.indicators}</span> : <span className="faint">—</span>}</td>
+                      <td className="num">{a.lastRun?.summary ? <span className={a.lastRun.summary.indicators ? 'danger-text' : 'faint'}>{a.lastRun.summary.indicators}</span> : <span className="faint">-</span>}</td>
                       <td className="num small muted">{dt(a.createdAt)}</td>
                     </tr>
                   ))}
@@ -402,7 +455,7 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
         {live && !live.githubToken && (
           <div className="banner warn">
             <TriangleAlert size={16} aria-hidden="true" />
-            <span>Brak GITHUB_TOKEN: GitHub pozwala na 60 zapytań na godzinę z adresu IP. Przy wyczerpaniu limitu pobierane są tylko pliki README i FUNDING.yml.</span>
+            <span>Brak GITHUB_TOKEN: GitHub pozwala na 60 zapytań na godzinę z&nbsp;adresu IP. Przy wyczerpaniu limitu pobierane są tylko pliki README i FUNDING.yml.</span>
           </div>
         )}
         {live && !live.searxng && (
@@ -459,13 +512,7 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
           <span id="depth-label" className="label">
             Głębokość pivotowania
           </span>
-          <div className="seg full">
-            {DEPTHS.map((d) => (
-              <button key={d} type="button" aria-pressed={depth === d} onClick={() => setDepth(d)} aria-describedby="depth-hint" title={depthHint(d)}>
-                {d === 6 ? 'Maks.' : d}
-              </button>
-            ))}
-          </div>
+          <DepthSlider value={depth} onChange={setDepth} />
           <span id="depth-hint" className="hint" aria-live="polite">
             {depthHint(depth)}
           </span>
@@ -613,11 +660,9 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
       </div>
       <div className="runs" aria-label="Przebiegi">
         <span className="runs-label">Przebiegi</span>
+        <div className="runs-seg">
         {data.runs.map((r) => (
           <a key={r.id} href={`#/a/${a.id}/r/${r.id}`} className={`run-chip st-${r.status}`} aria-current={r.id === current ? 'true' : undefined}>
-            <span className={`status ${r.status}`}>
-              <span className="dot" aria-hidden="true" />
-            </span>
             {r.trigger === 'schedule' && <Repeat size={12} aria-label="z harmonogramu" />}
             {dt(r.startedAt)}
             {r.status !== 'done' && <span className="sr-only">{STATUS_LABEL[r.status]}</span>}
@@ -628,6 +673,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
             )}
           </a>
         ))}
+        </div>
         {a.nextRunAt && <span className="small faint">Następny przebieg: {dt(a.nextRunAt)}</span>}
       </div>
       {(currentStatus === 'running' || currentStatus === 'queued') && (

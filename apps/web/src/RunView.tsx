@@ -58,7 +58,7 @@ export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
   }, []);
   const [hideExcluded, setHideExcluded] = useState(false);
   const [diff, setDiff] = useState<RunDiff | null>(null);
-  // przebiegi do porównania: zakończone, inne niż bieżący (domyślnie – poprzedni)
+  // przebiegi do porównania: zakończone, inne niż bieżący (domyślnie - poprzedni)
   const baseCandidates = useMemo(() => runs.filter((x) => x.status === 'done' && x.id !== run.id), [runs, run.id]);
   const [base, setBase] = useState<string>('');
   useEffect(() => {
@@ -161,7 +161,7 @@ export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
           ))}
         </div>
         <div className="actions">
-          <a className="btn sm" href={`/api/runs/${run.id}/report.pdf`} target="_blank" rel="noreferrer" title="Raport PDF generowany z tego przebiegu – otwiera się w przeglądarce, można go pobrać">
+          <a className="btn sm" href={`/api/runs/${run.id}/report.pdf`} target="_blank" rel="noreferrer" title="Raport PDF generowany z tego przebiegu - otwiera się w przeglądarce, można go pobrać">
             <FileText size={14} aria-hidden="true" /> Raport PDF
           </a>
           <a className="btn sm ghost" href={`/api/runs/${run.id}/export.json`} title="Pakiet dowodowy JSON: wynik, surowe dowody i parametry">
@@ -305,10 +305,10 @@ function Legend() {
         <span className="lg-node dia" style={{ background: 'var(--c4)' }} /> ≥80%
       </span>
       <span className="lg">
-        <span className="lg-node dia" style={{ background: 'var(--c3)' }} /> 60–79%
+        <span className="lg-node dia" style={{ background: 'var(--c3)' }} /> 60-79%
       </span>
       <span className="lg">
-        <span className="lg-node dia" style={{ background: 'var(--c2)' }} /> 40–59%
+        <span className="lg-node dia" style={{ background: 'var(--c2)' }} /> 40-59%
       </span>
       <span className="lg">
         <span className="lg-node dia" style={{ background: 'var(--c1)', border: '1px solid var(--c2)' }} /> &lt;40%
@@ -332,7 +332,7 @@ function Legend() {
 function Inspector({ f, findings, onSelect, onOpen, trace }: { f: AddressFinding; findings: AddressFinding[]; onSelect: (k: string) => void; onOpen: () => void; trace?: AnalysisResult['trace'] }) {
   const flags = flagsOf(f);
   // powód braku danych blockchain zapisany w przebiegu (np. limit zapytań dostawcy)
-  const chainIssue = trace?.find((t) => t.step === 'chain' && t.message.includes(f.key))?.message.replace(/^Uwaga: [^ ]+ – /, '');
+  const chainIssue = trace?.find((t) => t.step === 'chain' && t.message.includes(f.key))?.message.replace(/^Uwaga: [^ ]+ - /, '');
   return (
     <div>
       <div className="detail-head" style={{ marginBottom: 6 }}>
@@ -378,7 +378,7 @@ function Inspector({ f, findings, onSelect, onOpen, trace }: { f: AddressFinding
           {f.activity
             ? `Brak wskaźników cash-out · ${plural(f.activity.txCount, 'transakcja', 'transakcje', 'transakcji')}`
             : f.attribution.gated
-              ? 'Adres wykluczony – aktywności nie pobierano'
+              ? 'Adres wykluczony - aktywności nie pobierano'
               : chainIssue ?? 'Brak transakcji w blockchainie dla tego adresu'}
         </p>
       )}
@@ -475,9 +475,9 @@ function coverage(r: AnalysisResult) {
 
 /**
  * An empty result is only meaningful when the sources actually answered. If nothing was found and a source
- * failed (dropped connection, rate limit), say so – otherwise it reads as "this person publishes nothing".
+ * failed (dropped connection, rate limit), say so - otherwise it reads as "this person publishes nothing".
  */
-/** Optional sources that fail on every run without extra setup (Reddit keys, a SearXNG instance) – not a sign of a flaky run. */
+/** Optional sources that fail on every run without extra setup (Reddit keys, a SearXNG instance) - not a sign of a flaky run. */
 const OPTIONAL_SOURCES = new Set(['reddit', 'search']);
 
 function SourceFailures({ r }: { r: AnalysisResult }) {
@@ -526,7 +526,7 @@ function Pipeline({ r }: { r: AnalysisResult }) {
             {s.label}
             <span className="sr-only">: {STEP_STATE[s.state]}</span>
           </div>
-          <div className={`val num ${s.tone ?? ''}`}>{s.state === 'skipped' ? '—' : s.value}</div>
+          <div className={`val num ${s.tone ?? ''}`}>{s.state === 'skipped' ? '-' : s.value}</div>
           <div className="sub">{s.sub}</div>
         </li>
       ))}
@@ -535,7 +535,7 @@ function Pipeline({ r }: { r: AnalysisResult }) {
 }
 
 function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; runId: string }) {
-  // transfery tokenów spoza rejestru (spam) są domyślnie ukryte w chronologii – pokazywane na żądanie
+  // transfery tokenów spoza rejestru (spam) są domyślnie ukryte w chronologii - pokazywane na żądanie
   const [showIgnored, setShowIgnored] = useState(false);
   const timeline = (f.activity?.timeline ?? []).filter((t) => showIgnored || t.verifiedAsset !== false);
   const maxAbs = Math.max(100, ...f.attribution.rules.map((x) => Math.abs(x.delta)));
@@ -562,7 +562,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
             <Score band={f.attribution.band} score={f.attribution.score} value={false} />
             <div style={{ marginTop: 4 }}>
               <b>{CATEGORY_LABEL[f.classification.category]}</b>
-              {f.classification.entity ? <span className="muted"> – {f.classification.entity}</span> : ''}
+              {f.classification.entity ? <span className="muted"> - {f.classification.entity}</span> : ''}
             </div>
             <ul className="reasons">
               {f.classification.reasons.map((x) => (
@@ -659,7 +659,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
             <Stat label="Transakcje" value={f.activity.txCount} />
             <Stat label="Wpływy (PLN)" value={money(f.activity.totalInPln)} />
             <Stat label="Wypływy (PLN)" value={money(f.activity.totalOutPln)} />
-            <Stat label="Okres" value={`${f.activity.firstSeen?.slice(0, 10) ?? '—'} → ${f.activity.lastSeen?.slice(0, 10) ?? '—'}`} />
+            <Stat label="Okres" value={`${f.activity.firstSeen?.slice(0, 10) ?? '-'} → ${f.activity.lastSeen?.slice(0, 10) ?? '-'}`} />
           </div>
           {f.activity.indicators.map((i, n) => (
             <div key={n} className={`indicator sev-${i.severity} ${i.basis}`}>
@@ -708,15 +708,15 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
                         {t.network && <span className="faint small"> · {t.network}</span>}
                         {t.verifiedAsset === false && (
                           <div className="small neg" style={{ whiteSpace: 'normal' }} title={t.note}>
-                            niezweryfikowany token – pominięty
+                            niezweryfikowany token - pominięty
                           </div>
                         )}
                       </td>
-                      <td className="num" title={t.priceBasis === 'current' ? 'Cena krypto bieżąca (brak historii z dnia transakcji)' : t.priceBasis === 'peg' ? 'Stablecoin – parytet 1 USD' : t.priceBasis === 'historical' ? 'Cena krypto z dnia transakcji' : undefined}>
-                        {t.pln === null || t.pln === undefined ? (t.usd === null ? '—' : money(t.usd * f.activity!.rates.usdPln)) : money(t.pln)}
+                      <td className="num" title={t.priceBasis === 'current' ? 'Cena krypto bieżąca (brak historii z dnia transakcji)' : t.priceBasis === 'peg' ? 'Stablecoin - parytet 1 USD' : t.priceBasis === 'historical' ? 'Cena krypto z dnia transakcji' : undefined}>
+                        {t.pln === null || t.pln === undefined ? (t.usd === null ? '-' : money(t.usd * f.activity!.rates.usdPln)) : money(t.pln)}
                         {t.priceBasis === 'current' && <span className="faint">*</span>}
                         {t.nbp && (
-                          <div className="small faint" title={`Tabela ${t.nbp.no} – ostatni dzień roboczy przed transakcją (art. 11a ust. 1 ustawy o PIT)`}>
+                          <div className="small faint" title={`Tabela ${t.nbp.no} - ostatni dzień roboczy przed transakcją (art. 11a ust. 1 ustawy o PIT)`}>
                             {t.nbp.mid} z {t.nbp.date}
                           </div>
                         )}
@@ -732,7 +732,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
           )}
           <p className="small faint" style={{ marginTop: 10, marginBottom: 0 }}>
             {f.activity.plnBasis ?? `Wartości według kursów: ${f.activity.rates.source} (${f.activity.rates.asOf}).`}
-            {f.activity.timeline.some((t) => t.priceBasis === 'current') && ' * cena krypto bieżąca – brak notowania z dnia transakcji.'}
+            {f.activity.timeline.some((t) => t.priceBasis === 'current') && ' * cena krypto bieżąca - brak notowania z dnia transakcji.'}
             {f.activity.ignoredTokenTransfers ? ` Pominięto ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny).` : ''}
             {f.activity.networks && f.activity.networks.length > 1 ? ` Sieci: ${f.activity.networks.join(', ')}.` : ''}
           </p>
@@ -853,7 +853,7 @@ function Evidence({ r, runId }: { r: AnalysisResult; runId: string }) {
         </div>
       ) : (
         <Empty icon={Fingerprint} title="Brak śladów powiązanych z krypto">
-          Sprawdzono {plural(coverage(r).sources, 'źródło', 'źródła', 'źródeł')} ({coverage(r).sourceIds.join(', ') || '—'}) i pobrano {plural(coverage(r).pages, 'stronę', 'strony', 'stron')} z wyników
+          Sprawdzono {plural(coverage(r).sources, 'źródło', 'źródła', 'źródeł')} ({coverage(r).sourceIds.join(', ') || '-'}) i pobrano {plural(coverage(r).pages, 'stronę', 'strony', 'stron')} z wyników
           wyszukiwania. Żadne nie zawierało adresu kryptowalutowego ani identyfikatora powiązanego z podmiotem. Szczegóły zapytań i ewentualne błędy znajdziesz w zakładce „Przebieg i parametry”.
         </Empty>
       )}

@@ -155,7 +155,7 @@ export function Landing({ meta, themeToggle }: { meta: Meta | null; themeToggle:
                   <Icon size={16} />
                 </span>
                 <span className="trail-source">
-                  {i === 0 ? 'Wejście' : `Trop ${i}`} · {source}
+                  <b>{i === 0 ? 'Wejście' : `Trop ${i}`}</b> {source}
                 </span>
                 <span className="trail-value">
                   {/* Allow a line break before "@" so an e-mail address never splits mid-word. */}
@@ -274,7 +274,7 @@ export function Landing({ meta, themeToggle }: { meta: Meta | null; themeToggle:
       </main>
 
       <footer className="lp-foot">
-        <span>KryptoTrop · HackNation 2026 · rozwiązanie zadania Ministerstwa Finansów / KAS „OŁCyŚ”</span>
+        <span>KryptoTrop, HackNation 2026. Rozwiązanie zadania Ministerstwa Finansów / KAS „OŁCyŚ”.</span>
         <span>Wskaźnik Pewności nie przesądza o własności adresu i wymaga weryfikacji analityka.</span>
       </footer>
     </div>
