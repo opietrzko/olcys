@@ -741,6 +741,9 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
           </div>
         </div>
         <div className="actions">
+          <a className="btn" href="#/analizy" title="Wróć do listy analiz">
+            <ChevronLeft size={15} aria-hidden="true" /> Wróć
+          </a>
           <label className="sr-only" htmlFor="sched">
             Harmonogram
           </label>
