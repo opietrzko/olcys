@@ -21,7 +21,7 @@ Każdy scenariusz opisuje: co wpisać do narzędzia, jaki wynik jest oczekiwany 
 | S9 | Źródła, raport, odtwarzalność | przejrzystość raportu i źródeł | 20% |
 | S10 | Bezpieczeństwo ruchu wychodzącego | potencjał wdrożeniowy, wymaganie 5.7 | 15% |
 | S11 | Tryb offline (nagranie i odtworzenie) | potencjał wdrożeniowy, odtwarzalność | 15% / 20% |
-| – | 37 testów automatycznych (`npm test`) | jakość architektury | 15% |
+| – | 40 testów automatycznych (`npm test`) | jakość architektury | 15% |
 
 ---
 
@@ -275,7 +275,7 @@ Tożsamości odkryte pivotem: `name: Błażej Rzepecki`, `telegram: blazejrzepde
 2. **S1 + S6 (60 s)** – Błażej: 100% z synergią, pułapki USDT i Binance 0%, giveaway 25%; karta aktywności z wyjściem do fiat.
 3. **S9 (30 s)** – Raport PDF: fakty / obliczenia / wnioski, łańcuch dowodowy z SHA-256.
 4. **S7 (20 s)** – karta „Zmiany względem poprzedniego przebiegu” (przebieg przygotowany wcześniej).
-5. **Domknięcie (10 s)** – Źródła i zgodność: allowlista, tylko dane publiczne, tryb offline, 37 testów.
+5. **Domknięcie (10 s)** – Źródła i zgodność: allowlista, tylko dane publiczne, tryb offline, 40 testów.
 
 ---
 
@@ -285,4 +285,4 @@ Tożsamości odkryte pivotem: `name: Błażej Rzepecki`, `telegram: blazejrzepde
 npm test
 ```
 
-37 testów bez dostępu do sieci: walidacja i ekstrakcja adresów, reguły Wskaźnika Pewności, wskaźniki cash-out, numer telefonu, bezpieczeństwo (SSRF, allowlista, wzajemne potwierdzenie, filtr eksploratorów) oraz plan kont testowych odtworzony z nagrań (synergia, pułapki, szum, wyszukiwanie po adresie, warianty nicku, Reddit OAuth).
+40 testów bez dostępu do sieci: walidacja i ekstrakcja adresów, reguły Wskaźnika Pewności, wskaźniki cash-out, numer telefonu, bezpieczeństwo (SSRF, allowlista, wzajemne potwierdzenie, filtr eksploratorów) oraz plan kont testowych odtworzony z nagrań (synergia, pułapki, szum, wyszukiwanie po adresie, warianty nicku, Reddit OAuth).
