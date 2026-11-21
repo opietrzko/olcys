@@ -1,0 +1,47 @@
+# Uruchomienie: docker compose up --build   →  UI + API: http://localhost:4000
+# Wszystkie komponenty lokalnie (bez chmury publicznej). Opcjonalny lokalny model AI: docker compose --profile ai up
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: olcys
+      POSTGRES_USER: olcys
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-olcys-dev-only}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olcys -d olcys"]
+      interval: 3s
+      retries: 20
+
+  mock-web:
+    build: .
+    command: ["npx", "tsx", "apps/mock-web/src/server.ts"]
+    environment: { PORT: "4100" }
+    ports: ["4100:4100"]
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgres://olcys:${POSTGRES_PASSWORD:-olcys-dev-only}@db:5432/olcys
+      OLCYS_MODE: ${OLCYS_MODE:-demo}
+      MOCK_WEB_URL: http://mock-web:4100
+      CHAIN_PROVIDER: ${CHAIN_PROVIDER:-fixture}
+      EGRESS_ALLOWLIST: ${EGRESS_ALLOWLIST:-}
+      ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY:-}
+      ETH_RPC_URL: ${ETH_RPC_URL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+    ports: ["4000:4000"]
+    depends_on:
+      db: { condition: service_healthy }
+      mock-web: { condition: service_started }
+
+  ollama:
+    profiles: ["ai"]
+    image: ollama/ollama:0.5.7
+    volumes: [ollama:/root/.ollama]
+    ports: ["11434:11434"]
+
+volumes:
+  pgdata:
+  ollama:

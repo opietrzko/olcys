@@ -1,0 +1,14 @@
+{
+  "name": "@olcys/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Konektory Web2, dostawcy danych blockchain, pipeline analizy, raport",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@olcys/core": "*",
+    "cheerio": "^1.0.0"
+  }
+}

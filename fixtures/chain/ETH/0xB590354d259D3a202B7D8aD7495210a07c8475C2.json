@@ -1,0 +1,16 @@
+{
+  "chain": "ETH",
+  "address": "0xB590354d259D3a202B7D8aD7495210a07c8475C2",
+  "code": "0x",
+  "note": "Dane syntetyczne scenariusza demo",
+  "transfers": [
+    {
+      "hash": "0x5a7ebf5adfc9f5d33826a4fdb8ad045493616199c3a549b56e168565261e4d91",
+      "timestamp": "2025-06-03T08:00:00Z",
+      "from": "0x9EA9F6Ab3A5F5f3e120fcE303823d4C7cC470fc4",
+      "to": "0xB590354d259D3a202B7D8aD7495210a07c8475C2",
+      "asset": "ETH",
+      "amount": 0.3
+    }
+  ]
+}

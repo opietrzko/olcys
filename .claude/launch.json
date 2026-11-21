@@ -1,0 +1,8 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "mock-web", "runtimeExecutable": "npx", "runtimeArgs": ["tsx", "apps/mock-web/src/server.ts"], "port": 4100 },
+    { "name": "api", "runtimeExecutable": "npx", "runtimeArgs": ["tsx", "apps/api/src/server.ts"], "port": 4000 },
+    { "name": "web", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "-w", "@olcys/web"], "port": 5173 }
+  ]
+}

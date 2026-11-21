@@ -1,0 +1,15 @@
+{
+  "source": "Kursy stałe scenariusza demo (wartości przykładowe)",
+  "asOf": "2025-06-30",
+  "usdPln": 3.95,
+  "usd": {
+    "ETH": 2500,
+    "BTC": 95000,
+    "USDT": 1,
+    "USDC": 1,
+    "DAI": 1,
+    "TRX": 0.25,
+    "LTC": 90,
+    "SOL": 150
+  }
+}

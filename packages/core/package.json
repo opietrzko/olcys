@@ -1,0 +1,14 @@
+{
+  "name": "@olcys/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Czysta logika domenowa: ekstrakcja adresów, klasyfikacja, Wskaźnik Pewności, analiza blockchain, diff",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.7.1",
+    "@scure/base": "^1.2.1"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "chain": "ETH",
+  "address": "0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8",
+  "code": "0x",
+  "note": "Dane syntetyczne scenariusza demo",
+  "transfers": [
+    {
+      "hash": "0x0fcda6b37fd61d64f321c2c136da91a633a02281215298f4dd7ec9d7ee95aaf9",
+      "timestamp": "2023-08-01T10:00:00Z",
+      "from": "0x6427B19733a37DA2B016d2C5c3C03D2Caf5BE732",
+      "to": "0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8",
+      "asset": "ETH",
+      "amount": 1
+    },
+    {
+      "hash": "0xa4521529261876cc55377d90b95c34748fbbf065f158b67afabda9c022ec1886",
+      "timestamp": "2023-08-03T21:00:00Z",
+      "from": "0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8",
+      "to": "0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc",
+      "asset": "ETH",
+      "amount": 0.1,
+      "method": "deposit"
+    },
+    {
+      "hash": "0xa35de1e0fac59359e15a6ca505e16b1d329cf8f4f255f77ade97c13c189bc2cb",
+      "timestamp": "2023-08-03T21:10:00Z",
+      "from": "0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8",
+      "to": "0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc",
+      "asset": "ETH",
+      "amount": 0.1,
+      "method": "deposit"
+    },
+    {
+      "hash": "0x78c9b724df66019004ddf18c48473d1d47b74c8208430e685fce8eba57eeb623",
+      "timestamp": "2023-08-03T21:20:00Z",
+      "from": "0x21A40Dc85741C7bD3b3FffF4872483B82d100fE8",
+      "to": "0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc",
+      "asset": "ETH",
+      "amount": 0.1,
+      "method": "deposit"
+    }
+  ]
+}

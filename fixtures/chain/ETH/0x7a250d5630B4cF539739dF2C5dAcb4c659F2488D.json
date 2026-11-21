@@ -1,0 +1,7 @@
+{
+  "chain": "ETH",
+  "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+  "code": "0x60c06040523480156200001157600080fd5b5060405162005b7a38038062005b7a",
+  "note": "Dane syntetyczne scenariusza demo",
+  "transfers": []
+}

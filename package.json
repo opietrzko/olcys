@@ -1,0 +1,26 @@
+{
+  "name": "olcys",
+  "private": true,
+  "version": "0.1.0",
+  "description": "OŁCyŚ – Osintowy Łapacz Cyfrowych Śladów (HackNation 2026, zadanie MF/KAS)",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n mock,api,web -c gray,blue,green \"npm run dev -w @olcys/mock-web\" \"npm run dev -w @olcys/api\" \"npm run dev -w @olcys/web\"",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p apps/api && tsc -p apps/web && tsc -p apps/mock-web",
+    "demo:cli": "tsx scripts/demo-cli.ts",
+    "gen:address": "tsx scripts/gen-address.ts",
+    "licenses": "npx --yes license-checker-rseidelsohn --summary --excludePrivatePackages"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

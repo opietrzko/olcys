@@ -1,0 +1,91 @@
+{
+  "name": "known-public-entities",
+  "description": "Publicznie udokumentowane adresy instytucjonalne (giełdy, kontrakty DEX/tokenów, miksery, zbiórki). Zbiór startowy – przed wdrożeniem uzupełnić o pełne otwarte zbiory etykiet (np. listy OFAC SDN, otwarte repozytoria etykiet) i zweryfikować.",
+  "license": "Dane faktograficzne (adresy publiczne) – zestawienie własne zespołu",
+  "labels": [
+    {
+      "chain": "ETH",
+      "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
+      "entity": "Binance 14 (hot wallet)",
+      "category": "CEX",
+      "source": "publiczne etykiety eksploratorów"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2",
+      "entity": "Kraken 1",
+      "category": "CEX",
+      "source": "publiczne etykiety eksploratorów"
+    },
+    {
+      "chain": "BTC",
+      "address": "34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo",
+      "entity": "Binance (cold wallet)",
+      "category": "CEX",
+      "source": "publiczne etykiety eksploratorów"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "entity": "Uniswap V2: Router 2",
+      "category": "DEX",
+      "source": "dokumentacja Uniswap"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD",
+      "entity": "Uniswap: Universal Router",
+      "category": "DEX",
+      "source": "dokumentacja Uniswap"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "entity": "Tether USD (USDT) – kontrakt tokena",
+      "category": "TOKEN_CONTRACT",
+      "source": "Tether"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "entity": "USD Coin (USDC) – kontrakt tokena",
+      "category": "TOKEN_CONTRACT",
+      "source": "Circle"
+    },
+    {
+      "chain": "TRON",
+      "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "entity": "Tether USD (USDT TRC20) – kontrakt tokena",
+      "category": "TOKEN_CONTRACT",
+      "source": "Tether"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc",
+      "entity": "Tornado Cash: 0.1 ETH pool",
+      "category": "MIXER",
+      "source": "OFAC SDN (2022) / dokumentacja protokołu"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x165CD37b4C644C2921454429E7F9358d18A45e14",
+      "entity": "Zbiórka: Ukraine Government (ETH)",
+      "category": "CHARITY",
+      "source": "publiczny komunikat rządu Ukrainy (2022)"
+    },
+    {
+      "chain": "BTC",
+      "address": "357a3So9CbsNfBBgFYACGvxxS6tMaDoa1P",
+      "entity": "Zbiórka: Ukraine Government (BTC)",
+      "category": "CHARITY",
+      "source": "publiczny komunikat rządu Ukrainy (2022)"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852",
+      "entity": "Uniswap V2: USDT-WETH pair",
+      "category": "DEX",
+      "source": "dokumentacja Uniswap"
+    }
+  ]
+}

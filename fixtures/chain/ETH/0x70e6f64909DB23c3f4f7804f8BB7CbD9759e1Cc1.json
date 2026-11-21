@@ -1,0 +1,28 @@
+{
+  "chain": "ETH",
+  "address": "0x70e6f64909DB23c3f4f7804f8BB7CbD9759e1Cc1",
+  "code": "0x",
+  "note": "Dane syntetyczne scenariusza demo",
+  "transfers": [
+    {
+      "hash": "0x94c30b1623f54a0fb8959f64ab0e470f556323a40d135dd905aabefcbecbd834",
+      "timestamp": "2025-05-04T09:00:00Z",
+      "from": "0x1a04d94f740Ec5024E8Fb48b96b9e8792CcD1531",
+      "to": "0x70e6f64909DB23c3f4f7804f8BB7CbD9759e1Cc1",
+      "asset": "USDT",
+      "amount": 8500,
+      "tokenContract": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "method": "transfer"
+    },
+    {
+      "hash": "0x2d9ce061ff54bf30100b619cdb8a9bbf210c03e3ad8b3623da54183d752140d2",
+      "timestamp": "2025-05-04T12:05:00Z",
+      "from": "0x70e6f64909DB23c3f4f7804f8BB7CbD9759e1Cc1",
+      "to": "0x28C6c06298d514Db089934071355E5743bf21d60",
+      "asset": "USDT",
+      "amount": 8500,
+      "tokenContract": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "method": "transfer"
+    }
+  ]
+}

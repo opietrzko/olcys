@@ -1,0 +1,24 @@
+{
+  "chain": "ETH",
+  "address": "0x363EA387C36b0C1a94fc6B841fc0CbAF4B5859D1",
+  "code": "0x",
+  "note": "Dane syntetyczne scenariusza demo",
+  "transfers": [
+    {
+      "hash": "0xb860a8d11925e25b32da4f5bcb1a897294666f3a12c73503d0f023796679295b",
+      "timestamp": "2025-04-01T10:06:00Z",
+      "from": "0xF83c67509BcC1fF1d8b22e2fff66DaC89377acfe",
+      "to": "0x363EA387C36b0C1a94fc6B841fc0CbAF4B5859D1",
+      "asset": "ETH",
+      "amount": 0.1
+    },
+    {
+      "hash": "0xa339d5447413f106f94d62f47984e58d9b41f8a20f463d15e92730c3d5631749",
+      "timestamp": "2025-04-01T10:10:00Z",
+      "from": "0x86F8C2E4008812EfF738e60A9246b10AEE1F1681",
+      "to": "0x363EA387C36b0C1a94fc6B841fc0CbAF4B5859D1",
+      "asset": "ETH",
+      "amount": 0.1
+    }
+  ]
+}
