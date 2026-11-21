@@ -55,6 +55,8 @@
 
 ---
 
+> **Dla jury: sprawdzenie w 2 minuty.** Dwie fikcyjne osoby z prawdziwymi, publicznymi kontami, trzy identyfikatory do wpisania i to, co zobaczycie w wynikach: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+
 ## O projekcie
 
 Podatnicy publikują adresy portfeli na forach, w ogłoszeniach P2P, na profilach programistycznych i w komunikatorach. Ręczne łączenie tych śladów z historią transakcji jest czasochłonne i trudne do powtórzenia.
@@ -177,7 +179,7 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
    ```
    Pozostałe wartości domyślne działają bez kluczy. Pełna lista: [Zmienne środowiskowe](#zmienne-środowiskowe).
 
-4. Uruchom self-hosted wyszukiwarkę
+4. Opcjonalnie: uruchom self-hosted wyszukiwarkę i odkomentuj `SEARXNG_URL` w `.env`. Scenariusze testowe działają bez niej.
    ```sh
    docker compose up -d searxng
    ```
@@ -413,7 +415,7 @@ npm test
 - bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów), trop GitHub Pages → konto GitHub, konwersja adresów TRON hex → Base58
 - plan kont testowych zespołu (GitHub + dev.to + Reddit) od wejścia do wyniku, odtworzony z nagrań: synergia GitHub + dev.to, pułapki USDT i Binance = 0%, giveaway na Reddicie = szum bez synergii, wyszukiwanie po samym adresie, warianty nicku
 
-**Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na fikcyjnych kontach testowych zespołu (GitHub, Keybase, Telegram, strona WWW, …) z opublikowanymi adresami portfeli testowych. Każdy scenariusz opisuje, co wpisać do narzędzia i jaki wynik jest oczekiwany: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+**Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na dwóch fikcyjnych personach z kontami w GitHub, Gravatar, na stronie WWW i w Telegramie: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md) – co wpisać i co zobaczyć, w 2 minuty.
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -440,7 +442,7 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `OLCYS_MAX_DEPTH` | | `6` | Domyślna głębokość pivotowania |
 | `OLCYS_SEARCH_RESULTS` | | `8` | Liczba wyników wyszukiwarki pobieranych na zapytanie |
 | `OLCYS_LIVE_RATES` | | `true` | Kursy z NBP i CoinGecko |
-| `OLCYS_REDDIT` | | `true` | `false` wyłącza konektor Reddit |
+| `OLCYS_REDDIT` | | `true` | `false` wyłącza konektor Reddit (w `.env.example` wyłączony, dopóki nie podasz kluczy aplikacji) |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | do Reddita | | Klucze zarejestrowanej aplikacji Reddit typu „script” (tylko odczyt) – oficjalne API OAuth |
 | `OLCYS_RECORD_DIR` | | | Katalog, do którego zapisywane są odpowiedzi źródeł (do odtworzenia offline) |
 | `OLCYS_REPLAY_DIR` | | | Katalog z nagraniem – analizy bez sieci (ma pierwszeństwo przed `OLCYS_RECORD_DIR`) |
