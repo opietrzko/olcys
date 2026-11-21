@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="460" viewBox="6 9 52 50">
+  <title>KryptoTrop – znak bez tła (czarny)</title>
+  <g id="kapelusz" fill="#171717">
+    <path id="rondo" d="M9 33.5 C9 31.6 10.6 30 12.5 30 H51.5 C53.4 30 55 31.6 55 33.5 C55 35.4 53.4 37 51.5 37 H12.5 C10.6 37 9 35.4 9 33.5 Z"/>
+    <path id="denko" d="M19.5 30 L22.4 14.8 C22.7 13.2 24.1 12 25.8 12 H38.2 C39.9 12 41.3 13.2 41.6 14.8 L44.5 30 Z"/>
+    <path id="tasma" d="M20.7 26 H43.3 L44.5 30 H19.5 Z" fill="#0062D1"/>
+  </g>
+  <g id="okulary">
+    <path id="mostek" d="M26 49 H36.5" fill="none" stroke="#171717" stroke-width="3.2" stroke-linecap="round"/>
+    <circle id="soczewka-podmiot" cx="19.5" cy="49" r="6.3" fill="none" stroke="#171717" stroke-width="3.2"/>
+    <path id="soczewka-adres" d="M44 42 L51 49 L44 56 L37 49 Z" fill="#0062D1" stroke="#0062D1" stroke-width="2.4" stroke-linejoin="round"/>
+  </g>
+</svg>
