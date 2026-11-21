@@ -2,6 +2,12 @@
 
 Wewnętrzna lista dla zespołu: co jest opublikowane na kontach person i co zrobić przed oddaniem projektu. Przewodnik dla jury: [`scenariusze-testowe.md`](scenariusze-testowe.md).
 
+## Dane w scenariuszach – ustalenie z mentorem MF
+
+Treść zadania (kryteria akceptacji) mówi o scenariuszach na danych „zanonimizowanych lub syntetycznych”. Mentor MF doprecyzował to na Discordzie 21.11.2026: do fikcyjnej tożsamości Web2 można podpiąć istniejący, publiczny adres portfela bez etykiety, a nawet użyć prawdziwych danych Web2. Warunek: **na filmie i w prezentacji te dane muszą być zanonimizowane** (np. rozmyty adres, nazwa ENS, kwoty). Na demo na żywo mogą być widoczne.
+
+Dotyczy to portfela „głównego” Błażeja (`0x3963…Aa49`, `quasarbuilder.eth`) i scenariusza Tor Project.
+
 ## Persona 1 – Błażej Rzepecki
 
 | Element | Wartość |
@@ -41,6 +47,7 @@ Wcześniej przy limicie zapytań Blockscout heurystyka instytucjonalna nie wykon
 1. **Opcjonalnie: własny portfel Błażeja.** Żeby pokazać scenariusz „prawdziwy portfel osoby = 100%” z aktywnością w blockchainie, załóżcie nowy adres ETH, który kontrolujecie, zróbcie na nim kilka drobnych transakcji (np. wypłata z giełdy i odesłanie części na adres depozytowy), podmieńcie go w README na GitHubie i na Telegramie, a potem w `packages/engine/test/plan-scenarios.test.ts` i w przewodniku dla jury.
 2. **Nagranie offline**, na które powołuje się przewodnik: w `.env` ustaw `OLCYS_RECORD_DIR=data/recordings/demo`, wykonaj trzy analizy z przewodnika (oraz wejście `address=0x3963…`), potem zacommituj katalog `data/recordings/demo`.
 3. **Sprawdź szukanie po adresie** (`address=0x3963…Aa49`), gdy GitHub zaindeksuje README.
-4. **Test zmiany w czasie** do filmu: harmonogram co 5 minut, zmiana portfela w README Błażeja, karta „Zmiany względem poprzedniego przebiegu”; potem przywróć README.
-5. Opcjonalnie: link `http://169.254.169.254/latest/meta-data` na stronie Kordasa, żeby pokazać blokadę SSRF na żywo (wpis „ZABLOKOWANO” w ruchu wychodzącym).
-6. Przed filmem: powtórz trzy analizy z przewodnika i porównaj z tabelą wyników powyżej.
+4. **Anonimizacja na filmie i w prezentacji:** rozmyjcie pełny adres `0x3963…`, nazwę `quasarbuilder.eth` i kwoty z sekcji „Aktywność w blockchainie” (ustalenie z mentorem powyżej).
+5. **Test zmiany w czasie** do filmu: harmonogram co 5 minut, zmiana portfela w README Błażeja, karta „Zmiany względem poprzedniego przebiegu”; potem przywróć README.
+6. Opcjonalnie: link `http://169.254.169.254/latest/meta-data` na stronie Kordasa, żeby pokazać blokadę SSRF na żywo (wpis „ZABLOKOWANO” w ruchu wychodzącym).
+7. Przed filmem: powtórz trzy analizy z przewodnika i porównaj z tabelą wyników powyżej.
