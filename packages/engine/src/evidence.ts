@@ -23,6 +23,22 @@ export function toEvidence(doc: CollectedDocument, connector: string, query: Ide
   };
 }
 
+/**
+ * Właściciel strony na hostingu przypisanym do konta: `<login>.github.io` (GitHub Pages), `<login>.gitlab.io`, `<login>.codeberg.page`.
+ * Subdomenę takiego hostingu może opublikować wyłącznie właściciel konta o tym loginie, więc jest to silny trop do profilu.
+ */
+export function pagesOwner(url: string): { service: 'github' | 'gitlab' | 'codeberg'; login: string } | null {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const m = host.match(/^([a-z0-9](?:[a-z0-9-]{0,38}))\.(github\.io|gitlab\.io|codeberg\.page)$/);
+  if (!m) return null;
+  return { service: m[2] === 'github.io' ? 'github' : m[2] === 'gitlab.io' ? 'gitlab' : 'codeberg', login: m[1] };
+}
+
 /** Wyszukuje w tekście identyfikatory do pivotowania (Telegram, e-mail, URL, nick GitHub). */
 export function extractIdentifiers(text: string): Identifier[] {
   const out: Identifier[] = [];
@@ -36,7 +52,11 @@ export function extractIdentifiers(text: string): Identifier[] {
     const url = m[0].replace(/[.,;]+$/, '');
     const gh = url.match(/github(?:\.com)?\/([A-Za-z0-9-_]{2,39})\/?$/);
     if (gh) add('nick', gh[1]);
-    else add('url', url);
+    else {
+      add('url', url);
+      const owner = pagesOwner(url);
+      if (owner?.service === 'github') add('nick', owner.login);
+    }
   }
   return out;
 }

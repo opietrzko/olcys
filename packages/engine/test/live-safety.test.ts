@@ -85,3 +85,19 @@ describe('wyszukiwarka', () => {
     expect(kindForHost('www.olx.pl')).toBe('P2P_LISTING');
   });
 });
+
+describe('GitHub Pages → konto GitHub', () => {
+  it('strona <login>.github.io daje trop do konta GitHub o tym loginie', async () => {
+    const { extractIdentifiers, pagesOwner } = await import('../src/evidence');
+    expect(pagesOwner('https://kordas-dev.github.io/')).toEqual({ service: 'github', login: 'kordas-dev' });
+    expect(pagesOwner('https://example.com/')).toBeNull();
+    const ids = extractIdentifiers('Moja strona: https://kordas-dev.github.io/oferta');
+    expect(ids).toContainEqual({ type: 'nick', value: 'kordas-dev' });
+    expect(ids).toContainEqual({ type: 'url', value: 'https://kordas-dev.github.io/oferta' });
+  });
+
+  it('adres TRON w zapisie hex jest zamieniany na Base58Check', async () => {
+    const { tronHexToBase58 } = await import('../src/providers');
+    expect(tronHexToBase58('41a614f803b6fd780986a42c78ec9c7f77e6ded13c')).toBe('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+  });
+});

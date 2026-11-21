@@ -71,6 +71,6 @@ export const api = {
   rerun: (id: string) => req<Run>(`/api/analyses/${id}/runs`, { method: 'POST', body: '{}' }),
   schedule: (id: string, scheduleMinutes: number | null) => req<{ ok: true }>(`/api/analyses/${id}`, { method: 'PATCH', body: JSON.stringify({ scheduleMinutes }) }),
   run: (id: string) => req<Run>(`/api/runs/${id}`),
-  diff: (id: string) => req<{ diff: RunDiff | null; message?: string }>(`/api/runs/${id}/diff`),
+  diff: (id: string, base?: string) => req<{ diff: RunDiff | null; message?: string }>(`/api/runs/${id}/diff${base ? `?base=${encodeURIComponent(base)}` : ''}`),
   audit: () => req<{ at: string; actor: string; action: string; target: string; details: Record<string, unknown> }[]>('/api/audit'),
 };

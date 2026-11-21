@@ -43,9 +43,16 @@ export interface EngineConfig {
     evmApiKey?: string;
     blockscoutUrl: string;
     esploraUrl: string;
+    /** Zapasowe instancje Esplora (BTC) – używane przy limicie zapytań lub awarii podstawowej. */
+    esploraFallbacks: string[];
     tronGridUrl: string;
     ethRpcUrl?: string;
     liveRates: boolean;
+    /**
+     * Dodatkowe sieci EVM sprawdzane dla adresów 0x (ten sam adres = ten sam klucz prywatny we wszystkich sieciach EVM).
+     * Wymagają klucza Etherscan v2 (jeden klucz dla wszystkich sieci) – publiczne instancje Blockscout dla L2 blokują ruch automatyczny.
+     */
+    evmNetworks: string[];
   };
   labelsDir: string;
   /** Token GitHub (tylko odczyt danych publicznych) – podnosi limit API z 60 do 5000 zapytań/h. */
@@ -70,6 +77,7 @@ export const DEFAULT_LIVE_SOURCES = [
   'eth.blockscout.com',
   'ethereum-rpc.publicnode.com',
   'blockstream.info',
+  'mempool.space',
   'api.trongrid.io',
   'api.coingecko.com',
   'api.nbp.pl',
@@ -90,7 +98,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
   const blockscoutUrl = env.BLOCKSCOUT_URL ?? 'https://eth.blockscout.com';
   const evmApiUrl = env.EVM_API_URL ?? (evmApiKey ? 'https://api.etherscan.io/v2/api' : `${blockscoutUrl}/api`);
   const ethRpcUrl = env.ETH_RPC_URL || 'https://ethereum-rpc.publicnode.com';
-  const allow = [...DEFAULT_LIVE_SOURCES, ...list(env.EGRESS_ALLOWLIST), hostOf(searxng), hostOf(evmApiUrl), hostOf(ethRpcUrl), hostOf(env.ESPLORA_URL), hostOf(env.LLM_BASE_URL)].filter(Boolean) as string[];
+  const allow = [...DEFAULT_LIVE_SOURCES, ...list(env.EGRESS_ALLOWLIST), hostOf(searxng), hostOf(evmApiUrl), hostOf(ethRpcUrl), hostOf(env.ESPLORA_URL), ...list(env.ESPLORA_FALLBACK_URLS).map(hostOf), hostOf(env.LLM_BASE_URL)].filter(Boolean) as string[];
   return {
     egressAllowlist: [...new Set(allow)],
     webFetch: env.OLCYS_WEB_FETCH === 'allowlist' ? 'allowlist' : 'public',
@@ -121,9 +129,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
       evmApiKey,
       blockscoutUrl,
       esploraUrl: env.ESPLORA_URL ?? 'https://blockstream.info/api',
+      esploraFallbacks: env.ESPLORA_FALLBACK_URLS !== undefined ? list(env.ESPLORA_FALLBACK_URLS) : ['https://mempool.space/api'],
       tronGridUrl: env.TRONGRID_URL ?? 'https://api.trongrid.io',
       ethRpcUrl,
       liveRates: env.OLCYS_LIVE_RATES !== 'false',
+      evmNetworks: evmApiKey ? (env.EVM_NETWORKS !== undefined ? list(env.EVM_NETWORKS) : ['polygon', 'arbitrum']) : [],
     },
     labelsDir: env.LABELS_DIR ?? join(REPO_ROOT, 'data', 'labels'),
     githubToken: env.GITHUB_TOKEN || undefined,

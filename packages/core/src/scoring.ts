@@ -42,6 +42,29 @@ export const SCORING_RULES = {
   inferredInstitutional: { value: -40, label: 'Adres wnioskowany jako instytucjonalny (heurystyka on-chain)' },
 } as const;
 
+const SECOND_LEVEL = new Set(['com.pl', 'net.pl', 'org.pl', 'co.uk', 'org.uk', 'com.au', 'co.jp', 'com.br']);
+/** Hostingi stron przypisanych do kont – strona `<login>.github.io` to ta sama usługa co profil GitHub. */
+const SERVICE_ALIASES: [RegExp, string][] = [
+  [/(^|\.)github\.io$|(^|\.)githubusercontent\.com$|^gist\.github\.com$|^github(\.com)?$/, 'github.com'],
+  [/(^|\.)gitlab\.io$|^gitlab(\.com)?$/, 'gitlab.com'],
+  [/(^|\.)codeberg\.page$|^codeberg(\.org)?$/, 'codeberg.org'],
+  [/^t\.me$|^telegram(\.org|\.me)?$/, 'telegram'],
+  [/(^|\.)reddit\.com$|^reddit$/, 'reddit'],
+];
+
+/**
+ * Usługa (pochodzenie) źródła na potrzeby reguły synergii: różne subdomeny jednej domeny i strony hostowane
+ * na koncie danego serwisu (GitHub Pages) to JEDNA usługa – wielokrotne wystąpienie w niej nie jest niezależnym potwierdzeniem.
+ */
+export function sourceService(family: string): string {
+  const f = family.toLowerCase().replace(/^www\./, '');
+  for (const [re, service] of SERVICE_ALIASES) if (re.test(f)) return service;
+  if (!f.includes('.')) return f;
+  const parts = f.split('.');
+  const n = SECOND_LEVEL.has(parts.slice(-2).join('.')) ? 3 : 2;
+  return parts.slice(-n).join('.');
+}
+
 export const BANDS: { min: number; band: ConfidenceBand; label: string }[] = [
   { min: 80, band: 'BARDZO_WYSOKIE', label: 'Bardzo wysokie prawdopodobieństwo (80–100%)' },
   { min: 60, band: 'PRAWDOPODOBNE', label: 'Prawdopodobne (60–79%)' },
@@ -130,14 +153,14 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
 
   // SYNERGIA – niezależne rodziny źródeł (wielokrotność w jednym serwisie się nie liczy)
   const strong = subjectOccurrences.filter((o) => (o.identityLink!.strength === 'DIRECT' || o.identityLink!.strength === 'PIVOT') && o.context.category !== 'THIRD_PARTY_REFERENCE' && o.context.category !== 'MASS_COMMENT');
-  const families = [...new Set(strong.map((o) => o.family))];
+  const families = [...new Set(strong.map((o) => sourceService(o.family)))];
   if (families.length >= SCORING_RULES.synergy.minFamilies) {
     rules.push({
       ruleId: 'SYNERGY',
       label: SCORING_RULES.synergy.label,
       kind: 'bonus',
       delta: SCORING_RULES.synergy.value,
-      premise: `Niezależne źródła: ${families.join(', ')}`,
+      premise: `Niezależne źródła: ${families.join(', ')} (źródła: ${[...new Set(strong.map((o) => o.family))].join(', ')})`,
       occurrenceIds: strong.map((o) => o.id),
     });
   }

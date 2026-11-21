@@ -19,20 +19,38 @@ services:
       DATABASE_URL: postgres://olcys:${POSTGRES_PASSWORD:-olcys-dev-only}@db:5432/olcys
       SEARXNG_URL: ${SEARXNG_URL:-http://searxng:8080}
       EGRESS_ALLOWLIST: ${EGRESS_ALLOWLIST:-}
-      ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY:-}
+      OLCYS_WEB_FETCH: ${OLCYS_WEB_FETCH:-public}
+      OLCYS_MAX_DEPTH: ${OLCYS_MAX_DEPTH:-}
+      OLCYS_SEARCH_RESULTS: ${OLCYS_SEARCH_RESULTS:-}
+      OLCYS_LIVE_RATES: ${OLCYS_LIVE_RATES:-true}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      OLCYS_REDDIT: ${OLCYS_REDDIT:-true}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID:-}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET:-}
+      BLOCKSCOUT_URL: ${BLOCKSCOUT_URL:-https://eth.blockscout.com}
+      ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY:-}
+      EVM_NETWORKS: ${EVM_NETWORKS:-polygon,arbitrum}
       ETH_RPC_URL: ${ETH_RPC_URL:-}
+      ESPLORA_URL: ${ESPLORA_URL:-https://blockstream.info/api}
+      TRONGRID_URL: ${TRONGRID_URL:-https://api.trongrid.io}
+      # tryb offline (nagranie montowane z ./data/recordings)
+      OLCYS_RECORD_DIR: ${OLCYS_RECORD_DIR:-}
+      OLCYS_REPLAY_DIR: ${OLCYS_REPLAY_DIR:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
+    volumes: ["./data/recordings:/app/data/recordings"]
     ports: ["4000:4000"]
     depends_on:
       db: { condition: service_healthy }
       searxng: { condition: service_started }
 
   searxng:
-    image: searxng/searxng:latest
+    # wersja przypięta (odtwarzalność, kontrola łańcucha dostaw) – aktualizacja świadomą decyzją
+    image: searxng/searxng:2026.10.30-ffa88e3ba
     volumes: ["./infra/searxng/settings.yml:/etc/searxng/settings.yml:ro"]
-    environment: { SEARXNG_BASE_URL: "http://searxng:8080/" }
+    environment:
+      SEARXNG_BASE_URL: "http://searxng:8080/"
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-olcys-change-me-in-production}
     ports: ["8888:8080"]
     restart: unless-stopped
 

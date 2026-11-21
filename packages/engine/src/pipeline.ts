@@ -17,6 +17,8 @@ import {
   computeConfidence,
   detectProfileChanges,
   extractAddresses,
+  inferInstitutional,
+  resolveAsset,
   isExcluded,
   normalizeText,
   normalizePhone,
@@ -34,6 +36,7 @@ import {
   type SubjectIdentity,
   type TraceStep,
   type Transfer,
+  type AddressLabel,
 } from '@olcys/core';
 import { ENGINE_VERSION, type EngineConfig } from './config';
 import { ALL_CONNECTORS, HISTORY_CONNECTORS } from './connectors/registry';
@@ -41,9 +44,9 @@ import type { ConnectorContext, HistoryConnector, SourceConnector } from './conn
 import { toEvidence } from './evidence';
 import { createSafeFetch, type EgressLogEntry } from './http';
 import { createLlmClient } from './llm';
-import { createChainProvider } from './providers';
+import { createChainProvider, type AddressInfo } from './providers';
 import { buildStatements } from './statements';
-import { fetchLiveRates } from './rates';
+import { extendHistoricalRates, fetchLiveRates } from './rates';
 
 export interface AnalysisInput {
   identifiers: Identifier[];
@@ -75,6 +78,8 @@ export function normalizeIdentifier(i: Identifier): Identifier {
   if (i.type === 'nick' || i.type === 'telegram') v = v.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
   if (i.type === 'email') v = v.toLowerCase();
   if (i.type === 'phone') v = normalizePhone(v) ?? v;
+  // https://host/ i https://host to ten sam zasób – bez tego strona byłaby pobierana i liczona dwa razy
+  if (i.type === 'url') v = v.replace(/^(https?:\/\/[^/?#]+)\/$/i, '$1');
   return { type: i.type, value: v };
 }
 
@@ -122,6 +127,24 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
   const segNorm = norm(seg.text);
   const named = identities.find((i) => i.type === 'name' && norm(i.value).length >= 5 && segNorm.includes(norm(i.value)));
   if (named) return { strength: 'WEAK', identity: `name:${named.value}`, via: `imię i nazwisko „${named.value}” wymienione obok adresu (możliwy homonim, autor niepotwierdzony)` };
+  return undefined;
+}
+
+const CEX_TAG = /(binance|kraken|coinbase|okx|okex|bybit|kucoin|bitfinex|huobi|htx|gate\.io|bitstamp|gemini|crypto\.com|zonda|bitbay|kanga|exchange|hot wallet|deposit)/;
+
+/** Etykieta z odpowiedzi API eksploratora (tagi publiczne / nazwa zweryfikowanego kontraktu). */
+export function labelFromInfo(chain: Chain, address: string, info: AddressInfo): AddressLabel | undefined {
+  const tagText = info.tags.join(' ').toLowerCase();
+  if (CEX_TAG.test(tagText)) return { chain, address, entity: info.tags.join(', '), category: 'CEX', source: info.source };
+  if (/(tornado|mixer)/.test(tagText) || /tornado/i.test(info.name ?? '')) return { chain, address, entity: info.tags.join(', ') || `Kontrakt ${info.name}`, category: 'MIXER', source: info.source };
+  if (info.isContract && info.name)
+    return {
+      chain,
+      address,
+      entity: `Kontrakt ${info.name}`,
+      category: /router|swap|dex|pool|pair|aggregat|exchange/i.test(info.name) ? 'DEX' : /token|erc20|usd/i.test(info.name) ? 'TOKEN_CONTRACT' : 'SMART_CONTRACT',
+      source: `${info.source} (zweryfikowany kontrakt)`,
+    };
   return undefined;
 }
 
@@ -323,44 +346,93 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   // 5–6. Klasyfikacja, scoring, analiza blockchain
   const findings: AddressFinding[] = [];
   const inputKeys = new Set(inputAddresses.map((v) => addressKey(v.chain!, v.canonical!)));
+  const infoChecked = new Set<string>();
+  /** KROK 3.1 także dla kontrahentów: etykiety z API eksploratora dla najważniejszych kontrahentów (Ethereum). */
+  const labelCounterparties = async (c: Chain, own: string, transfers: Transfer[]) => {
+    if (c !== 'ETH') return;
+    const ownKey = addressKey(c, own);
+    const score = new Map<string, { address: string; n: number }>();
+    for (const x of transfers) {
+      if ((x.network ?? 'ethereum') !== 'ethereum') continue;
+      const cp = addressKey(c, x.from) === ownKey ? x.to : x.from;
+      const k = addressKey(c, cp);
+      if (labels.get(c, cp) || infoChecked.has(k)) continue;
+      const e = score.get(k) ?? { address: cp, n: 0 };
+      e.n++;
+      score.set(k, e);
+    }
+    const top = [...score.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 12);
+    let added = 0;
+    for (const [k, { address: cp }] of top) {
+      infoChecked.add(k);
+      const info = await chain.getInfo(c, cp);
+      const l = info && labelFromInfo(c, cp, info);
+      if (l) {
+        labels.add(l);
+        added++;
+        t('labels', `Kontrahent ${cp}: ${l.entity} (${l.category}) – ${l.source}`);
+      }
+    }
+    if (top.length) t('labels', `${ownKey}: sprawdzono etykiety ${top.length} kontrahentów w eksploratorze, rozpoznano ${added}`);
+  };
+
   for (const [key, g] of groups) {
     const subjectOcc = g.occ.filter((o) => o.identityLink);
     const foreignOcc = g.occ.filter((o) => !o.identityLink);
     if (!subjectOcc.length && !inputKeys.has(key)) continue;
-    const code = g.chain === 'ETH' ? await chain.getCode(g.chain, g.address) : null;
+    // KROK 3.2: flaga kontraktu – Ethereum (eth_getCode) i TRON (/wallet/getcontract)
+    const code = g.chain === 'ETH' || g.chain === 'TRON' ? await chain.getCode(g.chain, g.address) : null;
     let isContract = code === null ? null : !/^0x0*$/.test(code);
     // KROK 3.1: etykiety z API eksploratora (gdy brak w lokalnym rejestrze)
     if (!labels.get(g.chain, g.address)) {
       const info = await chain.getInfo(g.chain, g.address);
       if (info) {
         if (isContract === null && info.isContract !== undefined) isContract = info.isContract;
-        const tagText = info.tags.join(' ').toLowerCase();
-        const cex = /(binance|kraken|coinbase|okx|okex|bybit|kucoin|bitfinex|huobi|htx|gate\.io|bitstamp|gemini|crypto\.com|zonda|bitbay|exchange|hot wallet|deposit)/.test(tagText);
-        if (cex) labels.add({ chain: g.chain, address: g.address, entity: info.tags.join(', '), category: 'CEX', source: info.source });
-        else if (/(tornado|mixer)/.test(tagText)) labels.add({ chain: g.chain, address: g.address, entity: info.tags.join(', '), category: 'MIXER', source: info.source });
-        else if (info.isContract && info.name) labels.add({ chain: g.chain, address: g.address, entity: `Kontrakt ${info.name}`, category: /router|swap|dex|pool|pair/i.test(info.name) ? 'DEX' : /token|erc20|usd/i.test(info.name) ? 'TOKEN_CONTRACT' : 'SMART_CONTRACT', source: `${info.source} (zweryfikowany kontrakt)` });
+        const l = labelFromInfo(g.chain, g.address, info);
+        if (l) labels.add(l);
         if (info.tags.length || info.name) t('labels', `${key}: ${info.source} → ${[info.name, ...info.tags].filter(Boolean).join(', ')}`);
       }
     }
-    const classification = classifyAddress(g.chain, g.address, labels, isContract);
+    let classification = classifyAddress(g.chain, g.address, labels, isContract);
     const excluded = isExcluded(classification.category);
     const transfers = excluded ? null : await chain.getTransfers(g.chain, g.address);
+    for (const n of chain.takeNotes(g.chain)) t('chain', `${key}: ${n}`);
     if (!excluded && transfers === null && chain.errorFor(g.chain)) t('chain', `Uwaga: ${key} – brak danych blockchain: ${chain.errorFor(g.chain)}`);
+    // Heurystyka adresu instytucjonalnego (adres bez etykiety, ale z aktywnością typową dla giełdy / usługi)
+    if (!excluded && transfers) {
+      const stats = await chain.getStats(g.chain, g.address);
+      const inferred = inferInstitutional(g.chain, g.address, transfers, stats ?? undefined);
+      if (inferred) {
+        classification = classifyAddress(g.chain, g.address, labels, isContract, inferred);
+        t('labels', `${key}: ${inferred.reason}`);
+      }
+    }
     const verifiedOnChain = Boolean(labels.get(g.chain, g.address)) || code !== null || transfers !== null;
     const attribution = computeConfidence({ subjectOccurrences: subjectOcc, allOccurrences: g.occ, classification, verifiedOnChain });
     let activity;
     if (!excluded && transfers && transfers.length) {
+      await labelCounterparties(g.chain, g.address, transfers);
+      if (config.chain.liveRates) {
+        const times = transfers.map((x) => x.timestamp).sort();
+        const assets = [...new Set(transfers.map((x) => resolveAsset(x)).filter((a) => a.verified && a.priceKey).map((a) => a.priceKey!))];
+        const h = await extendHistoricalRates(fetch, rates, { from: times[0], to: times[times.length - 1], assets });
+        rates = h.rates;
+        if (h.fetched.length) t('rates', `Kursy historyczne: ${h.fetched.join(', ')}`);
+        for (const e of h.errors) t('rates', `Uwaga: ${e}`);
+      }
       const neighbours = new Map<string, Transfer[]>();
-      const outCps = [...new Set(transfers.filter((x) => addressKey(g.chain, x.from) === key).map((x) => x.to))].filter((a) => !labels.get(g.chain, a)).slice(0, 8);
+      const outCps = [...new Set(transfers.filter((x) => (x.network ?? 'ethereum') === 'ethereum' || g.chain !== 'ETH').filter((x) => addressKey(g.chain, x.from) === key).map((x) => x.to))].filter((a) => !labels.get(g.chain, a)).slice(0, 8);
       for (const n of outCps) {
-        const nt = await chain.getTransfers(g.chain, n);
+        const nt = await chain.getTransfers(g.chain, n, { mainOnly: true });
         if (nt) neighbours.set(n, nt);
       }
+      chain.takeNotes(g.chain);
       activity = analyzeChain({ chain: g.chain, address: g.address, transfers, neighbours, labels, rates, dataSource: chain.sourceFor(g.chain) });
+      if (activity.ignoredTokenTransfers) t('chain', `${key}: pominięto ${activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny)`);
       if (transfers.length >= 1000) t('chain', `${key}: pobrano pierwsze ${transfers.length} transferów – historia może być niepełna`);
     }
     findings.push({ key, chain: g.chain, address: g.address, classification, attribution, occurrences: subjectOcc, foreignOccurrences: foreignOcc, activity, explorerUrl: chain.explorerUrl(g.chain, g.address) });
-    t('score', `${key}: ${classification.category} → ${attribution.score}% (${attribution.band})${activity ? `, ${activity.indicators.length} wskaźnik(ów) aktywności` : ''}`);
+    t('score', `${key}: ${classification.category}${classification.inferred ? ' (wniosek)' : ''} → ${attribution.score}% (${attribution.band})${activity ? `, ${activity.indicators.length} wskaźnik(ów) aktywności` : ''}`);
   }
   findings.sort((a, b) => Number(a.attribution.gated) - Number(b.attribution.gated) || b.attribution.score - a.attribution.score);
 

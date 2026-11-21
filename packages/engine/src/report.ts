@@ -82,9 +82,14 @@ ${
   f.activity
     ? `<p><b>Aktywność w blockchainie</b> (${esc(f.activity.dataSource)}): ${f.activity.txCount} tx, wpływy ≈ ${usd(f.activity.totalInUsd)} USD / ${usd(f.activity.totalInPln)} PLN, wypływy ≈ ${usd(f.activity.totalOutUsd)} USD / ${usd(f.activity.totalOutPln)} PLN.</p>
 <ul class="st">${f.activity.indicators.map((i) => `<li class="${i.basis === 'computed' ? 'calc' : 'concl'}"><b>${i.basis === 'computed' ? 'WYNIK OBLICZENIA' : 'WNIOSEK DO WERYFIKACJI'}</b> ${esc(i.title)} – ${esc(i.description)}</li>`).join('')}</ul>
-<p><b>Chronologia przepływu środków:</b></p><table><tr><th>Data</th><th>Kier.</th><th>Kwota</th><th>≈USD</th><th>Kontrahent</th><th>Tx</th></tr>${f.activity.timeline
-        .map((x) => `<tr><td>${dt(x.timestamp)}</td><td>${x.direction === 'IN' ? '⬇ wpływ' : '⬆ wypływ'}</td><td>${x.amount} ${esc(x.asset)}</td><td>${x.usd === null ? '—' : usd(x.usd)}</td><td class="mono">${esc(x.counterpartyLabel ?? x.counterparty)}</td><td class="mono">${esc(x.hash.slice(0, 14))}…</td></tr>`)
-        .join('')}</table>`
+<p><b>Chronologia przepływu środków</b>${f.activity.ignoredTokenTransfers ? ` (bez ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów – pełna lista w pakiecie dowodowym JSON)` : ''}:</p><table><tr><th>Data</th><th>Kier.</th><th>Kwota</th><th>≈USD</th><th>≈PLN</th><th>Kurs NBP (art. 11a)</th><th>Kontrahent</th><th>Tx</th></tr>${f.activity.timeline
+        .filter((x) => x.verifiedAsset !== false)
+        .map(
+          (x) =>
+            `<tr><td>${dt(x.timestamp)}</td><td>${x.direction === 'IN' ? '⬇ wpływ' : '⬆ wypływ'}</td><td>${x.amount} ${esc(x.asset)}${x.network ? ` <span class="muted">(${esc(x.network)})</span>` : ''}${x.verifiedAsset === false ? '<br><span class="neg">niezweryfikowany token – pominięty</span>' : ''}</td><td>${x.usd === null ? '—' : usd(x.usd)}${x.priceBasis === 'current' ? '*' : ''}</td><td>${x.pln === null || x.pln === undefined ? '—' : usd(x.pln)}</td><td>${x.nbp ? `${x.nbp.mid} z ${esc(x.nbp.date)} (${esc(x.nbp.no)})` : 'kurs bieżący'}</td><td class="mono">${esc(x.counterpartyLabel ?? x.counterparty)}</td><td class="mono">${esc(x.hash.slice(0, 14))}…</td></tr>`,
+        )
+        .join('')}</table>
+<p class="muted">${esc(f.activity.plnBasis ?? '')}${f.activity.timeline.some((x) => x.priceBasis === 'current') ? ' * cena krypto bieżąca – brak notowania z dnia transakcji.' : ''}${f.activity.ignoredTokenTransfers ? ` Pominięto ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny).` : ''}</p>`
     : ''
 }
 <ul class="st">${stmt('CONCLUSION', f.key)}</ul></div>`,

@@ -1,16 +1,34 @@
-# SearXNG – self-hosted wyszukiwarka meta dla OŁCyŚ (zapytania nie trafiają do usług zewnętrznych bez pośrednika).
-use_default_settings: true
+# SearXNG – self-hosted wyszukiwarka meta dla OŁCyŚ.
+# Identyfikatory z analiz trafiają WYŁĄCZNIE do wyszukiwarek wymienionych w `keep_only` (zatwierdzona lista usług
+# zewnętrznych, wymóg 5.7 zadania). Wyszukiwarka nie dostaje informacji o analizie ani użytkowniku – tylko treść zapytania,
+# z adresu IP serwera SearXNG (bez cookies, bez nagłówków przeglądarki analityka). Zmiana listy = decyzja administratora KAS.
+use_default_settings:
+  engines:
+    keep_only:
+      - duckduckgo
+      - bing
+      - brave
+      - wikipedia
 general:
   instance_name: "OLCyS search"
+  enable_metrics: false
 server:
+  # nadpisywany zmienną środowiskową SEARXNG_SECRET (docker-compose); wartość poniżej tylko dla uruchomienia lokalnego
   secret_key: "olcys-change-me-in-production"
   limiter: false
   image_proxy: false
   public_instance: false
 search:
   safe_search: 0
+  autocomplete: ""
   formats:
     - html
     - json
+# silniki z listy keep_only domyślnie wyłączone w SearXNG – włączone jawnie
+engines:
+  - name: bing
+    disabled: false
+outgoing:
+  request_timeout: 6.0
 ui:
   default_locale: "pl"

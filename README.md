@@ -63,11 +63,12 @@ OŁCyŚ automatyzuje tę pracę dla analityków **Krajowej Administracji Skarbow
 
 **Kluczowe możliwości:**
 
-- **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias)
+- **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias; strona `<login>.github.io` → konto GitHub `<login>`)
 - **Ekstrakcja adresów** – BTC, ETH/EVM, TRON, LTC, SOL z walidacją sum kontrolnych i odtwarzaniem zapisów celowo zaciemnionych
 - **Wskaźnik Pewności** – deterministyczne, wersjonowane reguły; każdy punkt ma przesłankę i źródło
-- **Odrzucanie fałszywych trafień** – giełdy, kontrakty, miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia
-- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy, wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery, wolumen w PLN
+- **Odrzucanie fałszywych trafień** – giełdy, kontrakty (Ethereum i TRON), miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia, adresy o aktywności instytucjonalnej bez etykiety, fałszywe tokeny („USDT” z nieznanego kontraktu)
+- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery, wolumen w PLN; Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x)
+- **Wycena pod PIT-38** – cena krypto z dnia transakcji i kurs średni NBP z ostatniego dnia roboczego przed transakcją (art. 11a ust. 1 ustawy o PIT), z numerem tabeli NBP przy każdej pozycji
 - **Analizy cykliczne** – harmonogram, porównanie przebiegów, wykrywanie podmiany adresu w czasie (także z archiwum Internetu)
 - **Raport** – rozdzielenie **faktów źródłowych**, **wyników obliczeń** i **wniosków do weryfikacji**, kopie dowodów z SHA-256, chronologia przepływu środków
 
@@ -204,6 +205,36 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
 
 Otwórz http://localhost:5173, wpisz co najmniej jeden identyfikator i kliknij **Uruchom analizę**. Widok przebiegu pokazuje etapy analizy, adresy z rozpisaniem wyniku na reguły, graf powiązań, fakty/obliczenia/wnioski oraz źródła z sumami SHA-256. Raport do druku / PDF i pakiet dowodowy JSON są dostępne z widoku przebiegu.
 
+### Przykład: przebieg na personie testowej
+
+Wejście: tylko adres strony `https://kordas-dev.github.io/` (fikcyjna persona zespołu „Ksawery Kordas”). Fragment zakładki *Przebieg i parametry*:
+
+```text
+15:58:00 input    Identyfikatory wejściowe: url=https://kordas-dev.github.io; maks. głębokość pivotowania 6
+15:58:00 web      https://kordas-dev.github.io: strona hostowana na GitHub Pages – właściciel konta GitHub „kordas-dev”
+15:58:00 pivot    Nowy identyfikator nick=kordas-dev (głębokość 1, źródło: https://kordas-dev.github.io)
+15:58:00 pivot    Nowy identyfikator telegram=kordas_sprzedaz (głębokość 1, źródło: https://kordas-dev.github.io)
+15:58:02 github   nick=kordas-dev: 2 dokument(ów), nowych 2
+15:58:05 telegram telegram=kordas_sprzedaz: 1 dokument(ów), nowych 1
+15:58:08 pivot    Tropy wyczerpane – 5 identyfikator(ów), najgłębszy poziom 2 z 6
+15:58:13 score    BTC:bc1qj2xp3cuqeuldce3h36q3d2q7d5jrt474q8mtqz: UNHOSTED → 90% (BARDZO_WYSOKIE)
+15:58:13 score    ETH:0x165cd37b4c644c2921454429e7f9358d18a45e14: CHARITY → 0% (WYKLUCZONE)
+15:58:16 score    ETH:0xd3e785eff14af8454af1dce3ba63321123bce61c: UNHOSTED → 100% (BARDZO_WYSOKIE)
+15:58:17 score    TRON:TPL5VC5b8Nt7Kvhq2VvvJq5nTp6y9zbZoc: UNHOSTED → 70% (PRAWDOPODOBNE)
+15:58:20 score    ETH:0x5b2095ec0ea6484c2bf656d861e163971e240435: UNHOSTED → 10% (NISKIE)
+15:58:20 done     Zakończono: 3 adres(ów) ≥60%, 1 odrzuconych
+```
+
+| Adres | Wynik | Uzasadnienie (reguły) |
+|---|---|---|
+| `0xd3e7…E61C` (ETH) | **100%** | profil autorski +85, pivot −5, deklaracja własności +5, synergia GitHub + Telegram +15 |
+| `bc1qj2…mtqz` (BTC) | **90%** | strona autorska +85, deklaracja własności +5 |
+| `TPL5…Zoc` (TRON) | **70%** | ogłoszenie sprzedaży na Telegramie +70, pivot −5, „wpłać na” +5 |
+| `0x5b20…0435` (ETH) | **10%** | autor ostrzega przed scamem – adres cudzy +15, pivot −5 |
+| `0x165C…5e14` (ETH) | **0%** | bramka: adres zbiórki (etykieta) |
+
+Pełny opis scenariuszy i wyników: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+
 ### Analiza z linii poleceń
 
 ```sh
@@ -245,12 +276,14 @@ npm run licenses    # raport licencji zależności
 | Parametr | Opis | Domyślnie |
 |---|---|---|
 | Identyfikatory | `nick`, `email`, `phone`, `telegram`, `name`, `url`, `address` (min. 1). Telefon normalizowany do E.164 (domyślnie +48) | – |
-| Głębokość pivotowania | Liczba „skoków” po identyfikatorach odkrytych na profilach podmiotu | 3 |
+| Głębokość pivotowania | Liczba „skoków” po identyfikatorach odkrytych na profilach podmiotu (limit bezpieczeństwa: 60 identyfikatorów na przebieg) | 6 |
 | Historia (archiwum) | Wersje archiwalne profili i stron (Wayback CDX) do wykrycia podmiany adresu | wł. |
 | Harmonogram | Analiza cykliczna (5 min / 1 h / dzień / tydzień) z porównaniem wyników | brak |
 | Konektory | Lista źródeł; można wyłączyć wybrane | wszystkie aktywne |
 
 Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne powiązanie). Wyniki wyszukiwania po samym imieniu i nazwisku nie rozszerzają poszukiwań.
+
+**Hosting przypisany do konta:** stronę `<login>.github.io` (także `<login>.gitlab.io`, `<login>.codeberg.page`) może opublikować tylko właściciel konta o tym loginie, więc taka strona prowadzi do profilu GitHub jako powiązanie pośrednie (`PIVOT`). Dla reguły synergii strona GitHub Pages i profil GitHub to **ta sama usługa** – adres opublikowany w obu miejscach nie dostaje premii +15.
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -271,11 +304,13 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | SearXNG (self-hosted) | wyszukiwanie identyfikatorów i adresów w otwartym Internecie, pobranie stron wyników (bez eksploratorów blockchain) | własna instancja |
 | Strony WWW | strony linkowane z profili i z wyników | GET z ochroną SSRF |
 | Wayback CDX | historyczne wersje profili i stron | publiczne API |
-| Blockscout / Etherscan | historia ETH i tokenów, **etykiety i nazwy zweryfikowanych kontraktów** | Blockscout bez klucza |
+| Blockscout / Etherscan | historia ETH i tokenów, **nazwy zweryfikowanych kontraktów** (także kontrahentów transakcji), liczba transakcji adresu | Blockscout bez klucza |
+| Etherscan v2 (wiele sieci) | ten sam adres 0x w sieciach Polygon, Arbitrum, BSC, Base, OP | wymaga `ETHERSCAN_API_KEY` (publiczne instancje Blockscout L2 blokują ruch automatyczny) |
 | `eth_getCode` | flaga kontraktu (bytecode ≠ `0x`) | publiczny RPC |
-| Esplora (Blockstream) | historia BTC (do 100 tx) | bez klucza |
-| TronGrid | transfery USDT TRC20 | bez klucza |
-| NBP + CoinGecko | kurs USD/PLN (tabela A) i bieżące ceny krypto | bez klucza; przy awarii kurs zapasowy z adnotacją |
+| Esplora (Blockstream, zapasowo mempool.space) | historia BTC (do 100 tx), łączna liczba transakcji | bez klucza; ponowienie przy limicie 429 |
+| TronGrid | transfery TRC20 i natywne TRX, flaga kontraktu (`/wallet/getcontract`) | bez klucza |
+| NBP | kurs USD/PLN: bieżący i **historyczny** (tabele A z okresu transakcji) | bez klucza; przy awarii kurs zapasowy z adnotacją |
+| CoinGecko | ceny krypto: bieżące i dzienne z ostatnich 365 dni | bez klucza |
 
 > **Ograniczenia:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP, a wyszukiwanie kodu działa tylko z tokenem i obejmuje pliki dopiero po zaindeksowaniu przez GitHub. Reddit odmawia zapytań anonimowych z wielu sieci (403) – do scenariuszy z Redditem potrzebna jest zarejestrowana aplikacja tylko do odczytu (`REDDIT_CLIENT_ID/SECRET`), a wdrożenie w KAS – zgody wynikającej z Reddit Data API Terms. NBP bywa chwilowo niedostępne. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
 
@@ -317,7 +352,8 @@ Wersja reguł: `olcys-score/1.0.0`.
 | Ten sam adres publikuje ≥3 obcych autorów (zbiórka / giveaway / scam) | −30 |
 | Adres tylko w archiwalnej wersji zasobu | −5 |
 | Brak weryfikacji w blockchainie | −10 |
-| **Bramka:** etykieta CEX / custodial / DEX / kontrakt tokena / mikser / zbiórka / bramka fiat / sankcje, albo `eth_getCode ≠ 0x` | **0%** |
+| Adres wnioskowany jako instytucjonalny (bez etykiety, ≥5000 transakcji lub ≥300 kontrahentów) | −40 |
+| **Bramka:** etykieta CEX / custodial / DEX / kontrakt tokena / mikser / zbiórka / bramka fiat / sankcje, albo kod kontraktu (Ethereum: `eth_getCode ≠ 0x`, TRON: `/wallet/getcontract`) | **0%** |
 
 | Przedział | Znaczenie |
 |---|---|
@@ -326,6 +362,10 @@ Wersja reguł: `olcys-score/1.0.0`.
 | 40–59% | średnie – wymaga drugiego śladu |
 | 1–39% | niskie / szum |
 | 0% | wykluczone (fałszywe trafienie) |
+
+**Synergia a „niezależne źródło”:** źródła grupowane są po usłudze, a nie po adresie strony: subdomeny jednej domeny, profil GitHub, `raw.githubusercontent.com` i strona `*.github.io` to jedno źródło (zgodnie z załącznikiem: *wielokrotne wystąpienie adresu w ramach jednej usługi nie stanowi dodatkowego potwierdzenia*).
+
+**Adres instytucjonalny bez etykiety:** etykiet nie da się mieć dla wszystkich adresów giełd. Gdy adres ma aktywność typową dla giełdy lub usługi (≥5000 transakcji w historii albo ≥300 różnych kontrahentów w pobranym fragmencie), dostaje karę −40 i kategorię *custodial (wniosek)*. To wniosek do weryfikacji, a nie bramka 0%.
 
 **Otwarte przestrzenie nazw (ENS, Keybase):** nazwę `.eth` czy konto Keybase o danej nazwie może zarejestrować każdy. Zgodność z nickiem daje tylko powiązanie słabe, dopóki nie ma **wzajemnego potwierdzenia**: dla Keybase zweryfikowanego dowodu konta o tym nicku, dla ENS innego profilu podmiotu wskazującego tę nazwę lub adres. Przykład z testu na żywo: `torproject.eth` bez potwierdzenia ma 55% zamiast 90%.
 
@@ -345,7 +385,11 @@ Wersja reguł: `olcys-score/1.0.0`.
 | `MIXER_EXPOSURE` | kontakt z mikserem / podmiotem sankcjonowanym | obliczenie |
 | `HIGH_VOLUME` | łączny wolumen ≥20 000 USD (z przeliczeniem na PLN) | obliczenie |
 
-Wycena odbywa się według kursu bieżącego. Do rozliczeń PIT-38 wymagany jest kurs z dnia transakcji, dlatego raport oznacza wartości w PLN jako do weryfikacji.
+**Fałszywe tokeny:** symbol tokena może nadać każdy, a historie portfeli są pełne spamowych „USDT”. Do wyceny i wskaźników liczą się tylko tokeny z **rejestru zweryfikowanych kontraktów** (`packages/core/src/tokens.ts`: USDT, USDC, DAI, PYUSD, FDUSD, BUSD, EURC, WETH w 6 sieciach EVM i w TRON; każdy kontrakt sprawdzony wywołaniem `symbol()` w publicznym RPC). Pozostałe transfery są pokazywane z adnotacją „niezweryfikowany token – pominięty”.
+
+**Etykiety kontrahentów:** dla 12 najczęstszych kontrahentów adresu narzędzie pobiera z eksploratora nazwę zweryfikowanego kontraktu (router DEX, pula Tornado Cash). Giełdy rozpoznaje lokalny zbiór etykiet (`data/labels`), bo publiczne API eksploratorów nie udostępniają tagów giełd bez klucza. Etykiety kont EOA (np. portfeli giełd) obowiązują we wszystkich sieciach EVM, bo ten sam adres oznacza ten sam klucz prywatny. Etykiety kontraktów obowiązują tylko w sieci, w której kontrakt wdrożono.
+
+**Wycena (PIT-38):** każda pozycja chronologii ma cenę krypto w USD **z dnia transakcji** (CoinGecko, ostatnie 365 dni; stablecoiny dolarowe – parytet 1 USD) i przeliczenie na PLN po **kursie średnim NBP z ostatniego dnia roboczego poprzedzającego transakcję** (art. 11a ust. 1 ustawy o PIT) – z datą i numerem tabeli NBP. Starsze transakcje bez notowania dziennego są oznaczone gwiazdką (cena bieżąca). Wynik pozostaje **obliczeniem pomocniczym** – nie zastępuje ustalenia przychodu przez analityka.
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -357,13 +401,16 @@ Wycena odbywa się według kursu bieżącego. Do rozliczeń PIT-38 wymagany jest
 npm test
 ```
 
-37 testów automatycznych, działających bez dostępu do sieci:
+50 testów automatycznych, działających bez dostępu do sieci:
 
 - walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne)
 - Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów)
-- wskaźniki cash-out (swap na stablecoiny, wnioskowany adres depozytowy giełdy)
+- wskaźniki cash-out (swap na stablecoiny, wnioskowany adres depozytowy giełdy, fałszywe „USDT” pominięte)
+- kurs NBP z dnia poprzedzającego transakcję, wycena z ceną z dnia transakcji
+- heurystyka adresu instytucjonalnego, synergia GitHub + GitHub Pages (bez premii)
+- poprawność sum kontrolnych wszystkich adresów w zbiorze etykiet
 - numer telefonu
-- bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów)
+- bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów), trop GitHub Pages → konto GitHub, konwersja adresów TRON hex → Base58
 - plan kont testowych zespołu (GitHub + dev.to + Reddit) od wejścia do wyniku, odtworzony z nagrań: synergia GitHub + dev.to, pułapki USDT i Binance = 0%, giveaway na Reddicie = szum bez synergii, wyszukiwanie po samym adresie, warianty nicku
 
 **Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na fikcyjnych kontach testowych zespołu (GitHub, Keybase, Telegram, strona WWW, …) z opublikowanymi adresami portfeli testowych. Każdy scenariusz opisuje, co wpisać do narzędzia i jaki wynik jest oczekiwany: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
@@ -384,11 +431,13 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `EGRESS_ALLOWLIST` | | | Dodatkowe zatwierdzone hosty API (lista domyślna: `DEFAULT_LIVE_SOURCES`) |
 | `OLCYS_WEB_FETCH` | | `public` | `public` – dowolna publiczna strona z ochroną SSRF; `allowlist` – tylko allowlista |
 | `BLOCKSCOUT_URL` | | `https://eth.blockscout.com` | Blockscout (bez klucza; możliwa własna instancja) |
-| `ETHERSCAN_API_KEY` | | | Gdy ustawiony – Etherscan v2 zamiast Blockscout |
+| `ETHERSCAN_API_KEY` | | | Gdy ustawiony – Etherscan v2 zamiast Blockscout i dodatkowe sieci EVM |
+| `EVM_NETWORKS` | | `polygon,arbitrum` (z kluczem) | Dodatkowe sieci EVM: `polygon`, `arbitrum`, `bsc`, `base`, `optimism` |
 | `ETH_RPC_URL` | | `https://ethereum-rpc.publicnode.com` | RPC Ethereum (bytecode, ENS); może być własny węzeł |
 | `ESPLORA_URL` | | `https://blockstream.info/api` | Esplora dla BTC |
+| `ESPLORA_FALLBACK_URLS` | | `https://mempool.space/api` | Zapasowe instancje Esplora (przy limicie 429 lub awarii) |
 | `TRONGRID_URL` | | `https://api.trongrid.io` | TronGrid dla TRON |
-| `OLCYS_MAX_DEPTH` | | `3` | Domyślna głębokość pivotowania |
+| `OLCYS_MAX_DEPTH` | | `6` | Domyślna głębokość pivotowania |
 | `OLCYS_SEARCH_RESULTS` | | `8` | Liczba wyników wyszukiwarki pobieranych na zapytanie |
 | `OLCYS_LIVE_RATES` | | `true` | Kursy z NBP i CoinGecko |
 | `OLCYS_REDDIT` | | `true` | `false` wyłącza konektor Reddit |
@@ -397,6 +446,7 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `OLCYS_REPLAY_DIR` | | | Katalog z nagraniem – analizy bez sieci (ma pierwszeństwo przed `OLCYS_RECORD_DIR`) |
 | `LLM_BASE_URL` | | | API zgodne z OpenAI (Ollama, vLLM, LocalAI, LiteLLM) |
 | `LLM_MODEL` | | `llama3.1` | Model do klasyfikacji kontekstu |
+| `SEARXNG_SECRET` | w produkcji | | Sekret instancji SearXNG (docker compose) |
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -408,7 +458,19 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 - Pobieranie stron odkrytych w dowodach blokuje adresy prywatne, pętli zwrotnej i link-local (ochrona SSRF w sieci wewnętrznej); każde przekierowanie jest sprawdzane **przed** wykonaniem.
 - Kopie dowodów serwowane są jako `text/plain` z CSP `sandbox` – żaden skrypt ze źródła się nie wykona.
 - Każda operacja (utworzenie analizy, przebieg, podgląd, raport, eksport) trafia do dziennika audytu; nagłówek `x-olcys-user` to miejsce na integrację z SSO/RBAC KAS.
+- Wyszukiwarka SearXNG przekazuje zapytania **wyłącznie** do zatwierdzonej listy silników (`infra/searxng/settings.yml`: DuckDuckGo, Bing, Brave, Wikipedia), z adresu serwera, bez cookies i danych analityka. Obraz SearXNG jest przypięty do konkretnej wersji, a jego sekret pochodzi ze zmiennej `SEARXNG_SECRET`.
 - Brak telemetrii i zależności od chmury publicznej.
+
+### Ochrona danych osobowych (RODO)
+
+Narzędzie przetwarza dane osobowe osób, których dotyczy analiza (identyfikatory, treści publicznych wpisów, adresy portfeli). Założenia dla wdrożenia w KAS:
+
+- **Podstawa prawna:** art. 6 ust. 1 lit. c i e RODO w związku z przepisami o zadaniach KAS (ustawa o Krajowej Administracji Skarbowej, Ordynacja podatkowa – czynności sprawdzające i analityczne). Przy wdrożeniu wymagana jest ocena skutków dla ochrony danych (DPIA, art. 35 RODO).
+- **Minimalizacja:** zbierane są tylko publiczne dokumenty, w których wystąpił adres lub identyfikator podmiotu; e-mail trafia do Gravatara wyłącznie jako hash; pivot tylko z dokumentów należących do podmiotu; limit 60 identyfikatorów na przebieg.
+- **Ograniczenie celu i rozliczalność:** każda operacja (utworzenie analizy, przebieg, podgląd, raport, eksport) trafia do dziennika audytu z identyfikatorem analityka (miejsce na integrację z SSO/RBAC KAS).
+- **Okres przechowywania:** do ustalenia w polityce KAS; przebiegi i kopie dowodów są przechowywane w PostgreSQL, więc retencję realizuje się zadaniem usuwającym przebiegi starsze niż ustalony okres.
+- **Prawa osób:** raport oddziela fakty źródłowe od wniosków, a każdy wniosek wskazuje źródło – ułatwia to weryfikację i sprostowanie.
+- **Brak przekazywania danych:** identyfikatory trafiają tylko do zatwierdzonych hostów (allowlista), bez telemetrii i usług chmurowych; model AI działa lokalnie.
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -436,10 +498,10 @@ Zależności przechodnie: MIT, ISC, BSD-2/3-Clause, Apache-2.0, BlueOak-1.0.0, 0
 
 ## Dalszy rozwój
 
-- Kolejne konektory: Reddit, X/Bluesky, Nostr (NIP-05), OLX/Allegro, Bitcointalk
+- Kolejne konektory: X/Bluesky, Nostr (NIP-05), OLX/Allegro, Bitcointalk
 - Dekodowanie kodów QR z obrazów (adresy publikowane jako grafika)
-- Pełne zbiory etykiet (OFAC SDN, otwarte repozytoria etykiet) i ich automatyczna aktualizacja
-- Klastrowanie adresów BTC (common-input-ownership), kursy historyczne NBP na dzień transakcji
+- Pełne zbiory etykiet (OFAC SDN, etykiety giełd z licencjonowanych źródeł, polskie giełdy i kantory) i ich automatyczna aktualizacja
+- Klastrowanie adresów BTC (common-input-ownership), ceny historyczne krypto starsze niż 365 dni (własne archiwum notowań)
 - Eksport raportu do PDF po stronie serwera, podpis elektroniczny pakietu dowodowego
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>

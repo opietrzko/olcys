@@ -530,7 +530,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
           <Skeleton rows={6} />
         </Panel>
       )}
-      {run?.result && run.id === current && <RunView key={run.id} run={run} />}
+      {run?.result && run.id === current && <RunView key={run.id} run={run} runs={data.runs} />}
     </div>
   );
 }

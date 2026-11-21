@@ -28,7 +28,7 @@ import {
 import { api, type Run } from './api';
 import { Graph, identityNodeId } from './Graph';
 import { NodeInspector } from './NodeInspector';
-import { CATEGORY_LABEL, CopyButton, Empty, ID_TYPE, LINK_LABEL, Panel, Score, Stat, dt, money, plural, short, Highlight } from './ui';
+import { CATEGORY_LABEL, CopyButton, Empty, ID_TYPE, LINK_LABEL, Panel, Score, Stat, amount, dt, money, plural, short, Highlight } from './ui';
 
 const KIND: Record<StatementKind, { label: string; cls: string }> = {
   FACT: { label: 'Fakt źródłowy', cls: 'fact' },
@@ -41,7 +41,7 @@ type Tab = 'graf' | 'adresy' | 'ustalenia' | 'zrodla' | 'przebieg';
 const flagsOf = (f: AddressFinding) => (f.activity?.indicators ?? []).filter((i) => i.type !== 'HIGH_VOLUME');
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
-export function RunView({ run }: { run: Run }) {
+export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
   const r = run.result!;
   const [tab, setTab] = useState<Tab>('graf');
   const [selected, setSelected] = useState<string | null>(r.findings[0]?.key ?? null);
@@ -57,12 +57,16 @@ export function RunView({ run }: { run: Run }) {
   }, []);
   const [hideExcluded, setHideExcluded] = useState(false);
   const [diff, setDiff] = useState<RunDiff | null>(null);
+  // przebiegi do porównania: zakończone, inne niż bieżący (domyślnie – poprzedni)
+  const baseCandidates = useMemo(() => runs.filter((x) => x.status === 'done' && x.id !== run.id), [runs, run.id]);
+  const [base, setBase] = useState<string>('');
   useEffect(() => {
     api
-      .diff(run.id)
+      .diff(run.id, base || undefined)
       .then((d) => setDiff(d.diff))
       .catch(() => setDiff(null));
-  }, [run.id]);
+  }, [run.id, base]);
+  const baseRun = baseCandidates.find((x) => x.id === (base || diff?.baseRunId));
   const sel = r.findings.find((f) => f.key === selected);
   const hasDiff = diff && (diff.addedAddresses.length > 0 || diff.removedAddresses.length > 0 || diff.scoreChanges.length > 0 || diff.newIndicators.length > 0);
 
@@ -90,9 +94,11 @@ export function RunView({ run }: { run: Run }) {
           className="changes"
           title={
             <>
-              <Bell size={15} aria-hidden="true" /> Zmiany względem poprzedniego przebiegu
+              <Bell size={15} aria-hidden="true" /> Zmiany względem {base ? 'przebiegu' : 'poprzedniego przebiegu'}
+              {baseRun ? <span className="faint" style={{ fontWeight: 400 }}> · {dt(baseRun.startedAt)}</span> : null}
             </>
           }
+          actions={<CompareSelect runs={baseCandidates} value={base} onChange={setBase} />}
         >
           <ul>
             {diff!.addedAddresses.map((a) => (
@@ -124,8 +130,9 @@ export function RunView({ run }: { run: Run }) {
         </Panel>
       )}
       {diff && !hasDiff && (
-        <p className="small faint" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Check size={14} aria-hidden="true" /> Porównanie z poprzednim przebiegiem: brak zmian w adresach i wynikach.
+        <p className="small faint" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <Check size={14} aria-hidden="true" /> Porównanie z {base ? 'wybranym' : 'poprzednim'} przebiegiem{baseRun ? ` (${dt(baseRun.startedAt)})` : ''}: brak zmian w adresach i wynikach.
+          {baseCandidates.length > 1 && <CompareSelect runs={baseCandidates} value={base} onChange={setBase} />}
         </p>
       )}
 
@@ -505,6 +512,9 @@ function Pipeline({ r }: { r: AnalysisResult }) {
 }
 
 function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; runId: string }) {
+  // transfery tokenów spoza rejestru (spam) są domyślnie ukryte w chronologii – pokazywane na żądanie
+  const [showIgnored, setShowIgnored] = useState(false);
+  const timeline = (f.activity?.timeline ?? []).filter((t) => showIgnored || t.verifiedAsset !== false);
   const maxAbs = Math.max(100, ...f.attribution.rules.map((x) => Math.abs(x.delta)));
   const ev = useMemo(() => new Map(r.evidence.map((e) => [e.id, e])), [r]);
   return (
@@ -637,8 +647,16 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
               <div className="small">{i.description}</div>
             </div>
           ))}
-          <h4>Chronologia przepływu środków</h4>
-          {f.activity.timeline.length ? (
+          <h4 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            Chronologia przepływu środków
+            {f.activity.ignoredTokenTransfers ? (
+              <label className="small faint" style={{ fontWeight: 400, display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                <input type="checkbox" checked={showIgnored} onChange={(e) => setShowIgnored(e.target.checked)} />
+                pokaż pominięte tokeny ({f.activity.ignoredTokenTransfers})
+              </label>
+            ) : null}
+          </h4>
+          {timeline.length ? (
             <div className="table-wrap">
               <table className="table">
                 <thead>
@@ -646,14 +664,14 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
                     <th>Data</th>
                     <th>Kierunek</th>
                     <th className="num">Kwota</th>
-                    <th className="num">≈ PLN</th>
+                    <th className="num">≈ PLN · kurs NBP</th>
                     <th>Kontrahent</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {f.activity.timeline.map((t, i) => (
+                  {timeline.map((t, i) => (
                     <tr key={i}>
-                      <td className="num" style={{ textAlign: 'left' }}>
+                      <td className="num" style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
                         {t.timestamp.slice(0, 16).replace('T', ' ')}
                       </td>
                       <td>
@@ -662,10 +680,24 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
                           {t.direction === 'IN' ? 'Wpływ' : 'Wypływ'}
                         </span>
                       </td>
-                      <td className="num">
-                        {t.amount} {t.asset}
+                      <td className="num" title={`${t.amount} ${t.asset}`}>
+                        {amount(t.amount)} <span className="asset-sym">{t.asset}</span>
+                        {t.network && <span className="faint small"> · {t.network}</span>}
+                        {t.verifiedAsset === false && (
+                          <div className="small neg" style={{ whiteSpace: 'normal' }} title={t.note}>
+                            niezweryfikowany token – pominięty
+                          </div>
+                        )}
                       </td>
-                      <td className="num">{t.usd === null ? '—' : money(t.usd * f.activity!.rates.usdPln)}</td>
+                      <td className="num" title={t.priceBasis === 'current' ? 'Cena krypto bieżąca (brak historii z dnia transakcji)' : t.priceBasis === 'peg' ? 'Stablecoin – parytet 1 USD' : t.priceBasis === 'historical' ? 'Cena krypto z dnia transakcji' : undefined}>
+                        {t.pln === null || t.pln === undefined ? (t.usd === null ? '—' : money(t.usd * f.activity!.rates.usdPln)) : money(t.pln)}
+                        {t.priceBasis === 'current' && <span className="faint">*</span>}
+                        {t.nbp && (
+                          <div className="small faint" title={`Tabela ${t.nbp.no} – ostatni dzień roboczy przed transakcją (art. 11a ust. 1 ustawy o PIT)`}>
+                            {t.nbp.mid} z {t.nbp.date}
+                          </div>
+                        )}
+                      </td>
                       <td>{t.counterpartyLabel ?? <code>{short(t.counterparty, 6)}</code>}</td>
                     </tr>
                   ))}
@@ -676,11 +708,32 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
             <p className="muted small">Brak transakcji w pobranym zakresie.</p>
           )}
           <p className="small faint" style={{ marginTop: 10, marginBottom: 0 }}>
-            Wartości według kursów: {f.activity.rates.source} ({f.activity.rates.asOf}).
+            {f.activity.plnBasis ?? `Wartości według kursów: ${f.activity.rates.source} (${f.activity.rates.asOf}).`}
+            {f.activity.timeline.some((t) => t.priceBasis === 'current') && ' * cena krypto bieżąca – brak notowania z dnia transakcji.'}
+            {f.activity.ignoredTokenTransfers ? ` Pominięto ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny).` : ''}
+            {f.activity.networks && f.activity.networks.length > 1 ? ` Sieci: ${f.activity.networks.join(', ')}.` : ''}
           </p>
         </Panel>
       )}
     </div>
+  );
+}
+
+function CompareSelect({ runs, value, onChange }: { runs: Run[]; value: string; onChange: (v: string) => void }) {
+  if (!runs.length) return null;
+  return (
+    <label className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      Porównaj z
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label="Przebieg do porównania">
+        <option value="">poprzednim przebiegiem</option>
+        {runs.map((x) => (
+          <option key={x.id} value={x.id}>
+            {dt(x.startedAt)}
+            {x.summary ? ` · ${x.summary.attributed}/${x.summary.addresses} adr.` : ''}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

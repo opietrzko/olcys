@@ -237,6 +237,7 @@ table { border-collapse: collapse; width: 100%; }
 .kv tr:last-child td { border-bottom: 0; }
 .kv td:first-child { padding-right: 16px; }
 .table-wrap { overflow-x: auto; }
+.asset-sym { display: inline-block; max-width: 11ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; white-space: nowrap; }
 
 /* ---------- Stany: puste, ładowanie, błąd ---------- */
 .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 40px 24px; color: var(--text-2); }
@@ -301,7 +302,7 @@ table { border-collapse: collapse; width: 100%; }
 .stat.accent .stat-value { color: var(--accent); }
 .stat.dim .stat-value { color: var(--text-3); }
 .stats.compact { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 12px; }
-.stats.compact .stat-value { font-size: 16px; }
+.stats.compact .stat-value { font-size: 16px; overflow-wrap: anywhere; }
 @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat { border-bottom: 1px solid var(--border); } }
 @media (max-width: 560px) {
   .stats, .stats.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -447,8 +448,10 @@ mark { background: var(--accent-soft); color: var(--accent); padding: 1px 3px; b
 .node-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .node-list li { display: grid; gap: 1px; font-size: 13px; }
 .node-rows { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-.node-rows .addr-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; }
-.node-row-top { display: inline-flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; }
+.node-rows .addr-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; padding: 9px 12px; }
+.node-rows .addr-row .score { flex-shrink: 0; margin-left: auto; }
+.node-row-top { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; }
+.node-row-top .mono { overflow: hidden; text-overflow: ellipsis; }
 .link-btn { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--accent); cursor: pointer; text-align: left; }
 .link-btn:hover { text-decoration: underline; }
 .tag-btn { cursor: pointer; font: inherit; font-size: 12px; }

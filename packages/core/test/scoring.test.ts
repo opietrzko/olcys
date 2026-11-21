@@ -37,6 +37,13 @@ describe('Wskaźnik Pewności', () => {
     expect(indep.score).toBe(85);
   });
 
+  it('profil GitHub + strona GitHub Pages to jedno źródło (bez synergii); GitHub + inna domena – synergia', () => {
+    const pages = computeConfidence({ subjectOccurrences: [occ('OWN_PROFILE', 'github', 'mój portfel'), occ('OWN_WEBSITE', 'janek.github.io', 'mój portfel')], allOccurrences: [], classification: unhosted, verifiedOnChain: true });
+    const other = computeConfidence({ subjectOccurrences: [occ('OWN_PROFILE', 'github', 'mój portfel'), occ('OWN_WEBSITE', 'janek.pl', 'mój portfel')], allOccurrences: [], classification: unhosted, verifiedOnChain: true });
+    expect(pages.rules.some((r) => r.ruleId === 'SYNERGY')).toBe(false);
+    expect(other.rules.find((r) => r.ruleId === 'SYNERGY')?.premise).toContain('github.com, janek.pl');
+  });
+
   it('wynik nie przekracza 100%', () => {
     const s = computeConfidence({ subjectOccurrences: [occ('OWN_PROFILE', 'github', 'mój portfel'), occ('OWN_WEBSITE', 'www', 'mój portfel')], allOccurrences: [], classification: unhosted, verifiedOnChain: true });
     expect(s.score).toBe(100);

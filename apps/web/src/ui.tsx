@@ -145,6 +145,8 @@ export const ThemeCtx = createContext<'light' | 'dark'>('light');
 export const short = (a: string, n = 8) => (a.length > n * 2 + 2 ? `${a.slice(0, n + 2)}…${a.slice(-n)}` : a);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 export const money = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
+/** Kwota krypto: do 8 miejsc po przecinku dla małych wartości, 4 dla większych (pełna wartość w podpowiedzi). */
+export const amount = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: Math.abs(n) < 1 ? 8 : 4 });
 
 /** Podświetla adres w kontekście. */
 const PL = new Intl.PluralRules('pl-PL');

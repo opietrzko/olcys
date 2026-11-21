@@ -212,6 +212,8 @@ export interface Transfer {
   /** Adres kontraktu tokena / metoda wywołana (np. "swapExactETHForTokens"). */
   tokenContract?: string;
   method?: string;
+  /** Sieć (dla EVM: ethereum, polygon, arbitrum, bsc, base, optimism). Brak = sieć główna łańcucha. */
+  network?: string;
 }
 
 export type IndicatorType =
@@ -246,6 +248,15 @@ export interface TimelineEntry {
   counterparty: string;
   counterpartyLabel?: string;
   note?: string;
+  /** Sieć transferu, gdy inna niż główna (np. polygon). */
+  network?: string;
+  /** false = token spoza rejestru zweryfikowanych kontraktów – pominięty w wycenie i wskaźnikach. */
+  verifiedAsset?: boolean;
+  /** Podstawa ceny w USD: kurs z dnia transakcji, parytet stablecoina albo kurs bieżący (brak historii). */
+  priceBasis?: 'historical' | 'peg' | 'current';
+  /** Wartość w PLN wg kursu średniego NBP z ostatniego dnia roboczego przed transakcją (art. 11a ust. 1 ustawy o PIT). */
+  pln?: number | null;
+  nbp?: { date: string; no: string; mid: number };
 }
 
 export interface ChainActivity {
@@ -264,6 +275,12 @@ export interface ChainActivity {
   indicators: ActivityIndicator[];
   timeline: TimelineEntry[];
   rates: RateTable;
+  /** Transfery tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe „USDT”). */
+  ignoredTokenTransfers?: number;
+  /** Opis podstawy przeliczenia na PLN. */
+  plnBasis?: string;
+  /** Sieci, z których pochodzą transfery (dla EVM). */
+  networks?: string[];
 }
 
 export interface RateTable {
@@ -271,4 +288,10 @@ export interface RateTable {
   asOf: string;
   usdPln: number;
   usd: Record<string, number>;
+  /** Kursy historyczne: tabele A NBP (USD/PLN, rosnąco po dacie) i dzienne ceny krypto w USD (klucz → RRRR-MM-DD → cena). */
+  history?: {
+    nbp: { date: string; no: string; mid: number }[];
+    prices: Record<string, Record<string, number>>;
+    source: string;
+  };
 }

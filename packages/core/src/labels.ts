@@ -62,6 +62,38 @@ export function classifyAddress(
   return { category: 'UNHOSTED', isContract, inferred: false, reasons };
 }
 
+/** Progi heurystyki „adres instytucjonalny” – profil aktywności typowy dla giełdy / usługi, a nie osoby. */
+export const INSTITUTIONAL_THRESHOLDS = { txCount: 5000, distinctCounterparties: 300 };
+
+/**
+ * Heurystyka on-chain (KROK 3, uzupełnienie etykiet): adres bez etykiety, ale z liczbą transakcji lub kontrahentów
+ * typową dla giełdy, bramki płatniczej czy usługi custodial. Wynik to WNIOSEK (kara −40), a nie bramka 0%,
+ * bo duża aktywność nie przesądza o charakterze adresu.
+ */
+export function inferInstitutional(
+  chain: Chain,
+  address: string,
+  transfers: { from: string; to: string }[],
+  stats?: { txCount?: number },
+): { category: AddressCategory; entity: string; reason: string } | undefined {
+  const key = addressKey(chain, address);
+  const cps = new Set<string>();
+  for (const t of transfers) {
+    const out = addressKey(chain, t.from) === key;
+    cps.add(addressKey(chain, out ? t.to : t.from));
+  }
+  const txCount = stats?.txCount ?? 0;
+  const hitsTx = txCount >= INSTITUTIONAL_THRESHOLDS.txCount;
+  const hitsCp = cps.size >= INSTITUTIONAL_THRESHOLDS.distinctCounterparties;
+  if (!hitsTx && !hitsCp) return undefined;
+  const parts = [hitsTx ? `${txCount} transakcji w historii (próg ${INSTITUTIONAL_THRESHOLDS.txCount})` : '', hitsCp ? `${cps.size} różnych kontrahentów w pobranym fragmencie historii (próg ${INSTITUTIONAL_THRESHOLDS.distinctCounterparties})` : ''].filter(Boolean);
+  return {
+    category: 'CUSTODIAL',
+    entity: 'Adres o aktywności instytucjonalnej (bez etykiety)',
+    reason: `Heurystyka on-chain: ${parts.join('; ')} – profil typowy dla giełdy, bramki lub usługi custodial, nie dla portfela osoby (wniosek do weryfikacji)`,
+  };
+}
+
 export function isExcluded(category: AddressCategory): boolean {
   return EXCLUDED_CATEGORIES.has(category);
 }
