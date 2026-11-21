@@ -14,11 +14,17 @@
     "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p apps/api && tsc -p apps/web",
     "cli": "tsx --env-file-if-exists=.env scripts/cli.ts",
     "gen:address": "tsx scripts/gen-address.ts",
+    "labels:update": "tsx scripts/update-labels.ts",
+    "verify:package": "tsx scripts/verify-package.ts",
+    "user:add": "tsx scripts/user-add.ts",
     "licenses": "npx --yes license-checker-rseidelsohn --summary --excludePrivatePackages"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/pngjs": "^6.0.5",
+    "@types/qrcode": "^1.5.5",
     "concurrently": "^9.1.2",
+    "qrcode": "^1.5.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"

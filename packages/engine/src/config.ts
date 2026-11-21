@@ -32,6 +32,9 @@ export interface EngineConfig {
     devtoApi: string;
     reddit: string;
     redditOauth: string;
+    blueskyApi: string;
+    ninjasticApi: string;
+    njump: string;
     searxng?: string;
   };
   /** Reddit: switch (OLCYS_REDDIT=false) and the optional registered read-only app used for app-only OAuth. */
@@ -50,6 +53,10 @@ export interface EngineConfig {
     /** Zapasowe instancje Esplora (BTC) – używane przy limicie zapytań lub awarii podstawowej. */
     esploraFallbacks: string[];
     tronGridUrl: string;
+    /** JSON-RPC Solany (publiczny węzeł mainnet-beta lub własny węzeł KAS). */
+    solanaRpcUrl: string;
+    /** Maks. liczba transakcji Solany pobieranych dla adresu (publiczne RPC ma niskie limity zapytań). */
+    solanaMaxTx: number;
     ethRpcUrl?: string;
     liveRates: boolean;
     /**
@@ -59,12 +66,16 @@ export interface EngineConfig {
     evmNetworks: string[];
   };
   labelsDir: string;
+  /** Pieczętowanie pakietu dowodowego: plik klucza Ed25519 (PEM) i urząd znacznika czasu RFC 3161 (brak = bez znacznika). */
+  signing: { keyFile: string; tsaUrl?: string };
+  /** Lokalne archiwum dziennych cen krypto (pusty = wyłączone). */
+  priceArchiveDir?: string;
   /** Token GitHub (tylko odczyt danych publicznych) – podnosi limit API z 60 do 5000 zapytań/h. */
   githubToken?: string;
   llm?: { baseUrl: string; model: string; apiKey?: string };
 }
 
-export const ENGINE_VERSION = 'olcys-engine/0.3.0';
+export const ENGINE_VERSION = 'olcys-engine/0.4.0';
 export const REPO_ROOT = resolve(import.meta.dirname, '..', '..', '..');
 
 /** Zatwierdzone publiczne źródła trybu LIVE (do których trafiają identyfikatory w zapytaniach API). */
@@ -78,12 +89,18 @@ export const DEFAULT_LIVE_SOURCES = [
   'dev.to',
   'www.reddit.com',
   'oauth.reddit.com',
+  'public.api.bsky.app',
+  'api.ninjastic.space',
+  'bitcointalk.org',
+  'njump.me',
   'eth.blockscout.com',
   'ethereum-rpc.publicnode.com',
   'blockstream.info',
   'mempool.space',
   'api.trongrid.io',
+  'api.mainnet-beta.solana.com',
   'api.coingecko.com',
+  'data-api.binance.vision',
   'api.nbp.pl',
 ];
 
@@ -102,11 +119,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
   const blockscoutUrl = env.BLOCKSCOUT_URL ?? 'https://eth.blockscout.com';
   const evmApiUrl = env.EVM_API_URL ?? (evmApiKey ? 'https://api.etherscan.io/v2/api' : `${blockscoutUrl}/api`);
   const ethRpcUrl = env.ETH_RPC_URL || 'https://ethereum-rpc.publicnode.com';
-  const allow = [...DEFAULT_LIVE_SOURCES, ...list(env.EGRESS_ALLOWLIST), hostOf(searxng), hostOf(evmApiUrl), hostOf(ethRpcUrl), hostOf(env.ESPLORA_URL), ...list(env.ESPLORA_FALLBACK_URLS).map(hostOf), hostOf(env.LLM_BASE_URL)].filter(Boolean) as string[];
+  const allow = [...DEFAULT_LIVE_SOURCES, ...list(env.EGRESS_ALLOWLIST), hostOf(searxng), hostOf(evmApiUrl), hostOf(ethRpcUrl), hostOf(env.ESPLORA_URL), hostOf(env.SOLANA_RPC_URL), ...list(env.ESPLORA_FALLBACK_URLS).map(hostOf), hostOf(env.LLM_BASE_URL)].filter(Boolean) as string[];
   return {
     egressAllowlist: [...new Set(allow)],
     webFetch: env.OLCYS_WEB_FETCH === 'allowlist' ? 'allowlist' : 'public',
-    userAgent: env.OLCYS_USER_AGENT ?? 'KryptoTrop-OSINT/0.3 (+analiza danych publicznych)',
+    userAgent: env.OLCYS_USER_AGENT ?? 'KryptoTrop-OSINT/0.4 (+analiza danych publicznych)',
     requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 15000),
     maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 6),
     pivotBudgetMs: Number(env.OLCYS_PIVOT_BUDGET_MS ?? 180_000),
@@ -122,6 +139,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
       devtoApi: env.DEVTO_API_URL ?? 'https://dev.to/api',
       reddit: env.REDDIT_URL ?? 'https://www.reddit.com',
       redditOauth: env.REDDIT_OAUTH_URL ?? 'https://oauth.reddit.com',
+      blueskyApi: env.BLUESKY_API_URL ?? 'https://public.api.bsky.app',
+      ninjasticApi: env.NINJASTIC_API_URL ?? 'https://api.ninjastic.space',
+      njump: env.NJUMP_URL ?? 'https://njump.me',
       searxng,
     },
     reddit: { enabled: env.OLCYS_REDDIT !== 'false', clientId: env.REDDIT_CLIENT_ID || undefined, clientSecret: env.REDDIT_CLIENT_SECRET || undefined },
@@ -137,11 +157,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
       esploraUrl: env.ESPLORA_URL ?? 'https://blockstream.info/api',
       esploraFallbacks: env.ESPLORA_FALLBACK_URLS !== undefined ? list(env.ESPLORA_FALLBACK_URLS) : ['https://mempool.space/api'],
       tronGridUrl: env.TRONGRID_URL ?? 'https://api.trongrid.io',
+      solanaRpcUrl: env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com',
+      solanaMaxTx: Number(env.SOLANA_MAX_TX ?? 40),
       ethRpcUrl,
       liveRates: env.OLCYS_LIVE_RATES !== 'false',
       evmNetworks: evmApiKey ? (env.EVM_NETWORKS !== undefined ? list(env.EVM_NETWORKS) : ['polygon', 'arbitrum']) : [],
     },
     labelsDir: env.LABELS_DIR ?? join(REPO_ROOT, 'data', 'labels'),
+    // domyślnie Certum (polski kwalifikowany dostawca usług zaufania); OLCYS_TSA_URL= (pusty) wyłącza znacznik czasu
+    signing: { keyFile: resolve(env.OLCYS_SIGNING_KEY_FILE ?? join(REPO_ROOT, 'data', 'keys', 'signing-ed25519.pem')), tsaUrl: env.OLCYS_TSA_URL === '' ? undefined : (env.OLCYS_TSA_URL ?? 'http://time.certum.pl') },
+    priceArchiveDir: env.PRICE_ARCHIVE_DIR === '' ? undefined : resolve(env.PRICE_ARCHIVE_DIR ?? join(REPO_ROOT, 'data', 'prices')),
     githubToken: env.GITHUB_TOKEN || undefined,
     llm: env.LLM_BASE_URL ? { baseUrl: env.LLM_BASE_URL.replace(/\/$/, ''), model: env.LLM_MODEL ?? 'llama3.1', apiKey: env.LLM_API_KEY } : undefined,
   };

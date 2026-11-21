@@ -60,6 +60,24 @@ export function buildStatements(findings: AddressFinding[], identities: SubjectI
     }
   }
 
+  for (const f of findings) {
+    const c = f.cluster;
+    if (!c) continue;
+    if (c.members.length) {
+      const list = c.members.slice(0, 6).map((m) => `${short(m.address)}${m.label ? ` (${m.label})` : ''}`).join(', ');
+      out.push({ kind: 'COMPUTATION', text: `Adres ${short(f.address)} był współwydawany z ${c.members.length} innymi adresami w ${c.multiInputTxs} transakcjach wielowejściowych: ${list}${c.members.length > 6 ? ', …' : ''}.`, evidenceIds: [], addressKey: f.key });
+      out.push({
+        kind: 'CONCLUSION',
+        text: c.labeledMembers
+          ? `Wśród adresów współwydawanych ${c.labeledMembers} ma etykietę instytucji – adres ${short(f.address)} może należeć do portfela giełdy / usługi, a nie osoby.`
+          : `Według heurystyki wspólnego wejścia (common-input-ownership) adresy współwydawane z ${short(f.address)} prawdopodobnie należą do tego samego portfela – kandydaci do dalszej analizy.`,
+        evidenceIds: [],
+        addressKey: f.key,
+      });
+    }
+    if (c.coinjoinSkipped.length) out.push({ kind: 'COMPUTATION', text: `Pominięto ${c.coinjoinSkipped.length} transakcji o cechach CoinJoin (wejścia wielu osób) – nie świadczą o wspólnym posiadaczu adresów.`, evidenceIds: [], addressKey: f.key });
+  }
+
   for (const c of changes) {
     out.push({ kind: 'FACT', text: `Zasób ${c.url}: wersja z ${c.from?.slice(0, 10)} → wersja z ${c.to.slice(0, 10)}; usunięto: ${c.removed.join(', ') || '—'}; dodano: ${c.added.join(', ') || '—'}.`, evidenceIds: c.evidenceIds });
     if (c.removed.length && c.added.length) {

@@ -33,12 +33,17 @@ services:
       ETH_RPC_URL: ${ETH_RPC_URL:-}
       ESPLORA_URL: ${ESPLORA_URL:-https://blockstream.info/api}
       TRONGRID_URL: ${TRONGRID_URL:-https://api.trongrid.io}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
+      # pieczęć pakietu dowodowego: znacznik czasu RFC 3161 (pusty = wyłączony); konta analityków: data/users.json
+      OLCYS_TSA_URL: ${OLCYS_TSA_URL-http://time.certum.pl}
+      OLCYS_SESSION_SECRET: ${OLCYS_SESSION_SECRET:-}
       # tryb offline (nagranie montowane z ./data/recordings)
       OLCYS_RECORD_DIR: ${OLCYS_RECORD_DIR:-}
       OLCYS_REPLAY_DIR: ${OLCYS_REPLAY_DIR:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
-    volumes: ["./data/recordings:/app/data/recordings"]
+    # nagrania trybu offline i archiwum dziennych cen krypto (przetrwa przebudowę kontenera)
+    volumes: ["./data/recordings:/app/data/recordings", "./data/prices:/app/data/prices", "./data/keys:/app/data/keys"]
     ports: ["4000:4000"]
     depends_on:
       db: { condition: service_healthy }

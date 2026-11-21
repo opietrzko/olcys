@@ -164,7 +164,7 @@ export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
           <a className="btn sm" href={`/api/runs/${run.id}/report.pdf`} target="_blank" rel="noreferrer" title="Raport PDF generowany z tego przebiegu - otwiera się w przeglądarce, można go pobrać">
             <FileText size={14} aria-hidden="true" /> Raport PDF
           </a>
-          <a className="btn sm ghost" href={`/api/runs/${run.id}/export.json`} title="Pakiet dowodowy JSON: wynik, surowe dowody i parametry">
+          <a className="btn sm ghost" href={`/api/runs/${run.id}/export.json`} title="Pakiet dowodowy JSON: wynik, surowe dowody i parametry – opieczętowany (manifest SHA-256, podpis Ed25519, znacznik czasu RFC 3161)">
             <Download size={14} aria-hidden="true" /> Pakiet dowodowy
           </a>
         </div>
@@ -736,6 +736,58 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
             {f.activity.ignoredTokenTransfers ? ` Pominięto ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny).` : ''}
             {f.activity.networks && f.activity.networks.length > 1 ? ` Sieci: ${f.activity.networks.join(', ')}.` : ''}
           </p>
+        </Panel>
+      )}
+
+      {f.cluster && (f.cluster.members.length > 0 || f.cluster.coinjoinSkipped.length > 0) && (
+        <Panel
+          title={
+            <>
+              <Wallet size={15} aria-hidden="true" /> Adresy współwydawane <span className="faint" style={{ fontWeight: 400 }}>· heurystyka wspólnego wejścia</span>
+            </>
+          }
+        >
+          <div className={`indicator sev-${f.cluster.labeledMembers ? 'high' : 'medium'} inferred`}>
+            <Flag size={15} aria-hidden="true" />
+            <span className="indicator-title">
+              {f.cluster.members.length
+                ? `${plural(f.cluster.members.length, 'adres wydawany', 'adresy wydawane', 'adresów wydawanych')} razem z tym adresem (${plural(f.cluster.multiInputTxs, 'transakcja', 'transakcje', 'transakcji')})`
+                : 'Brak adresów współwydawanych poza transakcjami CoinJoin'}{' '}
+              <span className="kind concl">Wniosek do weryfikacji</span>
+            </span>
+            <div className="small">
+              {f.cluster.labeledMembers
+                ? `${f.cluster.labeledMembers} z nich ma etykietę instytucji – adres może należeć do portfela giełdy lub usługi, a nie osoby.`
+                : 'Transakcja z kilkoma wejściami wymaga kluczy każdego z nich, więc zwykle tworzy ją jeden portfel. To kandydaci na adresy tego samego posiadacza; heurystyka nie wpływa na Wskaźnik Pewności.'}
+              {f.cluster.coinjoinSkipped.length > 0 && ` Pominięto ${plural(f.cluster.coinjoinSkipped.length, 'transakcję', 'transakcje', 'transakcji')} o cechach CoinJoin (wejścia wielu osób).`}
+            </div>
+          </div>
+          {f.cluster.members.length > 0 && (
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Adres</th>
+                    <th className="num">Wspólne transakcje</th>
+                    <th>Etykieta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {f.cluster.members.slice(0, 20).map((m) => (
+                    <tr key={m.address}>
+                      <td>
+                        <a href={`https://mempool.space/address/${m.address}`} target="_blank" rel="noreferrer">
+                          <code>{short(m.address, 8)}</code>
+                        </a>
+                      </td>
+                      <td className="num">{m.txHashes.length}</td>
+                      <td>{m.label ? `${m.label} (${m.category})` : <span className="faint">—</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Panel>
       )}
     </div>

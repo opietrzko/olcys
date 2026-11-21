@@ -10,6 +10,8 @@ import {
   Filter,
   FolderSearch,
   LoaderCircle,
+  LogIn,
+  LogOut,
   Monitor,
   Moon,
   Plus,
@@ -24,7 +26,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { api, type Analysis, type Meta, type Run } from './api';
+import { api, type Analysis, type AuthUser, type Meta, type Run } from './api';
 import { Landing } from './Landing';
 import { RunView } from './RunView';
 import { Wave } from './Wave';
@@ -55,7 +57,102 @@ const THEMES: { v: ThemePref; label: string; icon: typeof Sun }[] = [
   { v: 'dark', label: 'Motyw ciemny', icon: Moon },
 ];
 
+const ROLE_LABEL: Record<AuthUser['role'], string> = { analityk: 'Analityk', przeglad: 'Przegląd (tylko odczyt)', admin: 'Administrator' };
+
+/** Bramka logowania: gdy API ma włączone konta, bez sesji pokazuje formularz logowania. */
 export function App() {
+  const [state, setState] = useState<{ enabled: boolean; user: AuthUser | null } | null>(null);
+  const check = useCallback(() => {
+    api
+      .me()
+      .then(setState)
+      .catch(() => setState({ enabled: false, user: null }));
+  }, []);
+  useEffect(() => {
+    check();
+    addEventListener('olcys:unauthorized', check);
+    return () => removeEventListener('olcys:unauthorized', check);
+  }, [check]);
+  if (!state) return null;
+  if (state.enabled && !state.user) return <Login onDone={check} />;
+  return (
+    <Shell
+      user={state.user}
+      onLogout={() =>
+        api
+          .logout()
+          .catch(() => undefined)
+          .then(check)
+      }
+    />
+  );
+}
+
+function Login({ onDone }: { onDone: () => void }) {
+  const { resolved } = useTheme();
+  const [login, setLogin] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    document.title = 'Logowanie · KryptoTrop';
+  }, []);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    try {
+      await api.login(login, password);
+      onDone();
+    } catch (x) {
+      const m = String((x as Error).message);
+      setErr(m.startsWith('429') ? 'Zbyt wiele nieudanych prób – spróbuj za kilka minut.' : 'Nieprawidłowy login lub hasło.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ThemeCtx.Provider value={resolved}>
+      <main id="main" className="login-page">
+        <form className="panel login-card" onSubmit={submit} aria-labelledby="login-title">
+          <div className="panel-body">
+            <div className="brand" style={{ marginBottom: 18 }}>
+              <span className="brand-mark" aria-hidden="true">
+                <Search size={16} strokeWidth={2.4} />
+              </span>
+              <span>
+                <span className="brand-name" id="login-title">
+                  KryptoTrop
+                </span>
+                <span className="brand-sub" style={{ display: 'block' }}>
+                  Logowanie analityka
+                </span>
+              </span>
+            </div>
+            {err && <ErrorNote title={err} />}
+            <label className="field">
+              <span>Login</span>
+              <input autoComplete="username" value={login} onChange={(e) => setLogin(e.target.value)} required autoFocus />
+            </label>
+            <label className="field">
+              <span>Hasło</span>
+              <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </label>
+            <button className="btn primary" type="submit" disabled={busy} style={{ width: '100%' }}>
+              {busy ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <LogIn size={15} aria-hidden="true" />}
+              Zaloguj
+            </button>
+            <p className="small faint" style={{ marginTop: 14 }}>
+              Każde logowanie, uruchomienie analizy i pobranie raportu trafia do dziennika audytu.
+            </p>
+          </div>
+        </form>
+      </main>
+    </ThemeCtx.Provider>
+  );
+}
+
+function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void }) {
   const hash = useHash();
   const { pref, setPref, resolved } = useTheme();
   const [meta, setMeta] = useState<Meta | null>(null);
@@ -130,20 +227,33 @@ export function App() {
                 <Settings size={12} aria-hidden="true" />
                 Administracja
               </span>
-              {ADMIN_NAV.map(({ href, key, label, icon: Icon }) => (
+              {ADMIN_NAV.filter((n) => n.key !== 'audyt' || !user || user.role === 'admin').map(({ href, key, label, icon: Icon }) => (
                 <a key={key} href={href} aria-current={section === key ? 'page' : undefined}>
                   <Icon size={14} aria-hidden="true" />
                   {label}
                 </a>
               ))}
             </nav>
+            {user && (
+              <div className="user-chip">
+                <span>
+                  <b>{user.name ?? user.login}</b>
+                  <span className="small faint" style={{ display: 'block' }}>
+                    {ROLE_LABEL[user.role]}
+                  </span>
+                </span>
+                <button type="button" className="btn sm ghost icon-only" onClick={onLogout} aria-label="Wyloguj" title="Wyloguj">
+                  <LogOut size={14} aria-hidden="true" />
+                </button>
+              </div>
+            )}
             <p className="side-note">Wyłącznie publicznie dostępne źródła (OSINT). Wskaźnik Pewności nie przesądza o własności adresu i wymaga weryfikacji analityka.</p>
             {themeToggle}
           </div>
         </aside>
         <div className="content">
           <main id="main" tabIndex={-1}>
-            {parts[0] === 'analizy' && <Home meta={meta} />}
+            {parts[0] === 'analizy' && <Home meta={meta} readOnly={user?.role === 'przeglad'} />}
             {parts[0] === 'a' && parts[1] && <AnalysisPage key={parts[1]} id={parts[1]} runId={parts[3]} />}
             {needsMeta && metaErr && <ErrorNote title="Nie można pobrać konfiguracji z API">Sprawdź, czy serwer KryptoTrop działa (domyślnie port 4000), i odśwież stronę.</ErrorNote>}
             {needsMeta && !meta && !metaErr && (
@@ -241,7 +351,7 @@ function DepthSlider({ value, onChange }: { value: number; onChange: (d: number)
 
 const STATUS_LABEL: Record<string, string> = { done: 'Zakończony', running: 'W toku', failed: 'Błąd', queued: 'W kolejce' };
 
-function Home({ meta }: { meta: Meta | null }) {
+function Home({ meta, readOnly = false }: { meta: Meta | null; readOnly?: boolean }) {
   const [list, setList] = useState<Analysis[] | null>(null);
   const [err, setErr] = useState(false);
   const load = useCallback(
@@ -299,7 +409,15 @@ function Home({ meta }: { meta: Meta | null }) {
         </dl>
       </section>
       <div className="grid-home">
-        <NewAnalysis meta={meta} />
+        {readOnly ? (
+          <Panel title="Nowa analiza">
+            <p className="muted small" style={{ margin: 0 }}>
+              Rola „Przegląd” ma dostęp tylko do odczytu: wyników, raportów i pakietów dowodowych. Analizy uruchamia analityk.
+            </p>
+          </Panel>
+        ) : (
+          <NewAnalysis meta={meta} />
+        )}
         <Panel title={`Sprawy${list?.length ? ` (${list.length})` : ''}`} flush>
           {err && (
             <div style={{ padding: 16 }}>

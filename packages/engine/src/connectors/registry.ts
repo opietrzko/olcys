@@ -1,5 +1,8 @@
 import type { EngineConfig } from '../config';
+import { bitcointalkConnector } from './bitcointalk';
+import { blueskyConnector } from './bluesky';
 import { ensConnector } from './ens';
+import { nostrConnector } from './nostr';
 import { devtoConnector } from './devto';
 import { githubConnector } from './github';
 import { githubCodeConnector } from './github-code';
@@ -13,7 +16,7 @@ import { waybackConnector } from './wayback';
 import { webConnector } from './web';
 
 /** Rejestr konektorów. Dodanie źródła = dopisanie konektora do tej listy. */
-export const ALL_CONNECTORS: SourceConnector[] = [githubConnector, githubCodeConnector, devtoConnector, redditConnector, keybaseConnector, gravatarConnector, webConnector, telegramConnector, ensConnector, searxngConnector];
+export const ALL_CONNECTORS: SourceConnector[] = [githubConnector, githubCodeConnector, devtoConnector, redditConnector, keybaseConnector, gravatarConnector, blueskyConnector, bitcointalkConnector, nostrConnector, webConnector, telegramConnector, ensConnector, searxngConnector];
 export const HISTORY_CONNECTORS: HistoryConnector[] = [waybackConnector];
 
 export function describeConnectors(config: EngineConfig) {

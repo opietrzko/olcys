@@ -66,6 +66,11 @@ const KNOWN: Record<string, Record<string, KnownToken>> = {
     '0x7f5c764cbc14f9669b88837ca1490cca17c31607': S('USDC.e', 'USDC'),
     '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': S('DAI'),
   },
+  // Solana: SPL mint (adres emitenta tokena) – Circle USDC i Tether USDT
+  sol: {
+    EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: S('USDC'),
+    Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: S('USDT'),
+  },
   tron: {
     TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t: S('USDT'),
     TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8: S('USDC'),
