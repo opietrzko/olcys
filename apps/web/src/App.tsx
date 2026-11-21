@@ -27,7 +27,7 @@ import {
 import { api, type Analysis, type Meta, type Run } from './api';
 import { RunView } from './RunView';
 import { Wave } from './Wave';
-import { Band, Empty, ErrorNote, IdTag, Panel, Skeleton, ThemeCtx, dt, plural, useTheme, type ThemePref } from './ui';
+import { Band, Empty, ErrorNote, ID_TYPE, IdTag, Panel, Skeleton, ThemeCtx, dt, plural, useTheme, type ThemePref } from './ui';
 
 function useHash() {
   const [hash, setHash] = useState(location.hash || '#/');
@@ -157,6 +157,10 @@ const SCHEDULES: { v: number | ''; l: string }[] = [
   { v: 1440, l: 'Codziennie' },
   { v: 10080, l: 'Co tydzień' },
 ];
+
+const DEPTHS = [0, 1, 2, 3, 6];
+const depthHint = (d: number) =>
+  d === 6 ? 'Do wyczerpania tropów (maks. 6 skoków)' : d === 0 ? '0 – tylko wejście, bez pivotowania' : `${plural(d, 'skok', 'skoki', 'skoków')} od podanych identyfikatorów`;
 
 const STATUS_LABEL: Record<string, string> = { done: 'Zakończony', running: 'W toku', failed: 'Błąd', queued: 'W kolejce' };
 
@@ -392,62 +396,73 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
           <span id="ids-label" className="label">
             Identyfikatory <span className="hint">co najmniej jeden</span>
           </span>
-          <div>
-            {ids.map((i, n) => (
-              <div className="id-row" key={n}>
-                <select aria-label={`Rodzaj identyfikatora ${n + 1}`} value={i.type} onChange={(e) => setIds(ids.map((x, k) => (k === n ? { ...x, type: e.target.value as IdentifierType } : x)))}>
-                  {TYPES.map((t) => (
-                    <option key={t.v} value={t.v}>
-                      {t.l}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  aria-label={`Wartość identyfikatora ${n + 1}`}
-                  aria-invalid={Boolean(err) && !ids.some((x) => x.value.trim())}
-                  value={i.value}
-                  placeholder={TYPES.find((t) => t.v === i.type)?.ph}
-                  onChange={(e) => setIds(ids.map((x, k) => (k === n ? { ...x, value: e.target.value } : x)))}
-                />
-                {ids.length > 1 ? (
-                  <button type="button" className="btn ghost icon-only" onClick={() => setIds(ids.filter((_, k) => k !== n))} aria-label={`Usuń identyfikator ${n + 1}`}>
-                    <X size={16} aria-hidden="true" />
-                  </button>
-                ) : (
-                  <span />
-                )}
-              </div>
-            ))}
-            <button type="button" className="btn ghost sm" style={{ marginTop: 2 }} onClick={() => setIds([...ids, { type: 'email', value: '' }])}>
+          <div className="id-list">
+            {ids.map((i, n) => {
+              const TypeIcon = ID_TYPE[i.type]?.icon ?? Search;
+              return (
+                <div className={`id-row ${ids.length > 1 ? 'removable' : ''}`} key={n}>
+                  <select aria-label={`Rodzaj identyfikatora ${n + 1}`} value={i.type} onChange={(e) => setIds(ids.map((x, k) => (k === n ? { ...x, type: e.target.value as IdentifierType } : x)))}>
+                    {TYPES.map((t) => (
+                      <option key={t.v} value={t.v}>
+                        {t.l}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="input-icon">
+                    <TypeIcon size={14} aria-hidden="true" />
+                    <input
+                      aria-label={`Wartość identyfikatora ${n + 1}`}
+                      aria-invalid={Boolean(err) && !ids.some((x) => x.value.trim())}
+                      value={i.value}
+                      placeholder={TYPES.find((t) => t.v === i.type)?.ph}
+                      onChange={(e) => setIds(ids.map((x, k) => (k === n ? { ...x, value: e.target.value } : x)))}
+                    />
+                  </span>
+                  {ids.length > 1 && (
+                    <button type="button" className="btn ghost icon-only" onClick={() => setIds(ids.filter((_, k) => k !== n))} aria-label={`Usuń identyfikator ${n + 1}`} title="Usuń identyfikator">
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            <button type="button" className="add-id" onClick={() => setIds([...ids, { type: 'email', value: '' }])}>
               <Plus size={14} aria-hidden="true" /> Dodaj identyfikator
             </button>
           </div>
         </div>
-        <div className="row">
-          <label className="field">
-            <span>Głębokość pivotowania</span>
-            <select value={depth} onChange={(e) => setDepth(Number(e.target.value))}>
-              {[6, 3, 2, 1, 0].map((d) => (
-                <option key={d} value={d}>
-                  {d === 6 ? 'Do wyczerpania tropów (maks. 6)' : d === 0 ? '0 – tylko wejście' : `${d} ${d === 1 ? 'skok' : 'skoki'}`}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Harmonogram</span>
-            <select value={schedule} onChange={(e) => setSchedule(e.target.value ? Number(e.target.value) : '')}>
-              {SCHEDULES.map((s) => (
-                <option key={String(s.v)} value={s.v}>
-                  {s.l}
-                </option>
-              ))}
-            </select>
-          </label>
+        <hr className="divider form-split" />
+        <div className="field" role="group" aria-labelledby="depth-label">
+          <span id="depth-label" className="label">
+            Głębokość pivotowania
+          </span>
+          <div className="seg full">
+            {DEPTHS.map((d) => (
+              <button key={d} type="button" aria-pressed={depth === d} onClick={() => setDepth(d)} aria-describedby="depth-hint" title={depthHint(d)}>
+                {d === 6 ? 'Maks.' : d}
+              </button>
+            ))}
+          </div>
+          <span id="depth-hint" className="hint" aria-live="polite">
+            {depthHint(depth)}
+          </span>
         </div>
-        <label className="check" style={{ marginTop: -4, marginBottom: 12 }}>
+        <label className="field">
+          <span>Harmonogram</span>
+          <select value={schedule} onChange={(e) => setSchedule(e.target.value ? Number(e.target.value) : '')}>
+            {SCHEDULES.map((s) => (
+              <option key={String(s.v)} value={s.v}>
+                {s.l}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="check-row">
           <input type="checkbox" checked={history} onChange={(e) => setHistory(e.target.checked)} />
-          Sprawdzaj wersje archiwalne (Wayback) – wykrywa podmianę adresu
+          <span>
+            <span className="check-title">Sprawdzaj wersje archiwalne (Wayback)</span>
+            <span className="hint">Wykrywa podmianę adresu.</span>
+          </span>
         </label>
         {err && (
           <p className="form-error" role="alert">
@@ -460,7 +475,7 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
           {busy ? 'Uruchamianie…' : 'Uruchom analizę'}
         </button>
         {live && (
-          <p className="small faint" style={{ marginTop: 12, marginBottom: 0 }}>
+          <p className="form-foot">
             Źródła: {live.connectors.filter((c) => c.enabled && c.kind === 'source').map((c) => c.id).join(', ')} oraz archiwum.
           </p>
         )}

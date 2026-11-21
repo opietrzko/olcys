@@ -198,7 +198,7 @@ main { padding: 22px 32px 48px; max-width: 1480px; margin: 0 auto; }
 .panel-body.flush { padding: 0; }
 .panel.tone-danger { border-color: var(--danger-border); background: var(--danger-soft); }
 .panel.tone-accent { border-color: var(--accent-border); background: var(--accent-soft); }
-.grid-home { display: grid; grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.grid-home { display: grid; grid-template-columns: minmax(360px, 440px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .grid-home, .grid2 { grid-template-columns: minmax(0, 1fr); } }
 
@@ -223,11 +223,68 @@ input, select { font: inherit; font-size: 13.5px; height: 34px; padding: 0 10px;
 input::placeholder { color: var(--text-3); }
 input:hover, select:hover { border-color: var(--text-3); }
 input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* Listy rozwijane: tam, gdzie przeglądarka pozwala (appearance: base-select), lista ma motyw aplikacji zamiast systemowego.
+   Ikony chevron i check to ścieżki lucide jako maski, kolor bierze się z currentColor. Starsze przeglądarki dostają natywną listę. */
+@supports (appearance: base-select) {
+  select, select::picker(select) { appearance: base-select; }
+  select { display: inline-flex; align-items: center; gap: 8px; padding: 0 8px 0 10px; cursor: pointer; white-space: nowrap; }
+  select::picker-icon {
+    content: ''; flex: none; width: 16px; height: 16px; margin-left: auto; background-color: var(--text-3);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px no-repeat;
+    transition: rotate 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
+  }
+  select:hover::picker-icon { background-color: var(--text-2); }
+  select:open { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  select:open::picker-icon { rotate: 180deg; background-color: var(--accent); }
+  select::picker(select) {
+    /* domyślnie przeglądarka wybiera stronę z większą ilością miejsca (często górę); lista ma się otwierać w dół,
+       a w górę tylko wtedy, gdy pod polem naprawdę brakuje miejsca */
+    position-area: block-end span-inline-end; position-try-order: normal; position-try-fallbacks: flip-block;
+    /* 100% = miejsce pod polem (obszar position-area); przy ciasnym dole lista się przewija zamiast wychodzić poza okno */
+    min-width: anchor-size(width); max-height: min(320px, calc(100% - 12px)); overflow-y: auto; margin-block: 6px; padding: 4px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: var(--shadow-md);
+    opacity: 1; translate: 0 0;
+    transition: opacity 0.14s ease-out, translate 0.18s cubic-bezier(0.16, 1, 0.3, 1), display 0.18s allow-discrete, overlay 0.18s allow-discrete;
+  }
+  select:not(:open)::picker(select) { opacity: 0; translate: 0 -4px; }
+  @starting-style { select:open::picker(select) { opacity: 0; translate: 0 -4px; } }
+  select option { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 10px; border-radius: 4px; font-size: 13.5px; color: var(--text); cursor: pointer; white-space: nowrap; transition: background-color 0.1s; }
+  select option:hover, select option:focus-visible { background: var(--surface-3); outline: none; }
+  select option:checked { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+  select option::checkmark {
+    content: ''; order: 1; flex: none; width: 14px; height: 14px; margin-left: auto; background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 14px no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 14px no-repeat;
+  }
+  .graph-toolbar select option { min-height: 28px; font-size: 12.5px; }
+}
 input[type='checkbox'] { height: 16px; width: 16px; margin: 0; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field > span, .label { font-size: 13px; font-weight: 500; color: var(--text); }
 .hint { font-size: 12.5px; color: var(--text-3); font-weight: 400; }
-.id-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 34px; gap: 6px; margin-bottom: 6px; }
+.field > span.hint { font-size: 12.5px; font-weight: 400; color: var(--text-3); }
+.id-list { display: grid; gap: 6px; }
+.id-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px; }
+.id-row.removable { grid-template-columns: 150px minmax(0, 1fr) 34px; }
+.input-icon { position: relative; display: block; min-width: 0; }
+.input-icon svg { position: absolute; left: 11px; top: 50%; translate: 0 -50%; color: var(--text-3); pointer-events: none; transition: color 0.15s; }
+.input-icon input { width: 100%; padding-left: 31px; }
+.input-icon:focus-within svg { color: var(--accent); }
+.add-id { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 32px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); background: none; color: var(--text-2); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.15s, border-color 0.15s, background-color 0.15s; }
+.add-id:hover { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent); }
+.divider.form-split { margin: 20px 0 18px; }
+.seg.full { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; }
+.seg.full button { height: 28px; font-variant-numeric: tabular-nums; }
+.seg button:not([aria-pressed='true']):hover { color: var(--text); background: var(--surface-2); }
+.check-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+.check-row:hover { border-color: var(--border-strong); }
+.check-row:has(input:checked) { border-color: var(--accent-border); background: var(--accent-soft); }
+.check-row input { margin-top: 2px; flex: none; }
+.check-title { display: block; font-size: 13.5px; font-weight: 500; color: var(--text); }
+.check-row .hint { display: block; margin-top: 1px; }
+.form-foot { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12.5px; line-height: 1.5; color: var(--text-3); }
 .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .row .field { flex: 1; min-width: 130px; }
 .check { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; height: 34px; cursor: pointer; }
@@ -353,7 +410,8 @@ table { border-collapse: collapse; width: 100%; }
 @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat { border-bottom: 1px solid var(--border); } }
 @media (max-width: 560px) {
   .stats, .stats.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .id-row { grid-template-columns: 120px minmax(0, 1fr) 34px; }
+  .id-row { grid-template-columns: 120px minmax(0, 1fr); }
+  .id-row.removable { grid-template-columns: 120px minmax(0, 1fr) 34px; }
   .tabbar .actions { margin-left: 0; width: 100%; }
   .page-head .actions { width: 100%; }
   .page-head .actions select { flex: 1; }

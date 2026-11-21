@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { BANDS, SCORING_RULES, RULES_VERSION, ACTIVITY_THRESHOLDS, diffRuns, type AnalysisResult } from '@olcys/core';
-import { createEngine, renderReportHtml, ENGINE_VERSION, REPO_ROOT } from '@olcys/engine';
+import { createEngine, renderReportHtml, renderReportPdf, ENGINE_VERSION, REPO_ROOT } from '@olcys/engine';
 import { createStore, type AnalysisRow, type RunRow, type RunSummary } from './store';
 
 const engine = createEngine();
@@ -151,6 +151,26 @@ app.get<{ Params: { id: string } }>('/api/runs/:id/report.html', async (req, rep
   const a = await store.getAnalysis(r.analysisId);
   await store.audit({ actor: actorOf(req.headers), action: 'report.generate', target: r.id, details: {} });
   return reply.type('text/html; charset=utf-8').send(renderReportHtml(r.result, { runId: r.id, analysisName: a?.name ?? r.analysisId }));
+});
+
+/**
+ * Raport PDF generowany przy każdym żądaniu z wyniku przebiegu. `inline` – przeglądarka pokazuje go w swojej przeglądarce PDF
+ * (z przyciskiem pobierania); nazwa pliku jest używana przy zapisie.
+ */
+app.get<{ Params: { id: string } }>('/api/runs/:id/report.pdf', async (req, reply) => {
+  const r = await store.getRun(req.params.id);
+  if (!r?.result) return reply.code(404).send({ error: 'not found' });
+  const a = await store.getAnalysis(r.analysisId);
+  const name = a?.name ?? r.analysisId;
+  const pdf = await renderReportPdf(r.result, { runId: r.id, analysisName: name });
+  await store.audit({ actor: actorOf(req.headers), action: 'report.generate', target: r.id, details: { format: 'pdf' } });
+  const slug = name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'analiza';
+  const file = `kryptotrop-raport-${slug}-${r.id}.pdf`;
+  return reply
+    .type('application/pdf')
+    .header('content-disposition', `inline; filename="${file}"; filename*=UTF-8''${encodeURIComponent(file)}`)
+    .header('cache-control', 'no-store')
+    .send(pdf);
 });
 
 /** Surowa kopia dowodu – serwowana jako tekst (bez wykonywania skryptów ze źródła). */

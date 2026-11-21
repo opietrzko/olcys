@@ -161,7 +161,7 @@ export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
           ))}
         </div>
         <div className="actions">
-          <a className="btn sm" href={`/api/runs/${run.id}/report.html`} target="_blank" rel="noreferrer">
+          <a className="btn sm" href={`/api/runs/${run.id}/report.pdf`} target="_blank" rel="noreferrer" title="Raport PDF generowany z tego przebiegu – otwiera się w przeglądarce, można go pobrać">
             <FileText size={14} aria-hidden="true" /> Raport PDF
           </a>
           <a className="btn sm ghost" href={`/api/runs/${run.id}/export.json`} title="Pakiet dowodowy JSON: wynik, surowe dowody i parametry">

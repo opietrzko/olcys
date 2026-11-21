@@ -9,6 +9,7 @@ export * from './http';
 export * from './evidence';
 export * from './pipeline';
 export * from './report';
+export * from './reportPdf';
 export * from './labels';
 export * from './providers';
 export * from './connectors/registry';
