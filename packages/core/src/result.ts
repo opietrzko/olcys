@@ -67,7 +67,7 @@ export interface AnalysisResult {
   statements: Statement[];
   trace: TraceStep[];
   /** Dziennik ruchu wychodzącego (kontrola zgodności z allowlistą). */
-  egress: { at: string; url: string; status: number | 'DENIED' | 'ERROR'; ms: number }[];
+  egress: { at: string; url: string; status: number | 'DENIED' | 'ERROR'; ms: number; replay?: boolean }[];
   connectorsUsed: { id: string; live: boolean; documents: number; errors: string[] }[];
 }
 

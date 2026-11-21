@@ -25,8 +25,18 @@ export interface EngineConfig {
     keybaseApi: string;
     wayback: string;
     telegram: string;
+    devtoApi: string;
+    reddit: string;
+    redditOauth: string;
     searxng?: string;
   };
+  /** Reddit: switch (OLCYS_REDDIT=false) and the optional registered read-only app used for app-only OAuth. */
+  reddit: { enabled: boolean; clientId?: string; clientSecret?: string };
+  /**
+   * Offline safety net for demos: record every response to a directory, or replay a recorded run without network.
+   * Replay never touches the network; a request with no recording fails loudly instead of silently going online.
+   */
+  recording?: { mode: 'record' | 'replay'; dir: string };
   chain: {
     /** API zgodne z Etherscan: Etherscan v2 (z kluczem) lub Blockscout (bez klucza, open source, możliwy self-hosting). */
     evmApiUrl: string;
@@ -54,6 +64,9 @@ export const DEFAULT_LIVE_SOURCES = [
   'keybase.io',
   'web.archive.org',
   't.me',
+  'dev.to',
+  'www.reddit.com',
+  'oauth.reddit.com',
   'eth.blockscout.com',
   'ethereum-rpc.publicnode.com',
   'blockstream.info',
@@ -92,8 +105,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
       keybaseApi: env.KEYBASE_API_URL ?? 'https://keybase.io/_/api/1.0',
       wayback: env.WAYBACK_URL ?? 'https://web.archive.org',
       telegram: env.TELEGRAM_PREVIEW_URL ?? 'https://t.me',
+      devtoApi: env.DEVTO_API_URL ?? 'https://dev.to/api',
+      reddit: env.REDDIT_URL ?? 'https://www.reddit.com',
+      redditOauth: env.REDDIT_OAUTH_URL ?? 'https://oauth.reddit.com',
       searxng,
     },
+    reddit: { enabled: env.OLCYS_REDDIT !== 'false', clientId: env.REDDIT_CLIENT_ID || undefined, clientSecret: env.REDDIT_CLIENT_SECRET || undefined },
+    recording: env.OLCYS_REPLAY_DIR
+      ? { mode: 'replay', dir: resolve(env.OLCYS_REPLAY_DIR) }
+      : env.OLCYS_RECORD_DIR
+        ? { mode: 'record', dir: resolve(env.OLCYS_RECORD_DIR) }
+        : undefined,
     chain: {
       evmApiUrl,
       evmApiKey,

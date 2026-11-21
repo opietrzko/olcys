@@ -63,7 +63,7 @@ OŁCyŚ automatyzuje tę pracę dla analityków **Krajowej Administracji Skarbow
 
 **Kluczowe możliwości:**
 
-- **Łączenie śladów OSINT** – konektory Web2 (GitHub, Keybase, Gravatar, Telegram, ENS, strony WWW, wyszukiwarka) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias)
+- **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias)
 - **Ekstrakcja adresów** – BTC, ETH/EVM, TRON, LTC, SOL z walidacją sum kontrolnych i odtwarzaniem zapisów celowo zaciemnionych
 - **Wskaźnik Pewności** – deterministyczne, wersjonowane reguły; każdy punkt ma przesłankę i źródło
 - **Odrzucanie fałszywych trafień** – giełdy, kontrakty, miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia
@@ -261,6 +261,9 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | Źródło | Co daje | Dostęp |
 |---|---|---|
 | GitHub API + raw | profil, bio, strona, profilowe README (także organizacji), FUNDING.yml | publiczne API; zalecany `GITHUB_TOKEN` |
+| GitHub – wyszukiwanie kodu | adres krypto → publiczne pliki, w których występuje, i ich właściciel (pivot do nicku) | publiczne API; wymaga `GITHUB_TOKEN` |
+| DEV (dev.to) | artykuły użytkownika (np. ogłoszenia sprzedaży) | publiczne API Forem, bez klucza |
+| Reddit | posty i komentarze na profilu użytkownika | oficjalne API OAuth z kluczem zarejestrowanej aplikacji (`REDDIT_CLIENT_ID/SECRET`); bez klucza anonimowe listingi `.json`, których Reddit zwykle odmawia (403) – raportowane, nie obchodzone |
 | Keybase | **kryptograficznie podpisane** adresy krypto i dowody kont (GitHub, X, Reddit, WWW) | publiczne API |
 | Gravatar v3 | e-mail (hash) → profil i zweryfikowane konta | publiczne API |
 | Telegram `t.me/s/` | publiczny podgląd kanału | bez logowania |
@@ -274,7 +277,20 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | TronGrid | transfery USDT TRC20 | bez klucza |
 | NBP + CoinGecko | kurs USD/PLN (tabela A) i bieżące ceny krypto | bez klucza; przy awarii kurs zapasowy z adnotacją |
 
-> **Ograniczenia:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP. NBP bywa chwilowo niedostępne. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
+> **Ograniczenia:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP, a wyszukiwanie kodu działa tylko z tokenem i obejmuje pliki dopiero po zaindeksowaniu przez GitHub. Reddit odmawia zapytań anonimowych z wielu sieci (403) – do scenariuszy z Redditem potrzebna jest zarejestrowana aplikacja tylko do odczytu (`REDDIT_CLIENT_ID/SECRET`), a wdrożenie w KAS – zgody wynikającej z Reddit Data API Terms. NBP bywa chwilowo niedostępne. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
+
+**Warianty nicku między serwisami:** GitHub nie dopuszcza znaku `_` w loginie, więc nick `jan_kowal` jest sprawdzany na GitHubie także jako `jan-kowal` (a na dev.to odwrotnie). Konto wariantowe liczy się jako konto podmiotu tylko wtedy, gdy jego treść wymienia oryginalny nick (np. `TG: @jan_kowal` w bio). W przeciwnym razie dostaje powiązanie słabe (−35), bo taki login mógł założyć ktokolwiek.
+
+### Tryb offline (nagrywanie i odtwarzanie)
+
+Zabezpieczenie na prezentację bez sieci. Najpierw nagraj przebieg na żywo, potem odtwórz go bez dostępu do Internetu:
+
+```sh
+OLCYS_RECORD_DIR=data/recordings/demo npm run dev     # przebieg na żywo, każda odpowiedź źródła zapisana na dysku
+OLCYS_REPLAY_DIR=data/recordings/demo npm run dev     # te same analizy bez sieci
+```
+
+W trybie odtwarzania żadne żądanie nie wychodzi z komputera. Zapytanie bez nagrania kończy się jawnym błędem konektora, a nie cichym wyjściem do sieci. Przebieg i raport oznaczają tryb offline. Nagrania nie zawierają nagłówków (np. tokena GitHub).
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 
@@ -341,13 +357,14 @@ Wycena odbywa się według kursu bieżącego. Do rozliczeń PIT-38 wymagany jest
 npm test
 ```
 
-28 testów automatycznych, działających bez dostępu do sieci:
+37 testów automatycznych, działających bez dostępu do sieci:
 
 - walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne)
 - Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów)
 - wskaźniki cash-out (swap na stablecoiny, wnioskowany adres depozytowy giełdy)
 - numer telefonu
 - bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów)
+- plan kont testowych zespołu (GitHub + dev.to + Reddit) od wejścia do wyniku, odtworzony z nagrań: synergia GitHub + dev.to, pułapki USDT i Binance = 0%, giveaway na Reddicie = szum bez synergii, wyszukiwanie po samym adresie, warianty nicku
 
 **Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na fikcyjnych kontach testowych zespołu (GitHub, Keybase, Telegram, strona WWW, …) z opublikowanymi adresami portfeli testowych. Każdy scenariusz opisuje, co wpisać do narzędzia i jaki wynik jest oczekiwany: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
 
@@ -374,6 +391,10 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `OLCYS_MAX_DEPTH` | | `3` | Domyślna głębokość pivotowania |
 | `OLCYS_SEARCH_RESULTS` | | `8` | Liczba wyników wyszukiwarki pobieranych na zapytanie |
 | `OLCYS_LIVE_RATES` | | `true` | Kursy z NBP i CoinGecko |
+| `OLCYS_REDDIT` | | `true` | `false` wyłącza konektor Reddit |
+| `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | do Reddita | | Klucze zarejestrowanej aplikacji Reddit typu „script” (tylko odczyt) – oficjalne API OAuth |
+| `OLCYS_RECORD_DIR` | | | Katalog, do którego zapisywane są odpowiedzi źródeł (do odtworzenia offline) |
+| `OLCYS_REPLAY_DIR` | | | Katalog z nagraniem – analizy bez sieci (ma pierwszeństwo przed `OLCYS_RECORD_DIR`) |
 | `LLM_BASE_URL` | | | API zgodne z OpenAI (Ollama, vLLM, LocalAI, LiteLLM) |
 | `LLM_MODEL` | | `llama3.1` | Model do klasyfikacji kontekstu |
 

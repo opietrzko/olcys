@@ -157,7 +157,9 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     seen.add(idKey(i));
     identities.push({ ...i, strength: 'DIRECT', via: 'Wejście analityka', depth: 0 });
   }
-  t('input', `Identyfikatory wejściowe: ${identities.map((i) => `${i.type}=${i.value}`).join(', ')}; maks. głębokość pivotowania ${maxDepth}`);
+  if (config.recording?.mode === 'replay') t('input', `Tryb offline: odpowiedzi źródeł odtwarzane z nagrania ${config.recording.dir} – żadne żądanie nie wychodzi do sieci`);
+  if (config.recording?.mode === 'record') t('input', `Nagrywanie odpowiedzi źródeł do ${config.recording.dir} (do późniejszego odtworzenia offline)`);
+  t('input', `Identyfikatory wejściowe:${identities.map((i) => `${i.type}=${i.value}`).join(', ')}; maks. głębokość pivotowania ${maxDepth}`);
 
   const evidence = new Map<string, EvidenceDocument>();
   const rawContent: Record<string, string> = {};
@@ -357,6 +359,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       labelDatasets: deps.labelDatasets,
       rates: { source: rates.source, asOf: rates.asOf, usdPln: rates.usdPln },
       webFetch: config.webFetch,
+      recording: config.recording ? { mode: config.recording.mode, dir: config.recording.dir } : null,
       llm: llm ? llm.model : null,
     },
     identities,

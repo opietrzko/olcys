@@ -5,8 +5,11 @@
  *    z blokadą adresów prywatnych / pętli zwrotnej / link-local (ochrona przed SSRF w sieci wewnętrznej KAS),
  *  - limit czasu, identyfikowalny User-Agent, limit rozmiaru odpowiedzi, log każdego żądania w przebiegu analizy.
  */
+import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
+import { join } from 'node:path';
 import type { EngineConfig } from './config';
 
 export class EgressDeniedError extends Error {
@@ -32,6 +35,8 @@ export interface EgressLogEntry {
   url: string;
   status: number | 'DENIED' | 'ERROR';
   ms: number;
+  /** Served from an offline recording – no request left the machine. */
+  replay?: boolean;
 }
 
 const MAX_BODY = 3_000_000;
@@ -53,7 +58,53 @@ async function assertPublicHost(hostname: string): Promise<void> {
   if (addrs.some((a) => isPrivateIp(a.address))) throw new EgressDeniedError(h, 'wskazuje na adres prywatny/wewnętrzny (ochrona SSRF)');
 }
 
+/** Controlled fetch for an analysis run: live, live + recording, or offline replay (see EngineConfig.recording). */
 export function createSafeFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void): SafeFetch {
+  const rec = config.recording;
+  if (rec?.mode === 'replay') return createReplayFetch(rec.dir, log);
+  const live = createLiveFetch(config, log);
+  return rec?.mode === 'record' ? withRecording(live, rec.dir) : live;
+}
+
+/** Recording key: method, URL and body. Headers are left out on purpose, so tokens never end up on disk. */
+export function recordingKey(url: string, init?: { method?: string; body?: string }): string {
+  return createHash('sha256')
+    .update(`${init?.method ?? 'GET'} ${url}\n${init?.body ?? ''}`)
+    .digest('hex')
+    .slice(0, 32);
+}
+
+interface Recording {
+  request: { method: string; url: string };
+  response: FetchedResource;
+}
+
+function withRecording(live: SafeFetch, dir: string): SafeFetch {
+  mkdirSync(dir, { recursive: true });
+  return async (url, init) => {
+    const res = await live(url, init);
+    // Never persist OAuth token responses: replay skips token requests altogether.
+    if (/\/access_token\b|\/oauth\/token\b/.test(url)) return res;
+    const rec: Recording = { request: { method: init?.method ?? 'GET', url }, response: res };
+    writeFileSync(join(dir, `${recordingKey(url, init)}.json`), JSON.stringify(rec));
+    return res;
+  };
+}
+
+function createReplayFetch(dir: string, log?: (e: EgressLogEntry) => void): SafeFetch {
+  return async (url, init) => {
+    const file = join(dir, `${recordingKey(url, init)}.json`);
+    if (!existsSync(file)) {
+      log?.({ at: new Date().toISOString(), url, status: 'ERROR', ms: 0, replay: true });
+      throw new Error(`Tryb offline: brak nagrania odpowiedzi dla ${url} (nagraj przebieg z OLCYS_RECORD_DIR)`);
+    }
+    const { response } = JSON.parse(readFileSync(file, 'utf8')) as Recording;
+    log?.({ at: new Date().toISOString(), url, status: response.status, ms: 0, replay: true });
+    return response;
+  };
+}
+
+function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void): SafeFetch {
   const allowed = new Set(config.egressAllowlist.map((h) => h.toLowerCase()));
   const isAllowed = (u: URL) => allowed.has(u.host.toLowerCase()) || allowed.has(u.hostname.toLowerCase());
   const check = async (u: URL, kind: FetchKind) => {
