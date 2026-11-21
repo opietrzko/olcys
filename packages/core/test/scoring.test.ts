@@ -79,6 +79,17 @@ describe('Wskaźnik Pewności', () => {
     expect(s.rules.some((r) => r.ruleId === 'CROSS_IDENTITY_REUSE')).toBe(true);
   });
 
+  it('brak danych o aktywności adresu obniża wynik zamiast cichego 100% (bez podwójnej kary)', () => {
+    const mine = [occ('OWN_PROFILE', 'github', 'mój portfel'), occ('P2P_LISTING', 't.me', 'rozliczenie')];
+    const ok = computeConfidence({ subjectOccurrences: mine, allOccurrences: [], classification: unhosted, verifiedOnChain: true });
+    const unchecked = computeConfidence({ subjectOccurrences: mine, allOccurrences: [], classification: unhosted, verifiedOnChain: true, activityChecked: false });
+    expect(ok.score).toBe(100);
+    expect(unchecked.rules.map((r) => r.ruleId)).toContain('ACTIVITY_UNCHECKED');
+    expect(unchecked.score).toBe(95);
+    const unverified = computeConfidence({ subjectOccurrences: mine, allOccurrences: [], classification: unhosted, verifiedOnChain: false, activityChecked: false });
+    expect(unverified.rules.map((r) => r.ruleId)).not.toContain('ACTIVITY_UNCHECKED');
+  });
+
   it('każda reguła ma przesłankę i suma reguł = wynik', () => {
     const s = computeConfidence({ subjectOccurrences: [occ('P2P_LISTING', 'p2p', 'sprzedam', 'PIVOT')], allOccurrences: [], classification: unhosted, verifiedOnChain: false });
     expect(s.rules.every((r) => r.premise.length > 0)).toBe(true);

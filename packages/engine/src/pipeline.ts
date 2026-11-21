@@ -421,16 +421,21 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     for (const n of chain.takeNotes(g.chain)) t('chain', `${key}: ${n}`);
     if (!excluded && transfers === null && chain.errorFor(g.chain)) t('chain', `Uwaga: ${key} – brak danych blockchain: ${chain.errorFor(g.chain)}`);
     // Heurystyka adresu instytucjonalnego (adres bez etykiety, ale z aktywnością typową dla giełdy / usługi)
-    if (!excluded && transfers) {
+    // Counters are fetched even when the transfer history failed (e.g. rate limit): the tx count alone is enough
+    // to recognise an exchange or service. Without either, the score gets a penalty instead of a silent 100%.
+    let activityChecked = true;
+    if (!excluded) {
       const stats = await chain.getStats(g.chain, g.address);
-      const inferred = inferInstitutional(g.chain, g.address, transfers, stats ?? undefined);
+      activityChecked = transfers !== null || stats?.txCount !== undefined;
+      const inferred = activityChecked ? inferInstitutional(g.chain, g.address, transfers ?? [], stats ?? undefined) : undefined;
       if (inferred) {
         classification = classifyAddress(g.chain, g.address, labels, isContract, inferred);
         t('labels', `${key}: ${inferred.reason}`);
       }
+      if (!activityChecked) t('labels', `${key}: nie pobrano liczby transakcji ani historii – heurystyka instytucjonalna nie została wykonana`);
     }
     const verifiedOnChain = Boolean(labels.get(g.chain, g.address)) || code !== null || transfers !== null;
-    const attribution = computeConfidence({ subjectOccurrences: subjectOcc, allOccurrences: g.occ, classification, verifiedOnChain });
+    const attribution = computeConfidence({ subjectOccurrences: subjectOcc, allOccurrences: g.occ, classification, verifiedOnChain, activityChecked });
     let activity;
     if (!excluded && transfers && transfers.length) {
       await labelCounterparties(g.chain, g.address, transfers);

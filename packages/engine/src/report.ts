@@ -114,7 +114,7 @@ ${r.profileChanges.length ? `<table><tr><th>Zasób</th><th>Okres</th><th>Usunię
 <table><tr><th>Reguła</th><th>Wartość</th></tr>
 ${Object.entries(SCORING_RULES.base).map(([k, v]) => `<tr><td>Baza: ${esc(v.label)} (${k})</td><td>${v.value}</td></tr>`).join('')}
 ${Object.entries(SCORING_RULES.identity).map(([k, v]) => `<tr><td>Tożsamość: ${esc(v.label)} (${k})</td><td>${v.value}</td></tr>`).join('')}
-${(['ownershipClaim', 'synergy', 'crossIdentityReuse', 'historicalOnly', 'unverifiedOnChain', 'inferredInstitutional'] as const).map((k) => `<tr><td>${esc(SCORING_RULES[k].label)}</td><td>${SCORING_RULES[k].value > 0 ? '+' : ''}${SCORING_RULES[k].value}</td></tr>`).join('')}
+${(['ownershipClaim', 'synergy', 'crossIdentityReuse', 'historicalOnly', 'unverifiedOnChain', 'inferredInstitutional', 'activityUnchecked'] as const).map((k) => `<tr><td>${esc(SCORING_RULES[k].label)}</td><td>${SCORING_RULES[k].value > 0 ? '+' : ''}${SCORING_RULES[k].value}</td></tr>`).join('')}
 <tr><td>Bramka: adres giełdy, kontraktu, miksera, zbiórki, bramki fiat (etykieta lub bytecode ≠ 0x)</td><td>0%</td></tr></table>
 
 <h2>9. Przebieg analizy</h2>

@@ -355,6 +355,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 | Adres tylko w archiwalnej wersji zasobu | −5 |
 | Brak weryfikacji w blockchainie | −10 |
 | Adres wnioskowany jako instytucjonalny (bez etykiety, ≥5000 transakcji lub ≥300 kontrahentów) | −40 |
+| Nie sprawdzono skali aktywności adresu (brak liczby transakcji i historii, np. limit zapytań) | −10 |
 | **Bramka:** etykieta CEX / custodial / DEX / kontrakt tokena / mikser / zbiórka / bramka fiat / sankcje, albo kod kontraktu (Ethereum: `eth_getCode ≠ 0x`, TRON: `/wallet/getcontract`) | **0%** |
 
 | Przedział | Znaczenie |
@@ -367,7 +368,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 
 **Synergia a „niezależne źródło”:** źródła grupowane są po usłudze, a nie po adresie strony: subdomeny jednej domeny, profil GitHub, `raw.githubusercontent.com` i strona `*.github.io` to jedno źródło (zgodnie z załącznikiem: *wielokrotne wystąpienie adresu w ramach jednej usługi nie stanowi dodatkowego potwierdzenia*).
 
-**Adres instytucjonalny bez etykiety:** etykiet nie da się mieć dla wszystkich adresów giełd. Gdy adres ma aktywność typową dla giełdy lub usługi (≥5000 transakcji w historii albo ≥300 różnych kontrahentów w pobranym fragmencie), dostaje karę −40 i kategorię *custodial (wniosek)*. To wniosek do weryfikacji, a nie bramka 0%.
+**Adres instytucjonalny bez etykiety:** etykiet nie da się mieć dla wszystkich adresów giełd. Gdy adres ma aktywność typową dla giełdy lub usługi (≥5000 transakcji w historii albo ≥300 różnych kontrahentów w pobranym fragmencie), dostaje karę −40 i kategorię *custodial (wniosek)*. To wniosek do weryfikacji, a nie bramka 0%. Gdy dostawca nie zwróci ani liczby transakcji, ani historii, heurystyka nie może się wykonać, więc wynik dostaje karę −10 („Nie sprawdzono skali aktywności adresu”) zamiast pełnej pewności.
 
 **Otwarte przestrzenie nazw (ENS, Keybase):** nazwę `.eth` czy konto Keybase o danej nazwie może zarejestrować każdy. Zgodność z nickiem daje tylko powiązanie słabe, dopóki nie ma **wzajemnego potwierdzenia**: dla Keybase zweryfikowanego dowodu konta o tym nicku, dla ENS innego profilu podmiotu wskazującego tę nazwę lub adres. Przykład z testu na żywo: `torproject.eth` bez potwierdzenia ma 55% zamiast 90%.
 
@@ -403,7 +404,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 npm test
 ```
 
-50 testów automatycznych, działających bez dostępu do sieci:
+57 testów automatycznych, działających bez dostępu do sieci:
 
 - walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne)
 - Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów)

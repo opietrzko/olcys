@@ -40,6 +40,7 @@ export const SCORING_RULES = {
   historicalOnly: { value: -5, label: 'Adres widoczny tylko w archiwalnej wersji zasobu' },
   unverifiedOnChain: { value: -10, label: 'Brak weryfikacji adresu w blockchainie (etykieta/bytecode)' },
   inferredInstitutional: { value: -40, label: 'Adres wnioskowany jako instytucjonalny (heurystyka on-chain)' },
+  activityUnchecked: { value: -10, label: 'Nie sprawdzono skali aktywności adresu (brak danych do heurystyki instytucjonalnej)' },
 } as const;
 
 const SECOND_LEVEL = new Set(['com.pl', 'net.pl', 'org.pl', 'co.uk', 'org.uk', 'com.au', 'co.jp', 'com.br']);
@@ -93,6 +94,11 @@ export interface ScoreInput {
   classification: AddressClassification;
   /** Czy adres zweryfikowano w blockchainie (etykiety + bytecode/historia). */
   verifiedOnChain: boolean;
+  /**
+   * Whether tx counters or history were fetched, i.e. whether the institutional-address heuristic could run.
+   * false => penalty, because without that data an exchange or service would look like a personal wallet. Defaults to true.
+   */
+  activityChecked?: boolean;
 }
 
 export function computeConfidence(input: ScoreInput): AttributionScore {
@@ -209,6 +215,17 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
       kind: 'penalty',
       delta: SCORING_RULES.unverifiedOnChain.value,
       premise: 'Dostawca danych blockchain nie zwrócił informacji o adresie',
+      occurrenceIds: allIds,
+    });
+  }
+
+  if (input.verifiedOnChain && input.activityChecked === false) {
+    rules.push({
+      ruleId: 'ACTIVITY_UNCHECKED',
+      label: SCORING_RULES.activityUnchecked.label,
+      kind: 'penalty',
+      delta: SCORING_RULES.activityUnchecked.value,
+      premise: 'Dostawca danych blockchain nie zwrócił liczby transakcji ani historii adresu (np. limit zapytań) – nie wykluczono adresu giełdy lub usługi',
       occurrenceIds: allIds,
     });
   }

@@ -2,7 +2,7 @@
 
 Przygotowaliśmy dwie **fikcyjne osoby** z prawdziwymi, publicznymi kontami w Internecie (GitHub, Gravatar, strona WWW, Telegram). Opublikowały one adresy portfeli w różnych kontekstach: na własnym profilu, w ogłoszeniu, w giveawayu, jako adres giełdy albo ostrzeżenie przed oszustem. Wystarczy wpisać jeden identyfikator, a OŁCyŚ sam przejdzie po śladach i oceni każdy adres.
 
-Żadne dane nie dotyczą prawdziwych osób. Adresy portfeli person są syntetyczne, z wyjątkiem portfela głównego Błażeja, który pokazuje aktywność w blockchainie.
+Żadne dane nie dotyczą prawdziwych osób. Adresy portfeli person są syntetyczne, z wyjątkiem portfela „głównego” Błażeja. To prawdziwy, bardzo aktywny adres Ethereum, dzięki któremu widać analizę aktywności w blockchainie.
 
 ---
 
@@ -48,22 +48,26 @@ Nazwa kanału nie pojawiła się ani na wejściu, ani na GitHubie. Narzędzie zn
 | ETH `0x5b20…0435` | Telegram | **10%** | „Uważajcie, to scam” – adres cudzy |
 | ETH `0x165C…5e14` | strona WWW | **0%** | znana zbiórka – nie jest portfelem osoby |
 
-Jeśli publiczne API Bitcoina (Blockstream) ogranicza zapytania z Waszej sieci, BTC dostanie 75% z regułą „Brak weryfikacji adresu w blockchainie”. Narzędzie nie przemilcza braku danych, tylko obniża za to pewność.
+Jeśli publiczne API Bitcoina (Blockstream) ogranicza zapytania z Waszej sieci, BTC dostanie 75% z regułą „Brak weryfikacji adresu w blockchainie”. Gdy uda się sprawdzić sam adres, ale nie liczbę jego transakcji, wynik spada o 10 pkt z regułą „Nie sprawdzono skali aktywności adresu”. Narzędzie nie przemilcza braku danych, tylko obniża za to pewność.
 
-### 2. Błażej – pełny przebieg i odrzucanie pułapek (ok. 45 s)
+### 2. Błażej – pełny przebieg, pułapki i adres, który nie wygląda na portfel osoby (ok. 45 s)
 
 Otwórzcie analizę Błażeja i zakładkę **Adresy**. Przy każdym adresie jest tabela „Jak powstał wynik” z regułami, które sumują się do wyniku.
 
 | Adres | Wynik | Dlaczego |
 |---|---|---|
-| ETH `0x3963…Aa49` | **100%** | profil GitHub („Wesprzyj moje projekty”) i rozliczenie na Telegramie |
+| ETH `0x3963…Aa49` | **65%** | profil GitHub („Wesprzyj moje projekty”) i rozliczenie na Telegramie (85 + 5 + 15), ale ponad milion transakcji: kara −40 „Adres wnioskowany jako instytucjonalny” |
 | ETH `0xD37d…eBeF` | **25%** | dwa wpisy typu giveaway / airdrop w jednym serwisie: szum, bez premii za synergię |
 | `0xdAC1…1ec7` | **0%** | kontrakt tokena USDT, a nie portfel osoby |
 | `0x28C6…1d60` | **0%** | portfel giełdy Binance |
 
-Pułapki są opublikowane przez tę samą osobę, obok jej prawdziwego portfela, a mimo to nie obniżają jego wyniku.
+Pułapki są opublikowane przez tę samą osobę, obok jej portfela, a mimo to nie obniżają jego wyniku.
 
-Kliknijcie portfel `0x3963…Aa49`. Sekcja **Aktywność w blockchainie** pokazuje transakcje, wpływy i wypływy w PLN oraz wskaźniki wyjścia do walut tradycyjnych, każdy oznaczony jako *obliczenie* albo *wniosek do weryfikacji*.
+Ślady Web2 wskazują `0x3963…Aa49` bardzo mocno. Adres nie ma etykiety giełdy, ale w blockchainie ma ponad milion transakcji. Taka aktywność jest typowa dla buildera bloków albo usługi, a nie dla prywatnej osoby (w ENS adres nosi nazwę `quasarbuilder.eth`). Narzędzie nie zeruje go jak giełdy z rejestru, tylko obniża pewność do 65% i opisuje to jako *wniosek do weryfikacji*. Analityk dostaje informację, że osoba podaje adres, który najpewniej nie należy do niej.
+
+Kliknijcie portfel `0x3963…Aa49`. Sekcja **Aktywność w blockchainie** pokazuje transakcje, wpływy i wypływy w PLN oraz wskaźniki wyjścia do walut tradycyjnych (m.in. „Znaczny łączny wolumen”), każdy oznaczony jako *obliczenie* albo *wniosek do weryfikacji*.
+
+Jeśli Blockscout ogranicza zapytania z Waszej sieci i nie zwróci liczby transakcji, adres dostanie 95% z regułą „Nie sprawdzono skali aktywności adresu”. Brak danych widać w wyniku, a nie znika po cichu.
 
 ### 3. Tor Project – ta sama nazwa to jeszcze nie ta sama osoba (ok. 15 s)
 
@@ -101,4 +105,4 @@ Wszystko, z czego korzysta narzędzie, jest publiczne:
 - **Bez Internetu.** Ustawcie w `.env` `OLCYS_REPLAY_DIR=data/recordings/demo` i uruchomcie aplikację ponownie. Analizy z nagrania działają bez sieci, a przebieg jest oznaczony jako tryb offline.
 - **Źródła i zgodność** (menu po lewej). Lista źródeł, podstawa korzystania z każdego z nich i lista zatwierdzonych hostów. Zapytania do innych usług są blokowane i logowane.
 - **Metodyka** (link przy wyniku adresu). Wszystkie reguły Wskaźnika Pewności i progi wskaźników wyjścia do fiat.
-- **Testy automatyczne:** `npm test`. 56 testów bez dostępu do sieci, w tym cały plan kont testowych odtworzony z nagrań, ochrona przed żądaniami do sieci wewnętrznej (SSRF) i reguły punktacji.
+- **Testy automatyczne:** `npm test`. 57 testów bez dostępu do sieci, w tym cały plan kont testowych odtworzony z nagrań, ochrona przed żądaniami do sieci wewnętrznej (SSRF) i reguły punktacji.

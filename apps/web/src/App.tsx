@@ -539,7 +539,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
 
 function Methodology({ meta }: { meta: Meta }) {
   const rules = meta.scoring.rules as Record<string, { value: number; label: string }> & Meta['scoring']['rules'];
-  const extra = ['ownershipClaim', 'synergy', 'crossIdentityReuse', 'historicalOnly', 'unverifiedOnChain', 'inferredInstitutional'];
+  const extra = ['ownershipClaim', 'synergy', 'crossIdentityReuse', 'historicalOnly', 'unverifiedOnChain', 'inferredInstitutional', 'activityUnchecked'];
   const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : '0');
   return (
     <>
