@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Identifier, IdentifierType } from '@olcys/core';
 import {
-  BookOpen,
+  ChevronLeft,
   ChevronRight,
   CircleAlert,
   ClipboardList,
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Repeat,
   Search,
+  Settings,
   ShieldCheck,
   Sun,
   TriangleAlert,
@@ -32,9 +33,11 @@ function useHash() {
   return hash;
 }
 
-const NAV = [
-  { href: '#/', key: 'analizy', label: 'Analizy', icon: FolderSearch },
-  { href: '#/metodyka', key: 'metodyka', label: 'Metodyka', icon: BookOpen },
+/** Praca analityka – w głównej nawigacji tylko sprawy. */
+const NAV = [{ href: '#/', key: 'analizy', label: 'Analizy', icon: FolderSearch }];
+
+/** Treści dla administratora / IT i jury – poza codzienną ścieżką analityka. Metodyka jest linkowana przy wyniku adresu. */
+const ADMIN_NAV = [
   { href: '#/zrodla', key: 'zrodla', label: 'Źródła i zgodność', icon: ShieldCheck },
   { href: '#/audyt', key: 'audyt', label: 'Audyt', icon: ClipboardList },
 ];
@@ -87,6 +90,18 @@ export function App() {
             ))}
           </nav>
           <div className="side-foot">
+            <nav className="nav nav-admin" aria-label="Administracja">
+              <span className="nav-heading">
+                <Settings size={12} aria-hidden="true" />
+                Administracja
+              </span>
+              {ADMIN_NAV.map(({ href, key, label, icon: Icon }) => (
+                <a key={key} href={href} aria-current={section === key ? 'page' : undefined}>
+                  <Icon size={14} aria-hidden="true" />
+                  {label}
+                </a>
+              ))}
+            </nav>
             <p className="side-note">Wyłącznie publicznie dostępne źródła (OSINT). Wskaźnik Pewności nie przesądza o własności adresu i wymaga weryfikacji analityka.</p>
             <div className="theme" role="group" aria-label="Motyw">
               {THEMES.map(({ v, label, icon: Icon }) => (
@@ -256,7 +271,7 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
   const [ids, setIds] = useState<Identifier[]>([{ type: 'nick', value: '' }]);
   const [schedule, setSchedule] = useState<number | ''>('');
   const [history, setHistory] = useState(true);
-  const [depth, setDepth] = useState(3);
+  const [depth, setDepth] = useState(6);
   const live = meta?.sources;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -333,9 +348,9 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
           <label className="field">
             <span>Głębokość pivotowania</span>
             <select value={depth} onChange={(e) => setDepth(Number(e.target.value))}>
-              {[0, 1, 2, 3].map((d) => (
+              {[6, 3, 2, 1, 0].map((d) => (
                 <option key={d} value={d}>
-                  {d === 0 ? '0 – tylko wejście' : `${d} ${d === 1 ? 'skok' : 'skoki'}`}
+                  {d === 6 ? 'Do wyczerpania tropów (maks. 6)' : d === 0 ? '0 – tylko wejście' : `${d} ${d === 1 ? 'skok' : 'skoki'}`}
                 </option>
               ))}
             </select>
@@ -530,7 +545,11 @@ function Methodology({ meta }: { meta: Meta }) {
     <>
       <div className="page-head">
         <div>
-          <h1>Metodyka</h1>
+          <button type="button" className="back" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/'))}>
+            <ChevronLeft size={14} aria-hidden="true" />
+            Wróć do sprawy
+          </button>
+          <h1>Metodyka Wskaźnika Pewności</h1>
           <p className="lede">
             Wskaźnik Pewności liczą jawne, deterministyczne reguły w wersji <code>{meta.rulesVersion}</code>. Te same dane zawsze dają ten sam wynik.
           </p>

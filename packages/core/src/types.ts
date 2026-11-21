@@ -24,6 +24,12 @@ export interface SubjectIdentity extends Identifier {
   /** Identyfikator dokumentu-dowodu, z którego odkryto powiązanie (dla PIVOT). */
   evidenceId?: string;
   depth: number;
+  /**
+   * Trop tymczasowy: identyfikator odkryty na koncie, którego przynależność do podmiotu nie jest potwierdzona
+   * (np. konto znalezione po samym imieniu i nazwisku). Wartość = ID dowodu, od którego zaczęła się gałąź.
+   * Cała gałąź ma powiązanie słabe, dopóki ten dowód nie zostanie potwierdzony niezależnym śladem.
+   */
+  tentative?: string;
 }
 
 /** Rodzaj źródła Web2 – decyduje o wyniku bazowym (KROK 2). */

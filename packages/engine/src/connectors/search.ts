@@ -48,8 +48,8 @@ export const searxngConnector: SourceConnector = {
   id: 'search',
   title: 'Wyszukiwarka (SearXNG self-hosted) + pobranie stron wyników',
   compliance: 'Własna instancja SearXNG; pobierane wyłącznie publiczne strony z wyników (bez logowania, z blokadą adresów wewnętrznych).',
-  accepts: ['nick', 'email', 'phone', 'address', 'telegram'],
-  maxIdentityDepth: 1,
+  accepts: ['nick', 'name', 'email', 'phone', 'address', 'telegram'],
+  maxIdentityDepth: 2,
   isLive: () => true,
   enabled: (c) => Boolean(c.urls.searxng),
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
@@ -67,9 +67,12 @@ export const searxngConnector: SourceConnector = {
         const page = await ctx.fetch(r.url, { kind: 'page', timeoutMs: 10000 });
         if (page.status !== 200 || !/html|text|json/.test(page.contentType)) continue;
         const { title, segments } = /html/.test(page.contentType) ? pageSegments(page.body) : { title: r.title ?? r.url, segments: [{ id: 'body', text: page.body.slice(0, 200000) }] };
-        const needle = q.value.toLowerCase();
-        // zachowujemy tylko fragmenty istotne dla zapytania (identyfikator lub adres) – minimalizacja danych
-        const relevant = segments.filter((s) => s.text.toLowerCase().includes(needle) || /0x[0-9a-fA-F]{40}|\b(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}\b|\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(s.text));
+        const fold = (s: string) => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[łŁ]/g, 'l').toLowerCase().replace(/\s+/g, ' ');
+        const needle = fold(q.value);
+        // minimalizacja danych: zachowujemy tylko fragmenty z adresem krypto (strony z samym nazwiskiem/nickiem bez adresu
+        // nic nie wnoszą do celu analizy i mogą dotyczyć homonimu); dla zapytania o adres – fragmenty z tym adresem
+        const hasAddr = (t: string) => /0x[0-9a-fA-F]{40}|\b(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}\b|\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t);
+        const relevant = segments.filter((s) => hasAddr(s.text) && (q.type === 'address' ? fold(s.text).includes(needle) : true));
         if (!relevant.length) continue;
         const host = new URL(page.url).host;
         docs.push({

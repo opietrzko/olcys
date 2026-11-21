@@ -25,10 +25,11 @@ export const githubConnector: SourceConnector = {
   id: 'github',
   title: 'GitHub (profil, README, FUNDING.yml)',
   compliance: 'Publiczne REST API GitHub (opcjonalnie token tylko do odczytu danych publicznych), w limitach API; przy wyczerpaniu limitu – jawne ostrzeżenie i pliki raw.',
-  accepts: ['nick'],
+  accepts: ['nick', 'name'],
   isLive: () => true,
   enabled: () => true,
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
+    if (q.type === 'name') return collectByName(q, ctx);
     const { githubApi, githubRaw } = ctx.config.urls;
     const auth: Record<string, string> = ctx.config.githubToken ? { authorization: `Bearer ${ctx.config.githubToken}` } : {};
     const candidates = nickVariants(q.value, 'github');
@@ -63,6 +64,18 @@ export const githubConnector: SourceConnector = {
       if (u.email) links.push({ type: 'email', value: u.email });
       if (u.twitter_username) links.push({ type: 'nick', value: u.twitter_username });
       if (u.name) links.push({ type: 'name', value: u.name });
+      // Konta społecznościowe podpięte przez właściciela profilu – kolejne tropy („macki”)
+      const social = await ctx.fetch(`${githubApi}/users/${encodeURIComponent(u.login)}/social_accounts`, { headers: { accept: 'application/vnd.github+json', ...auth } }).catch(() => null);
+      const socialLines: string[] = [];
+      if (social?.status === 200) {
+        for (const a of JSON.parse(social.body) as { provider: string; url: string }[]) {
+          socialLines.push(`${a.provider}: ${a.url}`);
+          const handle = a.url.match(/^https?:\/\/(?:www\.)?(?:twitter\.com|x\.com|reddit\.com\/u(?:ser)?|dev\.to|t\.me|keybase\.io)\/@?([A-Za-z0-9_.-]{2,40})\/?$/i)?.[1];
+          if (/t\.me\//i.test(a.url) && handle) links.push({ type: 'telegram', value: handle });
+          else if (handle) links.push({ type: 'nick', value: handle });
+          else if (!/linkedin\.com|facebook\.com|instagram\.com/i.test(a.url)) links.push({ type: 'url', value: a.url }); // serwisy wymagające logowania pomijamy
+        }
+      }
       docs.push({
         family,
         sourceKind: 'OWN_PROFILE',
@@ -71,7 +84,7 @@ export const githubConnector: SourceConnector = {
         fetchedAt: profileRes.fetchedAt,
         contentType: profileRes.contentType,
         owner,
-        segments: [{ id: 'profile', author: owner, text: profileText }],
+        segments: [{ id: 'profile', author: owner, text: [profileText, ...socialLines].join('\n') }],
         links: [...links, ...extractIdentifiers(profileText).filter((l) => !links.some((x) => x.type === l.type && x.value === l.value))],
         meta: { api: profileRes.url, created_at: u.created_at, ownedByQuery: true },
         raw: profileRes.body,
@@ -116,3 +129,37 @@ export const githubConnector: SourceConnector = {
     return docs;
   },
 };
+
+const normName = (s: string) => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').toLowerCase().replace(/\s+/g, ' ').trim();
+
+/**
+ * Imię i nazwisko → konta GitHub z identycznym polem „Name” (wyszukiwarka użytkowników, kwalifikator fullname:).
+ * Samo imię i nazwisko to najsłabszy identyfikator (homonimy): znalezione konta dostają powiązanie słabe,
+ * dopóki inny ślad podmiotu nie wskaże tego loginu (wzajemne potwierdzenie), i nie są źródłem dalszego pivotu.
+ */
+async function collectByName(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
+  const auth: Record<string, string> = ctx.config.githubToken ? { authorization: `Bearer ${ctx.config.githubToken}` } : {};
+  const res = await ctx.fetch(`${ctx.config.urls.githubApi}/search/users?q=${encodeURIComponent(`fullname:"${q.value}"`)}&per_page=5`, {
+    headers: { accept: 'application/vnd.github+json', ...auth },
+  });
+  if (res.status !== 200) {
+    ctx.warn(`GitHub – wyszukiwanie po imieniu i nazwisku: HTTP ${res.status}${res.status === 403 || res.status === 422 ? ' (limit API lub brak GITHUB_TOKEN)' : ''}`);
+    return [];
+  }
+  const logins = ((JSON.parse(res.body).items ?? []) as { login: string }[]).map((i) => i.login).slice(0, 3);
+  ctx.log(`„${q.value}”: ${logins.length} kont(a) do sprawdzenia (${logins.join(', ') || '—'})`);
+  const target = normName(q.value);
+  const out: CollectedDocument[] = [];
+  for (const login of logins) {
+    const docs = await githubConnector.collect({ type: 'nick', value: login }, ctx);
+    // tylko konta z dokładnie tym imieniem i nazwiskiem w profilu (wyszukiwarka GitHub dopasowuje też częściowo)
+    if (!docs.some((d) => d.owner?.displayName && normName(d.owner.displayName) === target)) continue;
+    for (const d of docs) {
+      // login konta jest kolejnym tropem: ten sam nick sprawdzamy na innych platformach (Keybase, dev.to, Reddit, ENS, wyszukiwarka)
+      if (!d.links.some((l) => l.type === 'nick' && l.value.toLowerCase() === login.toLowerCase())) d.links.push({ type: 'nick', value: login });
+      Object.assign(d.meta, { weakOwnership: true, reciprocalNeedles: [login], nameMatch: login, weakReason: `konto GitHub @${login} znalezione wyłącznie po imieniu i nazwisku (możliwy homonim)` });
+    }
+    out.push(...docs);
+  }
+  return out;
+}

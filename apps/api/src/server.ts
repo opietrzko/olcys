@@ -24,7 +24,7 @@ const IdentifierSchema = z.object({ type: z.enum(['name', 'nick', 'email', 'phon
 const CreateSchema = z.object({
   name: z.string().min(1).max(200),
   identifiers: z.array(IdentifierSchema).min(1).max(20),
-  options: z.object({ maxDepth: z.number().int().min(0).max(4).optional(), disabledConnectors: z.array(z.string()).optional(), useHistory: z.boolean().optional() }).default({}),
+  options: z.object({ maxDepth: z.number().int().min(0).max(8).optional(), disabledConnectors: z.array(z.string()).optional(), useHistory: z.boolean().optional() }).default({}),
   scheduleMinutes: z.number().int().min(5).max(60 * 24 * 30).nullable().optional(),
 });
 

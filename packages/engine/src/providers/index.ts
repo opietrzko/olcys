@@ -13,6 +13,8 @@ export interface ChainProvider {
   getTransfers(chain: Chain, address: string): Promise<Transfer[] | null>;
   /** Bytecode adresu (EVM). null = nie sprawdzono. */
   getCode(chain: Chain, address: string): Promise<string | null>;
+  /** Powód ostatniego niepowodzenia (np. limit zapytań) – trafia do przebiegu analizy zamiast cichego „brak danych”. */
+  lastError?: string;
   /** Etykieta / nazwa adresu z API eksploratora (KROK 3.1 załącznika). */
   getInfo?(chain: Chain, address: string): Promise<AddressInfo | null>;
   explorerUrl(chain: Chain, address: string): string | undefined;
@@ -43,19 +45,32 @@ export class EtherscanProvider implements ChainProvider {
   supports(chain: Chain) {
     return chain === 'ETH';
   }
+  lastError?: string;
+  /** Zapytanie z ponowieniem przy limicie (HTTP 429 / „Too many requests” / „rate limit”): 2 próby, odstęp 1,5 s i 3 s. */
   private async q(params: Record<string, string>) {
     const u = new URL(this.cfg.chain.evmApiUrl);
     const extra: Record<string, string> = this.cfg.chain.evmApiKey ? { chainid: String(this.chainId), apikey: this.cfg.chain.evmApiKey } : {};
     for (const [k, v] of Object.entries({ ...params, ...extra })) u.searchParams.set(k, v);
-    const r = await this.fetch(u.toString());
-    return JSON.parse(r.body);
+    for (let attempt = 0; ; attempt++) {
+      const r = await this.fetch(u.toString());
+      let body: { message?: string; result?: unknown } = {};
+      try {
+        body = JSON.parse(r.body);
+      } catch {
+        /* odpowiedź nie-JSON – traktujemy jak błąd poniżej */
+      }
+      const limited = r.status === 429 || /too many requests|rate limit/i.test(`${body.message ?? ''} ${typeof body.result === 'string' ? body.result : ''}`);
+      if (!limited) return body as { message?: string; result?: unknown } & Record<string, unknown>;
+      if (attempt >= 2) throw new Error(`${this.id}: przekroczony limit zapytań (ustaw ETHERSCAN_API_KEY lub użyj własnej instancji Blockscout)`);
+      await new Promise((res) => setTimeout(res, 1500 * (attempt + 1)));
+    }
   }
   async getTransfers(chain: Chain, address: string): Promise<Transfer[] | null> {
     try {
-      const [native, tokens] = await Promise.all([
-        this.q({ module: 'account', action: 'txlist', address, sort: 'asc', page: '1', offset: '1000' }),
-        this.q({ module: 'account', action: 'tokentx', address, sort: 'asc', page: '1', offset: '1000' }),
-      ]);
+      this.lastError = undefined;
+      // po kolei, nie równolegle – publiczne API mają niskie limity zapytań na sekundę
+      const native = (await this.q({ module: 'account', action: 'txlist', address, sort: 'asc', page: '1', offset: '1000' })) as { result?: any };
+      const tokens = (await this.q({ module: 'account', action: 'tokentx', address, sort: 'asc', page: '1', offset: '1000' })) as { result?: any };
       const out: Transfer[] = [];
       for (const t of Array.isArray(native.result) ? native.result : []) {
         if (t.isError === '1') continue;
@@ -67,7 +82,8 @@ export class EtherscanProvider implements ChainProvider {
       }
       if (!Array.isArray(native.result) && !Array.isArray(tokens.result)) return null;
       return out;
-    } catch {
+    } catch (e) {
+      this.lastError = (e as Error).message;
       return null;
     }
   }
@@ -188,6 +204,10 @@ export class CompositeProvider implements ChainProvider {
     return (await this.pick(chain)?.getInfo?.(chain, address)) ?? null;
   }
   explorerUrl = explorer;
+  /** Powód braku danych od dostawcy dla danej sieci (jeśli znany). */
+  errorFor(chain: Chain) {
+    return this.pick(chain)?.lastError;
+  }
   sourceFor(chain: Chain) {
     return this.pick(chain)?.id ?? 'brak dostawcy';
   }

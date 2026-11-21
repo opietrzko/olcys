@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react';
-import { AtSign, CircleAlert, Globe, Hash, Mail, Phone, Send, User, Wallet, type LucideIcon } from 'lucide-react';
+import { AtSign, Check, CircleAlert, Copy, Globe, Hash, Mail, Phone, Send, User, Wallet, type LucideIcon } from 'lucide-react';
 
 export const BAND_LABEL: Record<string, string> = {
   BARDZO_WYSOKIE: 'Bardzo wysokie',
@@ -201,4 +201,26 @@ export function useTheme() {
   }, [pref]);
   const resolved: 'light' | 'dark' = pref === 'system' ? (sysDark ? 'dark' : 'light') : pref;
   return { pref, setPref, resolved };
+}
+
+/** Przycisk kopiowania do schowka z potwierdzeniem. */
+export function CopyButton({ text, label }: { text: string; label: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn sm ghost icon-only"
+      style={{ marginLeft: 'auto' }}
+      aria-label={done ? 'Skopiowano' : label}
+      title={done ? 'Skopiowano' : label}
+      onClick={() => {
+        void navigator.clipboard?.writeText(text).then(() => {
+          setDone(true);
+          setTimeout(() => setDone(false), 1500);
+        });
+      }}
+    >
+      {done ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+    </button>
+  );
 }

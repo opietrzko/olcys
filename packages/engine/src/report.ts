@@ -42,7 +42,7 @@ ul.st{list-style:none;padding:0}ul.st li{padding:5px 8px;margin:3px 0;border-lef
 </style></head><body>
 <header><h1>Raport OSINT: powiązania śladów cyfrowych z adresami kryptowalutowymi</h1>
 <p class="muted">Analiza: <b>${esc(meta.analysisName)}</b> · przebieg <code>${esc(meta.runId)}</code> · ${dt(r.startedAt)} – ${dt(r.finishedAt)} UTC · ${esc(r.engineVersion)} · reguły ${esc(r.rulesVersion)}</p>
-<p class="disclaimer">Raport sporządzono wyłącznie na podstawie publicznie dostępnych źródeł. Wskaźnik Pewności to wynik algorytmu regułowego i <b>nie przesądza</b> o własności adresu – wnioski oznaczone kolorem pomarańczowym wymagają weryfikacji przez analityka.</p>
+<p class="disclaimer">Raport sporządzono wyłącznie na podstawie publicznie dostępnych źródeł. Wskaźnik Pewności to wynik algorytmu regułowego i <b>nie przesądza</b> o własności adresu – wnioski oznaczone kolorem pomarańczowym wymagają weryfikacji przez analityka. Reguły punktacji opisano w sekcji 8 (Metodyka).</p>
 <p class="legend"><span class="band b-vh">80–100%</span><span class="band b-h">60–79%</span><span class="band b-m">40–59%</span><span class="band b-l">1–39%</span><span class="band b-x">0% wykluczone</span></p>
 </header>
 

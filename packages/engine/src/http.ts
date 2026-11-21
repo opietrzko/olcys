@@ -37,6 +37,7 @@ export interface EgressLogEntry {
   ms: number;
   /** Served from an offline recording – no request left the machine. */
   replay?: boolean;
+  kind: FetchKind;
 }
 
 const MAX_BODY = 3_000_000;
@@ -95,11 +96,11 @@ function createReplayFetch(dir: string, log?: (e: EgressLogEntry) => void): Safe
   return async (url, init) => {
     const file = join(dir, `${recordingKey(url, init)}.json`);
     if (!existsSync(file)) {
-      log?.({ at: new Date().toISOString(), url, status: 'ERROR', ms: 0, replay: true });
+      log?.({ at: new Date().toISOString(), url, status: 'ERROR', ms: 0, replay: true, kind: init?.kind ?? 'api' });
       throw new Error(`Tryb offline: brak nagrania odpowiedzi dla ${url} (nagraj przebieg z OLCYS_RECORD_DIR)`);
     }
     const { response } = JSON.parse(readFileSync(file, 'utf8')) as Recording;
-    log?.({ at: new Date().toISOString(), url, status: response.status, ms: 0, replay: true });
+    log?.({ at: new Date().toISOString(), url, status: response.status, ms: 0, replay: true, kind: init?.kind ?? 'api' });
     return response;
   };
 }
@@ -139,12 +140,12 @@ function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void
         }
         let body = await res.text();
         if (body.length > MAX_BODY) body = body.slice(0, MAX_BODY);
-        log?.({ at: new Date().toISOString(), url, status: res.status, ms: Date.now() - t0 });
+        log?.({ at: new Date().toISOString(), url, status: res.status, ms: Date.now() - t0, kind });
         return { url: current, status: res.status, contentType: res.headers.get('content-type') ?? 'application/octet-stream', body, fetchedAt: new Date().toISOString() };
       }
       throw new Error('Zbyt wiele przekierowań');
     } catch (e) {
-      log?.({ at: new Date().toISOString(), url: current, status: e instanceof EgressDeniedError ? 'DENIED' : 'ERROR', ms: Date.now() - t0 });
+      log?.({ at: new Date().toISOString(), url: current, status: e instanceof EgressDeniedError ? 'DENIED' : 'ERROR', ms: Date.now() - t0, kind });
       throw e;
     }
   };

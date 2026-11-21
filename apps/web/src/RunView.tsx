@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { AddressFinding, AnalysisResult, RunDiff, StatementKind } from '@olcys/core';
 import {
   Activity,
@@ -26,8 +26,9 @@ import {
   Wallet,
 } from 'lucide-react';
 import { api, type Run } from './api';
-import { Graph } from './Graph';
-import { CATEGORY_LABEL, Empty, LINK_LABEL, Panel, Score, Stat, dt, money, plural, short, Highlight } from './ui';
+import { Graph, identityNodeId } from './Graph';
+import { NodeInspector } from './NodeInspector';
+import { CATEGORY_LABEL, CopyButton, Empty, ID_TYPE, LINK_LABEL, Panel, Score, Stat, dt, money, plural, short, Highlight } from './ui';
 
 const KIND: Record<StatementKind, { label: string; cls: string }> = {
   FACT: { label: 'Fakt źródłowy', cls: 'fact' },
@@ -44,6 +45,16 @@ export function RunView({ run }: { run: Run }) {
   const r = run.result!;
   const [tab, setTab] = useState<Tab>('graf');
   const [selected, setSelected] = useState<string | null>(r.findings[0]?.key ?? null);
+  // wybrany węzeł nie-adresowy (podmiot / tożsamość); wybór adresu go czyści i odwrotnie
+  const [node, setNode] = useState<string | null>(null);
+  const pickAddress = useCallback((k: string | null) => {
+    setSelected(k);
+    if (k) setNode(null);
+  }, []);
+  const pickNode = useCallback((id: string | null) => {
+    setNode(id);
+    if (id) setSelected(null);
+  }, []);
   const [hideExcluded, setHideExcluded] = useState(false);
   const [diff, setDiff] = useState<RunDiff | null>(null);
   useEffect(() => {
@@ -156,25 +167,47 @@ export function RunView({ run }: { run: Run }) {
             <div className="graph-main">
               <div className="graph-toolbar">
                 <label className="sr-only" htmlFor="graph-pick">
-                  Wybierz adres
+                  Wybierz węzeł grafu
                 </label>
-                <select id="graph-pick" value={selected ?? ''} onChange={(e) => setSelected(e.target.value || null)} style={{ maxWidth: 320 }}>
-                  <option value="">Wybierz adres…</option>
-                  {r.findings.map((f) => (
-                    <option key={f.key} value={f.key}>
-                      {f.chain} {short(f.address, 6)} · {f.attribution.score}%
-                    </option>
-                  ))}
+                <select
+                  id="graph-pick"
+                  value={node ? `n:${node}` : selected ? `a:${selected}` : ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) {
+                      pickAddress(null);
+                      pickNode(null);
+                    } else if (v.startsWith('a:')) pickAddress(v.slice(2));
+                    else pickNode(v.slice(2));
+                  }}
+                  style={{ maxWidth: 320 }}
+                >
+                  <option value="">Wybierz węzeł…</option>
+                  <option value="n:subject">Podmiot</option>
+                  <optgroup label="Tożsamości">
+                    {r.identities.map((i) => (
+                      <option key={`${i.type}:${i.value}`} value={`n:${identityNodeId(i.type, i.value)}`}>
+                        {ID_TYPE[i.type]?.label ?? i.type}: {short(i.value, 14)}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Adresy">
+                    {r.findings.map((f) => (
+                      <option key={f.key} value={`a:${f.key}`}>
+                        {f.chain} {short(f.address, 6)} · {f.attribution.score}%
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
                 <button type="button" className="btn sm" aria-pressed={hideExcluded} onClick={() => setHideExcluded((x) => !x)}>
                   {hideExcluded ? <Eye size={14} aria-hidden="true" /> : <EyeOff size={14} aria-hidden="true" />}
                   {hideExcluded ? 'Pokaż wykluczone' : 'Ukryj wykluczone'}
                 </button>
                 <span className="grow" />
-                <span className="small faint graph-hint">Kliknij adres, aby podświetlić jego ścieżkę dowodową</span>
+                <span className="small faint graph-hint">Kliknij węzeł, aby zobaczyć szczegóły i jego powiązania</span>
               </div>
               {r.findings.length || r.identities.length ? (
-                <Graph result={r} selected={selected} onSelect={setSelected} hideExcluded={hideExcluded} />
+                <Graph result={r} selected={selected} selectedNode={node} onSelect={pickAddress} onSelectNode={pickNode} hideExcluded={hideExcluded} />
               ) : (
                 <Empty icon={Network} title="Brak powiązań do pokazania">
                   Źródła nie zwróciły tożsamości ani adresów. Spróbuj innego identyfikatora lub większej głębokości pivotowania.
@@ -182,12 +215,14 @@ export function RunView({ run }: { run: Run }) {
               )}
               <Legend />
             </div>
-            <aside className="inspector" aria-label="Wybrany adres">
-              {sel ? (
-                <Inspector f={sel} findings={r.findings} onSelect={setSelected} onOpen={() => setTab('adresy')} />
+            <aside className="inspector" aria-label="Szczegóły wybranego węzła" aria-live="polite">
+              {node ? (
+                <NodeInspector r={r} nodeId={node} onSelectAddress={pickAddress} onSelectNode={pickNode} />
+              ) : sel ? (
+                <Inspector f={sel} findings={r.findings} onSelect={pickAddress} onOpen={() => setTab('adresy')} trace={r.trace} />
               ) : (
-                <Empty icon={Wallet} title="Wybierz adres">
-                  Kliknij romb w grafie albo wybierz adres z listy nad grafem. Tu pojawi się wynik, reguły i wskaźniki cash-out.
+                <Empty icon={Network} title="Wybierz węzeł">
+                  Kliknij podmiot, tożsamość lub adres w grafie albo wybierz węzeł z listy nad grafem. Dla tożsamości zobaczysz, skąd pochodzi i dokąd prowadzi; dla adresu wynik, reguły i cash-out.
                 </Empty>
               )}
             </aside>
@@ -273,17 +308,22 @@ function Legend() {
         <span className="lg-node dia" style={{ background: 'var(--c0)', border: '1px dashed var(--c0-border)' }} /> Wykluczony
       </span>
       <span className="lg">
-        <span className="lg-line dot" /> Powiązanie słabe (homonim)
+        <span className="lg-node sq" style={{ background: 'var(--surface)', border: '1.5px dashed var(--warn)' }} /> Trop tymczasowy
       </span>
       <span className="lg">
-        <span className="lg-line" style={{ borderColor: 'var(--accent)' }} /> Ścieżka wybranego adresu
+        <span className="lg-line dot" /> Powiązanie słabe (homonim, niepotwierdzone)
+      </span>
+      <span className="lg">
+        <span className="lg-line" style={{ borderColor: 'var(--accent)' }} /> Powiązania wybranego węzła
       </span>
     </div>
   );
 }
 
-function Inspector({ f, findings, onSelect, onOpen }: { f: AddressFinding; findings: AddressFinding[]; onSelect: (k: string) => void; onOpen: () => void }) {
+function Inspector({ f, findings, onSelect, onOpen, trace }: { f: AddressFinding; findings: AddressFinding[]; onSelect: (k: string) => void; onOpen: () => void; trace?: AnalysisResult['trace'] }) {
   const flags = flagsOf(f);
+  // powód braku danych blockchain zapisany w przebiegu (np. limit zapytań dostawcy)
+  const chainIssue = trace?.find((t) => t.step === 'chain' && t.message.includes(f.key))?.message.replace(/^Uwaga: [^ ]+ – /, '');
   return (
     <div>
       <div className="detail-head" style={{ marginBottom: 6 }}>
@@ -312,6 +352,9 @@ function Inspector({ f, findings, onSelect, onOpen }: { f: AddressFinding; findi
             ))}
         </tbody>
       </table>
+      <a href="#/metodyka" className="method-link">
+        Jak liczony jest wynik?
+      </a>
       <h4>Wyjście do fiat</h4>
       {flags.length > 0 ? (
         flags.map((i, n) => (
@@ -327,7 +370,7 @@ function Inspector({ f, findings, onSelect, onOpen }: { f: AddressFinding; findi
             ? `Brak wskaźników cash-out · ${plural(f.activity.txCount, 'transakcja', 'transakcje', 'transakcji')}`
             : f.attribution.gated
               ? 'Adres wykluczony – aktywności nie pobierano'
-              : 'Aktywność w blockchainie nie została pobrana'}
+              : chainIssue ?? 'Brak transakcji w blockchainie dla tego adresu'}
         </p>
       )}
       <p className="small muted" style={{ marginTop: 12 }}>
@@ -362,26 +405,6 @@ function Inspector({ f, findings, onSelect, onOpen }: { f: AddressFinding; findi
   );
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [done, setDone] = useState(false);
-  return (
-    <button
-      type="button"
-      className="btn sm ghost icon-only"
-      style={{ marginLeft: 'auto' }}
-      aria-label={done ? 'Skopiowano' : label}
-      title={done ? 'Skopiowano' : label}
-      onClick={() => {
-        void navigator.clipboard?.writeText(text).then(() => {
-          setDone(true);
-          setTimeout(() => setDone(false), 1500);
-        });
-      }}
-    >
-      {done ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
-    </button>
-  );
-}
 
 function AddressList({ findings, selected, onSelect }: { findings: AddressFinding[]; selected: string | null; onSelect: (k: string) => void }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -434,6 +457,13 @@ function AddressList({ findings, selected, onSelect }: { findings: AddressFindin
   );
 }
 
+/** Zakres przeszukania: ile źródeł odpytano i ile stron pobrano (także gdy nic nie znaleziono). */
+function coverage(r: AnalysisResult) {
+  const queried = r.connectorsUsed.filter((c) => (c.queries ?? 0) > 0);
+  const pages = r.egress.filter((e) => e.kind === 'page' && typeof e.status === 'number').length;
+  return { sources: queried.length, sourceIds: queried.map((c) => c.id), pages };
+}
+
 type StepState = 'done' | 'empty' | 'skipped';
 const STEP_STATE: Record<StepState, string> = { done: 'ukończono', empty: 'brak danych', skipped: 'pominięto' };
 
@@ -441,6 +471,7 @@ const STEP_STATE: Record<StepState, string> = { done: 'ukończono', empty: 'brak
 function Pipeline({ r }: { r: AnalysisResult }) {
   const occ = r.findings.reduce((s, f) => s + f.occurrences.length + f.foreignOccurrences.length, 0);
   const pivots = r.identities.filter((i) => i.strength === 'PIVOT').length;
+  const cov = coverage(r);
   const strong = r.findings.filter((f) => !f.attribution.gated && f.attribution.score >= 60).length;
   const weaker = r.findings.filter((f) => !f.attribution.gated && f.attribution.score > 0 && f.attribution.score < 60).length;
   const rejected = r.findings.filter((f) => f.attribution.gated || f.attribution.score === 0).length;
@@ -449,7 +480,7 @@ function Pipeline({ r }: { r: AnalysisResult }) {
   const cashout = r.findings.reduce((s, f) => s + flagsOf(f).length, 0);
   const steps: { label: string; value: number; sub: string; state: StepState; tone?: 'accent' | 'danger' }[] = [
     { label: 'Wejście', value: r.input.length, sub: plural(r.input.length, 'identyfikator', 'identyfikatory', 'identyfikatorów'), state: 'done' },
-    { label: 'Ślady OSINT', value: r.evidence.length, sub: `${plural(r.evidence.length, 'dowód', 'dowody', 'dowodów')} · ${pivots} z pivotu`, state: r.evidence.length ? 'done' : 'empty' },
+    { label: 'Ślady OSINT', value: r.evidence.length, sub: r.evidence.length ? `${plural(r.evidence.length, 'dowód', 'dowody', 'dowodów')} · ${pivots} z pivotu · ${plural(cov.sources, 'źródło', 'źródła', 'źródeł')}` : `sprawdzono ${plural(cov.sources, 'źródło', 'źródła', 'źródeł')}, ${plural(cov.pages, 'stronę', 'strony', 'stron')}`, state: r.evidence.length ? 'done' : 'empty' },
     { label: 'Wykryte adresy', value: r.findings.length, sub: plural(occ, 'wystąpienie', 'wystąpienia', 'wystąpień'), state: r.findings.length ? 'done' : 'empty' },
     { label: 'Pewność ≥60%', value: strong, sub: `${weaker} o niższej pewności`, state: r.findings.length ? 'done' : 'empty', tone: strong ? 'accent' : undefined },
     { label: 'Odrzucone', value: rejected, sub: plural(rejected, 'fałszywe trafienie', 'fałszywe trafienia', 'fałszywych trafień'), state: r.findings.length ? 'done' : 'empty' },
@@ -507,8 +538,13 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
             </ul>
           </div>
         </div>
-        <h4>
-          Jak powstał wynik <span className="faint" style={{ fontWeight: 400 }}>· reguły {f.attribution.rulesVersion}</span>
+        <h4 className="rules-head">
+          <span>
+            Jak powstał wynik <span className="faint" style={{ fontWeight: 400 }}>· reguły {f.attribution.rulesVersion}</span>
+          </span>
+          <a href="#/metodyka" className="method-link" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
+            Jak liczony jest wynik?
+          </a>
         </h4>
         <table className="rules">
           <tbody>
@@ -740,8 +776,9 @@ function Evidence({ r, runId }: { r: AnalysisResult; runId: string }) {
           </table>
         </div>
       ) : (
-        <Empty icon={Fingerprint} title="Brak zebranych dowodów">
-          Żaden konektor nie zwrócił dokumentów dla podanych identyfikatorów. Szczegóły błędów znajdziesz w zakładce „Przebieg i parametry”.
+        <Empty icon={Fingerprint} title="Brak śladów powiązanych z krypto">
+          Sprawdzono {plural(coverage(r).sources, 'źródło', 'źródła', 'źródeł')} ({coverage(r).sourceIds.join(', ') || '—'}) i pobrano {plural(coverage(r).pages, 'stronę', 'strony', 'stron')} z wyników
+          wyszukiwania. Żadne nie zawierało adresu kryptowalutowego ani identyfikatora powiązanego z podmiotem. Szczegóły zapytań i ewentualne błędy znajdziesz w zakładce „Przebieg i parametry”.
         </Empty>
       )}
     </Panel>

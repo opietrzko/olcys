@@ -64,7 +64,10 @@ export interface EngineDeps {
   history?: HistoryConnector[];
 }
 
-const norm = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+/** Limit bezpieczeństwa liczby identyfikatorów w jednym przebiegu (ochrona przed „rozlaniem” analizy). */
+const MAX_IDENTITIES = Number(process.env.OLCYS_MAX_IDENTITIES ?? 60);
+
+const norm = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[łŁ]/g, 'l').toLowerCase().replace(/\s+/g, ' ').trim();
 const idKey = (i: Identifier) => `${i.type}:${i.type === 'address' ? i.value : i.value.toLowerCase()}`;
 
 export function normalizeIdentifier(i: Identifier): Identifier {
@@ -97,7 +100,8 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
   // Otwarte przestrzenie nazw (ENS, Keybase): zgodność nazwy bez wzajemnego potwierdzenia = powiązanie słabe
   if (doc.meta.weakOwnership === true && candidates.length) {
     const c = candidates.find((x) => x.strength !== 'WEAK') ?? candidates[0];
-    return { strength: 'WEAK', identity: c.identity, via: `nazwa w otwartej przestrzeni nazw (${doc.family}) zgodna z identyfikatorem – brak wzajemnego potwierdzenia w innym profilu` };
+    const reason = (doc.meta.weakReason as string | undefined) ?? `nazwa w otwartej przestrzeni nazw (${doc.family}) zgodna z identyfikatorem`;
+    return { strength: 'WEAK', identity: c.identity, via: `${reason} – brak wzajemnego potwierdzenia w innym profilu` };
   }
   const rank = { DIRECT: 0, PIVOT: 1, MENTION: 2, WEAK: 3 } as const;
   if (candidates.length) return candidates.sort((a, b) => rank[a.strength] - rank[b.strength])[0];
@@ -114,6 +118,10 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
     const n = identities.find((i) => i.type === 'name' && norm(i.value) === norm(display));
     if (n) return { strength: 'WEAK', identity: `name:${n.value}`, via: 'zgodność wyłącznie imienia i nazwiska (możliwy homonim)' };
   }
+  // Imię i nazwisko wymienione w tym samym fragmencie co adres (np. strona z wyników wyszukiwania)
+  const segNorm = norm(seg.text);
+  const named = identities.find((i) => i.type === 'name' && norm(i.value).length >= 5 && segNorm.includes(norm(i.value)));
+  if (named) return { strength: 'WEAK', identity: `name:${named.value}`, via: `imię i nazwisko „${named.value}” wymienione obok adresu (możliwy homonim, autor niepotwierdzony)` };
   return undefined;
 }
 
@@ -146,8 +154,8 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   const disabled = new Set(input.options?.disabledConnectors ?? []);
   const connectors = (deps.connectors ?? ALL_CONNECTORS).filter((c) => c.enabled(config) && !disabled.has(c.id));
   const historyConnectors = input.options?.useHistory === false ? [] : (deps.history ?? HISTORY_CONNECTORS).filter((c) => !disabled.has(c.id));
-  const stats = new Map<string, { id: string; live: boolean; documents: number; errors: string[] }>();
-  for (const c of [...connectors, ...historyConnectors]) stats.set(c.id, { id: c.id, live: c.isLive(config), documents: 0, errors: [] });
+  const stats = new Map<string, { id: string; live: boolean; documents: number; errors: string[]; queries: number }>();
+  for (const c of [...connectors, ...historyConnectors]) stats.set(c.id, { id: c.id, live: c.isLive(config), documents: 0, errors: [], queries: 0 });
 
   const identities: SubjectIdentity[] = [];
   const seen = new Set<string>();
@@ -173,12 +181,15 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
 
   // 1–2. Zbieranie i pivotowanie (BFS po identyfikatorach)
   const queue = [...identities];
+  let capped = false;
+  let maxReached = 0;
   while (queue.length) {
     const id = queue.shift()!;
     for (const c of connectors.filter((x) => x.accepts.includes(id.type) && (x.maxIdentityDepth === undefined || id.depth <= x.maxIdentityDepth))) {
       const ctx: ConnectorContext = { config, fetch, log: (m) => t(c.id, m), warn: (m) => { stats.get(c.id)!.errors.push(m); t(c.id, `Uwaga: ${m}`); } };
       let docs;
       try {
+        stats.get(c.id)!.queries++;
         docs = await c.collect({ type: id.type, value: id.value }, ctx);
       } catch (e) {
         const msg = `${id.type}:${id.value} – ${(e as Error).message}`;
@@ -190,26 +201,36 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       for (const d of docs) {
         const { evidence: ev, raw } = toEvidence(d, c.id, { type: id.type, value: id.value });
         if (addDoc(ev, raw, c.id)) added++;
-        // pivot tylko z dokumentów należących do podmiotu i tylko przy silnym powiązaniu
+        // „Macki”: podążamy za tropami z dokumentów należących do podmiotu, aż się wyczerpią (z limitem bezpieczeństwa).
         if (id.depth >= maxDepth) continue;
-        const owned = ev.segments.some((s) => {
-          const l = linkFor(s, ev, identities);
-          return l && (l.strength === 'DIRECT' || l.strength === 'PIVOT');
-        });
-        if (!owned) continue;
+        const links = ev.segments.map((s) => linkFor(s, ev, identities)).filter(Boolean);
+        const strong = links.some((l) => l!.strength === 'DIRECT' || l!.strength === 'PIVOT');
+        // trop tymczasowy: konto o niepotwierdzonej przynależności (np. znalezione po imieniu) lub gałąź z takiego konta
+        const tentativeRoot = !strong && links.some((l) => l!.strength === 'WEAK') && (ev.meta.weakOwnership === true || id.tentative) ? (id.tentative ?? ev.id) : undefined;
+        if (!strong && !tentativeRoot) continue;
         for (const link of ev.links) {
           const n = normalizeIdentifier(link);
           if (seen.has(idKey(n))) continue;
+          if (identities.length >= MAX_IDENTITIES) {
+            if (!capped) t('pivot', `Osiągnięto limit ${MAX_IDENTITIES} identyfikatorów – dalsze tropy pominięto`);
+            capped = true;
+            break;
+          }
           seen.add(idKey(n));
-          const pivot: SubjectIdentity = { ...n, strength: 'PIVOT', via: `${n.type} opublikowany w: ${ev.title}`, evidenceId: ev.id, depth: id.depth + 1 };
+          const pivot: SubjectIdentity = tentativeRoot
+            ? { ...n, strength: 'WEAK', via: `${n.type} z konta niepotwierdzonego: ${ev.title} (trop tymczasowy)`, evidenceId: ev.id, depth: id.depth + 1, tentative: tentativeRoot }
+            : { ...n, strength: 'PIVOT', via: `${n.type} opublikowany w: ${ev.title}`, evidenceId: ev.id, depth: id.depth + 1 };
           identities.push(pivot);
           queue.push(pivot);
-          t('pivot', `Nowy identyfikator ${n.type}=${n.value} (źródło: ${ev.url})`);
+          maxReached = Math.max(maxReached, pivot.depth);
+          t('pivot', `Nowy ${tentativeRoot ? 'trop tymczasowy' : 'identyfikator'} ${n.type}=${n.value} (głębokość ${pivot.depth}, źródło: ${ev.url})`);
         }
       }
       if (docs.length) t(c.id, `${id.type}=${id.value}: ${docs.length} dokument(ów), nowych ${added}`);
     }
   }
+
+  t('pivot', queue.length === 0 && !capped ? `Tropy wyczerpane – ${identities.length} identyfikator(ów), najgłębszy poziom ${maxReached} z ${maxDepth}` : `Zakończono na limicie bezpieczeństwa (głębokość ${maxDepth}, maks. ${MAX_IDENTITIES} identyfikatorów)`);
 
   // 2b. Wzajemne potwierdzenie (ENS): inny dokument podmiotu wskazuje nazwę .eth lub adres
   for (const d of evidence.values()) {
@@ -222,6 +243,14 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       d.meta.weakOwnership = false;
       d.meta.confirmedBy = confirmedBy.id;
       t('reciprocal', `${d.title}: potwierdzone wzajemnie w ${confirmedBy.url}`);
+      // potwierdzenie konta = cała gałąź tropów tymczasowych z niego staje się pełnoprawnym pivotem
+      const promoted = identities.filter((i) => i.tentative === d.id);
+      for (const i of promoted) {
+        i.strength = 'PIVOT';
+        i.via = `${i.via.replace(' (trop tymczasowy)', '')} – potwierdzone`;
+        delete i.tentative;
+      }
+      if (promoted.length) t('reciprocal', `Awans ${promoted.length} tropów tymczasowych na pełne powiązanie`);
     } else t('reciprocal', `${d.title}: brak wzajemnego potwierdzenia – powiązanie słabe`);
   }
 
@@ -233,6 +262,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     const ctx: ConnectorContext = { config, fetch, log: (m) => t(h.id, m), warn: (m) => { stats.get(h.id)!.errors.push(m); t(h.id, `Uwaga: ${m}`); } };
     for (const d of ownDocs.slice(0, 15)) {
       try {
+        stats.get(h.id)!.queries++;
         const snaps = await h.history(d, ctx);
         for (const s of snaps) {
           const { evidence: ev, raw } = toEvidence(s, h.id, d.query);
@@ -315,6 +345,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     const classification = classifyAddress(g.chain, g.address, labels, isContract);
     const excluded = isExcluded(classification.category);
     const transfers = excluded ? null : await chain.getTransfers(g.chain, g.address);
+    if (!excluded && transfers === null && chain.errorFor(g.chain)) t('chain', `Uwaga: ${key} – brak danych blockchain: ${chain.errorFor(g.chain)}`);
     const verifiedOnChain = Boolean(labels.get(g.chain, g.address)) || code !== null || transfers !== null;
     const attribution = computeConfidence({ subjectOccurrences: subjectOcc, allOccurrences: g.occ, classification, verifiedOnChain });
     let activity;

@@ -41,6 +41,39 @@ describe('wzajemne potwierdzenie w otwartych przestrzeniach nazw', () => {
   });
 });
 
+describe('imię i nazwisko', () => {
+  const ids: SubjectIdentity[] = [{ type: 'name', value: 'Błażej Rzepecki', strength: 'DIRECT', via: 'wejście', depth: 0 }];
+  const page: EvidenceDocument = {
+    id: 'ev2', connector: 'search', family: 'example.org', sourceKind: 'UNKNOWN', url: 'https://example.org', title: 't', fetchedAt: '', contentType: '', sha256: '', sizeBytes: 0,
+    segments: [{ id: 's', text: 'Blazej Rzepecki – portfel 0x0000000000000000000000000000000000000001' }], links: [], query: { type: 'name', value: 'Błażej Rzepecki' }, meta: {},
+  };
+  it('imię i nazwisko obok adresu (także bez polskich znaków) → powiązanie słabe', () => {
+    expect(linkFor(page.segments[0], page, ids)?.strength).toBe('WEAK');
+  });
+  it('konto znalezione po imieniu i nazwisku bez potwierdzenia → WEAK z powodem', () => {
+    const gh: EvidenceDocument = { ...page, connector: 'github', meta: { ownedByQuery: true, weakOwnership: true, weakReason: 'konto GitHub @x znalezione wyłącznie po imieniu i nazwisku' } };
+    const l = linkFor(gh.segments[0], gh, ids);
+    expect(l?.strength).toBe('WEAK');
+    expect(l?.via).toContain('wyłącznie po imieniu i nazwisku');
+  });
+});
+
+describe('tropy tymczasowe („macki”)', () => {
+  it('identyfikator z gałęzi niepotwierdzonego konta daje powiązanie słabe', () => {
+    const ids: SubjectIdentity[] = [
+      { type: 'name', value: 'Jan Kowalski', strength: 'DIRECT', via: 'wejście', depth: 0 },
+      { type: 'nick', value: 'jk_dev', strength: 'WEAK', via: 'z konta niepotwierdzonego', depth: 1, tentative: 'ev_root' },
+    ];
+    const doc: EvidenceDocument = {
+      id: 'ev3', connector: 'devto', family: 'dev.to', sourceKind: 'OWN_PROFILE', url: 'https://dev.to/jk_dev', title: 'dev.to', fetchedAt: '', contentType: '', sha256: '', sizeBytes: 0,
+      owner: { handle: 'jk_dev' }, segments: [{ id: 's', text: 'x' }], links: [], query: { type: 'nick', value: 'jk_dev' }, meta: { ownedByQuery: true },
+    };
+    expect(linkFor(doc.segments[0], doc, ids)?.strength).toBe('WEAK');
+    ids[1].strength = 'PIVOT'; // po potwierdzeniu konta-źródła gałąź awansuje
+    expect(linkFor(doc.segments[0], doc, ids)?.strength).toBe('PIVOT');
+  });
+});
+
 describe('wyszukiwarka', () => {
   it('pomija eksploratory blockchain i klasyfikuje domeny', () => {
     expect(EXPLORER_HOSTS.test('etherscan.io')).toBe(true);

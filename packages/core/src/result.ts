@@ -67,8 +67,9 @@ export interface AnalysisResult {
   statements: Statement[];
   trace: TraceStep[];
   /** Dziennik ruchu wychodzącego (kontrola zgodności z allowlistą). */
-  egress: { at: string; url: string; status: number | 'DENIED' | 'ERROR'; ms: number; replay?: boolean }[];
-  connectorsUsed: { id: string; live: boolean; documents: number; errors: string[] }[];
+  egress: { at: string; url: string; status: number | 'DENIED' | 'ERROR'; ms: number; kind?: 'api' | 'page'; replay?: boolean }[];
+  /** queries = ile razy konektor został odpytany w tym przebiegu (0 = nie dotyczył podanych identyfikatorów). */
+  connectorsUsed: { id: string; live: boolean; documents: number; errors: string[]; queries?: number }[];
 }
 
 export interface RunDiff {

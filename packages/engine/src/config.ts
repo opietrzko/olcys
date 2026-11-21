@@ -96,7 +96,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
     webFetch: env.OLCYS_WEB_FETCH === 'allowlist' ? 'allowlist' : 'public',
     userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.3 (+analiza danych publicznych)',
     requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 15000),
-    maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 3),
+    maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 6),
     searchResults: Number(env.OLCYS_SEARCH_RESULTS ?? 8),
     urls: {
       githubApi: env.GITHUB_API_URL ?? 'https://api.github.com',
