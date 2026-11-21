@@ -348,7 +348,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 | Baza: autor wskazuje adres cudzy („wpłaciłem na…”, „adres giełdy”, „scam”) | 15 |
 | Powiązanie pośrednie (identyfikator z pivotu) | −5 |
 | Wzmianka – identyfikator obok adresu, autor treści niepotwierdzony | −20 |
-| Powiązanie słabe – tylko imię i nazwisko lub nazwa ENS/Keybase bez wzajemnego potwierdzenia | −35 |
+| Powiązanie słabe – tylko imię i nazwisko, nazwa ENS/Keybase bez wzajemnego potwierdzenia lub plik w cudzym repozytorium | −35 |
 | Deklaracja własności („mój portfel”, „przelej na”, „wesprzyj”) | +5 |
 | **Synergia** – ≥2 niezależne źródła Web2 (wielokrotność w jednym serwisie się nie liczy) | +15 |
 | Ten sam adres publikuje ≥3 obcych autorów (zbiórka / giveaway / scam) | −30 |
@@ -440,6 +440,8 @@ Skopiuj `.env.example` do `.env` i uzupełnij wartości.
 | `ESPLORA_FALLBACK_URLS` | | `https://mempool.space/api` | Zapasowe instancje Esplora (przy limicie 429 lub awarii) |
 | `TRONGRID_URL` | | `https://api.trongrid.io` | TronGrid dla TRON |
 | `OLCYS_MAX_DEPTH` | | `6` | Domyślna głębokość pivotowania |
+| `OLCYS_PIVOT_BUDGET_MS` | | `180000` | Budżet czasu na zbieranie i pivotowanie w jednym przebiegu; po przekroczeniu analiza ocenia zebrane dowody |
+| `OLCYS_MAX_PIVOTS_PER_DOC` | | `12` | Maks. liczba nowych tropów z jednego dokumentu (najpierw nicki, komunikatory, e-maile, na końcu strony WWW) |
 | `OLCYS_SEARCH_RESULTS` | | `8` | Liczba wyników wyszukiwarki pobieranych na zapytanie |
 | `OLCYS_LIVE_RATES` | | `true` | Kursy z NBP i CoinGecko |
 | `OLCYS_REDDIT` | | `true` | `false` wyłącza konektor Reddit (w `.env.example` wyłączony, dopóki nie podasz kluczy aplikacji) |

@@ -101,4 +101,4 @@ Wszystko, z czego korzysta narzędzie, jest publiczne:
 - **Bez Internetu.** Ustawcie w `.env` `OLCYS_REPLAY_DIR=data/recordings/demo` i uruchomcie aplikację ponownie. Analizy z nagrania działają bez sieci, a przebieg jest oznaczony jako tryb offline.
 - **Źródła i zgodność** (menu po lewej). Lista źródeł, podstawa korzystania z każdego z nich i lista zatwierdzonych hostów. Zapytania do innych usług są blokowane i logowane.
 - **Metodyka** (link przy wyniku adresu). Wszystkie reguły Wskaźnika Pewności i progi wskaźników wyjścia do fiat.
-- **Testy automatyczne:** `npm test`. 50 testów bez dostępu do sieci, w tym cały plan kont testowych odtworzony z nagrań, ochrona przed żądaniami do sieci wewnętrznej (SSRF) i reguły punktacji.
+- **Testy automatyczne:** `npm test`. 56 testów bez dostępu do sieci, w tym cały plan kont testowych odtworzony z nagrań, ochrona przed żądaniami do sieci wewnętrznej (SSRF) i reguły punktacji.

@@ -30,6 +30,7 @@ import {
   type Chain,
   type EvidenceDocument,
   type Identifier,
+  type IdentifierType,
   type Occurrence,
   type RateTable,
   type Segment,
@@ -69,6 +70,9 @@ export interface EngineDeps {
 
 /** Limit bezpieczeństwa liczby identyfikatorów w jednym przebiegu (ochrona przed „rozlaniem” analizy). */
 const MAX_IDENTITIES = Number(process.env.OLCYS_MAX_IDENTITIES ?? 60);
+
+/** Kolejność przyjmowania tropów z dokumentu przy limicie: identyfikatory osoby przed linkami do stron. */
+const PIVOT_PRIORITY: Record<IdentifierType, number> = { nick: 0, telegram: 1, email: 2, phone: 3, name: 4, address: 5, url: 6 };
 
 const norm = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[łŁ]/g, 'l').toLowerCase().replace(/\s+/g, ' ').trim();
 const idKey = (i: Identifier) => `${i.type}:${i.type === 'address' ? i.value : i.value.toLowerCase()}`;
@@ -206,9 +210,19 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   const queue = [...identities];
   let capped = false;
   let maxReached = 0;
-  while (queue.length) {
+  const collectStart = Date.now();
+  let budgetHit = false;
+  const overBudget = () => {
+    if (!budgetHit && Date.now() - collectStart > config.pivotBudgetMs) {
+      budgetHit = true;
+      t('pivot', `Przekroczono budżet czasu zbierania (${Math.round(config.pivotBudgetMs / 1000)} s) – ${queue.length} nieodpytanych tropów pominięto, analiza przechodzi do oceny zebranych dowodów`);
+    }
+    return budgetHit;
+  };
+  while (queue.length && !overBudget()) {
     const id = queue.shift()!;
     for (const c of connectors.filter((x) => x.accepts.includes(id.type) && (x.maxIdentityDepth === undefined || id.depth <= x.maxIdentityDepth))) {
+      if (overBudget()) break;
       const ctx: ConnectorContext = { config, fetch, log: (m) => t(c.id, m), warn: (m) => { stats.get(c.id)!.errors.push(m); t(c.id, `Uwaga: ${m}`); } };
       let docs;
       try {
@@ -231,8 +245,11 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
         // trop tymczasowy: konto o niepotwierdzonej przynależności (np. znalezione po imieniu) lub gałąź z takiego konta
         const tentativeRoot = !strong && links.some((l) => l!.strength === 'WEAK') && (ev.meta.weakOwnership === true || id.tentative) ? (id.tentative ?? ev.id) : undefined;
         if (!strong && !tentativeRoot) continue;
-        for (const link of ev.links) {
-          const n = normalizeIdentifier(link);
+        // Limit tropów z jednego dokumentu: strona z rozbudowaną nawigacją lub dokumentacja to nie profil osoby.
+        const fresh = ev.links.map(normalizeIdentifier).filter((n, i, all) => !seen.has(idKey(n)) && all.findIndex((x) => idKey(x) === idKey(n)) === i);
+        const ordered = fresh.sort((a, b) => PIVOT_PRIORITY[a.type] - PIVOT_PRIORITY[b.type]);
+        if (ordered.length > config.maxPivotsPerDoc) t('pivot', `${ev.url}: ${ordered.length} tropów w jednym dokumencie – przyjęto ${config.maxPivotsPerDoc} (najpierw nicki, komunikatory, e-maile), ${ordered.length - config.maxPivotsPerDoc} pominięto`);
+        for (const n of ordered.slice(0, config.maxPivotsPerDoc)) {
           if (seen.has(idKey(n))) continue;
           if (identities.length >= MAX_IDENTITIES) {
             if (!capped) t('pivot', `Osiągnięto limit ${MAX_IDENTITIES} identyfikatorów – dalsze tropy pominięto`);
@@ -253,7 +270,12 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     }
   }
 
-  t('pivot', queue.length === 0 && !capped ? `Tropy wyczerpane – ${identities.length} identyfikator(ów), najgłębszy poziom ${maxReached} z ${maxDepth}` : `Zakończono na limicie bezpieczeństwa (głębokość ${maxDepth}, maks. ${MAX_IDENTITIES} identyfikatorów)`);
+  t(
+    'pivot',
+    queue.length === 0 && !capped && !budgetHit
+      ? `Tropy wyczerpane – ${identities.length} identyfikator(ów), najgłębszy poziom ${maxReached} z ${maxDepth}`
+      : `Zakończono na limicie bezpieczeństwa (głębokość ${maxDepth}, maks. ${MAX_IDENTITIES} identyfikatorów, budżet czasu ${Math.round(config.pivotBudgetMs / 1000)} s)`,
+  );
 
   // 2b. Wzajemne potwierdzenie (ENS): inny dokument podmiotu wskazuje nazwę .eth lub adres
   for (const d of evidence.values()) {

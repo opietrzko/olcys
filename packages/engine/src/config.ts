@@ -16,6 +16,10 @@ export interface EngineConfig {
   userAgent: string;
   requestTimeoutMs: number;
   maxDepth: number;
+  /** Budżet czasu (ms) na zbieranie i pivotowanie w jednym przebiegu – po jego przekroczeniu analiza przechodzi do oceny zebranych dowodów. */
+  pivotBudgetMs: number;
+  /** Maks. liczba nowych tropów z jednego dokumentu (strona z nawigacją / dokumentacja to nie profil osoby). */
+  maxPivotsPerDoc: number;
   /** Maks. liczba wyników wyszukiwarki pobieranych na zapytanie. */
   searchResults: number;
   urls: {
@@ -105,6 +109,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
     userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.3 (+analiza danych publicznych)',
     requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 15000),
     maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 6),
+    pivotBudgetMs: Number(env.OLCYS_PIVOT_BUDGET_MS ?? 180_000),
+    maxPivotsPerDoc: Number(env.OLCYS_MAX_PIVOTS_PER_DOC ?? 12),
     searchResults: Number(env.OLCYS_SEARCH_RESULTS ?? 8),
     urls: {
       githubApi: env.GITHUB_API_URL ?? 'https://api.github.com',

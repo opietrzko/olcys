@@ -617,7 +617,7 @@ function Methodology({ meta }: { meta: Meta }) {
               </li>
               <li>Kontekst „wpłaciłem na…”, „adres giełdy”, „scam” oznacza adres cudzy (15 pkt).</li>
               <li>Ten sam adres u co najmniej 3 obcych autorów: kara −30 (giveaway, zbiórka, oszustwo).</li>
-              <li>Zgodność wyłącznie imienia i nazwiska: możliwy homonim, kara −35.</li>
+              <li>Powiązanie słabe (tylko imię i nazwisko, nazwa ENS/Keybase bez wzajemnego potwierdzenia, plik w cudzym repozytorium): kara −35.</li>
             </ol>
           </Panel>
           <Panel title="Wskaźniki wyjścia do fiat (cash-out)">

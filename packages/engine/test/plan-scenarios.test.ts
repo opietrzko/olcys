@@ -18,6 +18,7 @@ const BINANCE = '0x28C6c06298d514Db089934071355E5743bf21d60';
 const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 const RAW = 'https://raw.githubusercontent.com';
 const RPC = 'https://ethereum-rpc.publicnode.com';
+const SEARCH = `https://api.github.com/search/code?q=${encodeURIComponent(`"${MAIN}"`)}&per_page=20`;
 
 function recorder(dir: string) {
   return (url: string, status: number, body: unknown, init?: { method?: string; body?: string }) => {
@@ -144,7 +145,8 @@ describe('S3: wyszukiwanie po samym adresie (GitHub code search, wymaga tokena)'
     const dir = mkdtempSync(join(tmpdir(), 'olcys-addr-'));
     recordPersona(dir);
     const rec = recorder(dir);
-    rec(`https://api.github.com/search/code?q=${encodeURIComponent(`"${MAIN}"`)}&per_page=5`, 200, {
+    rec(SEARCH, 200, {
+      total_count: 1,
       items: [{ path: 'README.md', html_url: `https://github.com/${GH}/${GH}/blob/main/README.md`, repository: { name: GH, full_name: `${GH}/${GH}`, owner: { login: GH } } }],
     });
     rec(`https://dev.to/api/articles?username=${GH}&per_page=10`, 404, { error: 'not found' });
@@ -154,6 +156,33 @@ describe('S3: wyszukiwanie po samym adresie (GitHub code search, wymaga tokena)'
     expect(f.occurrences.some((o) => o.family === 'github')).toBe(true);
     expect(f.attribution.score).toBeGreaterThanOrEqual(80);
     expect(result.identities.some((i) => i.type === 'nick' && i.value === GH && i.strength === 'PIVOT')).toBe(true);
+  });
+
+  it('adres szeroko publikowany: idzie tylko za profilowym README, nie za plikami z cudzych repozytoriów', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'olcys-addr-wide-'));
+    recordPersona(dir);
+    const rec = recorder(dir);
+    const docHit = { path: 'docs/tutorial.md', html_url: 'https://github.com/ethereum/docs-site/blob/main/docs/tutorial.md', repository: { name: 'docs-site', full_name: 'ethereum/docs-site', owner: { login: 'ethereum' } } };
+    const profileHit = { path: 'README.md', html_url: `https://github.com/${GH}/${GH}/blob/main/README.md`, repository: { name: GH, full_name: `${GH}/${GH}`, owner: { login: GH } } };
+    // The profile README is the last of many hits – it must still be picked first.
+    rec(SEARCH, 200, { total_count: 1824, items: [docHit, docHit, docHit, docHit, docHit, profileHit] });
+    rec(
+      `${RAW}/ethereum/docs-site/HEAD/docs/tutorial.md`,
+      200,
+      `Przykład: subskrypcja ${MAIN}. Zobacz https://www.alchemy.com/docs/websockets, https://github.com/features/copilot, https://claude.ai/new?q=read i https://dashboard.example.org/signup`,
+    );
+    rec(`https://dev.to/api/articles?username=${GH}&per_page=10`, 404, { error: 'not found' });
+    const engine = createEngine(loadConfig({ OLCYS_REPLAY_DIR: dir, OLCYS_LIVE_RATES: 'false', GITHUB_TOKEN: 'test-token' }));
+    const { result } = await engine.run({ identifiers: [{ type: 'address', value: MAIN }], options: { maxDepth: 2, useHistory: false } });
+    const ids = result.identities.map((i) => `${i.type}:${i.value}`);
+    expect(ids).toContain(`nick:${GH}`);
+    expect(ids).not.toContain('nick:ethereum');
+    expect(ids).not.toContain('nick:features');
+    expect(ids.filter((i) => i.startsWith('url:'))).toEqual([]);
+    expect(result.trace.some((t) => t.message.includes('1824 plikach'))).toBe(true);
+    // The documentation file stays as context evidence, but it is not the subject's own profile.
+    const doc = result.evidence.find((e) => e.url.includes('docs-site'))!;
+    expect(doc.sourceKind).toBe('UNKNOWN');
   });
 });
 

@@ -32,7 +32,7 @@ export const SCORING_RULES = {
     DIRECT: { value: 0, label: 'Autor = identyfikator podany przez analityka' },
     PIVOT: { value: -5, label: 'Autor powiązany pośrednio (identyfikator odkryty w innym źródle)' },
     MENTION: { value: -20, label: 'Identyfikator podmiotu wymieniony obok adresu – autor treści niepotwierdzony' },
-    WEAK: { value: -35, label: 'Powiązanie słabe – zgodność wyłącznie imienia i nazwiska' },
+    WEAK: { value: -35, label: 'Powiązanie słabe – autor niepotwierdzony (homonim, nazwa ENS/Keybase, cudze repozytorium)' },
   } satisfies Record<LinkStrength, { value: number; label: string }>,
   ownershipClaim: { value: 5, label: 'Autor deklaruje adres jako własny' },
   synergy: { value: 15, minFamilies: 2, label: 'Synergia śladów – ≥2 niezależne źródła Web2' },
