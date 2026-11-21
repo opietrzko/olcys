@@ -55,7 +55,7 @@
 
 ---
 
-> **Dla jury: sprawdzenie w 2 minuty.** Dwie fikcyjne osoby z prawdziwymi, publicznymi kontami, trzy identyfikatory do wpisania i to, co zobaczycie w wynikach: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+> **Dla jury: instrukcja testowania.** Krok po kroku: przygotowanie, trzy identyfikatory do wpisania i wyniki, które powinny się pojawić, w podziale na etapy obowiązkowego scenariusza: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
 
 ## O projekcie
 
@@ -157,14 +157,15 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
 ### Wymagania
 
 - [Node.js](https://nodejs.org) ≥ 20.11
-- [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) v2
-- Token GitHub (fine-grained, **bez uprawnień** – tylko dane publiczne); zalecany, bo bez niego limit to 60 zapytań/h na IP
+- Zalecane: token GitHub (fine-grained, **bez uprawnień** – tylko dane publiczne), bo bez niego limit to 60 zapytań/h na IP
+- Zalecane: darmowy klucz Etherscan (`ETHERSCAN_API_KEY`), bo publiczny Blockscout szybko ogranicza zapytania, a bez historii transakcji nie ma analizy aktywności w blockchainie
+- Opcjonalnie: [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) v2 (wyszukiwarka SearXNG, PostgreSQL, wdrożenie produkcyjne)
 
 ### Instalacja
 
 1. Sklonuj repozytorium
    ```sh
-   git clone git@github.com:opietrzko/olcys.git
+   git clone https://github.com/opietrzko/olcys.git
    cd olcys
    ```
 
@@ -173,9 +174,9 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
    npm install
    ```
 
-3. Skopiuj konfigurację i ustaw `GITHUB_TOKEN`
+3. Skopiuj konfigurację i ustaw `GITHUB_TOKEN` oraz `ETHERSCAN_API_KEY`
    ```sh
-   cp .env.example .env
+   cp .env.example .env              # Windows PowerShell: Copy-Item .env.example .env
    ```
    Pozostałe wartości domyślne działają bez kluczy. Pełna lista: [Zmienne środowiskowe](#zmienne-środowiskowe).
 
@@ -404,7 +405,7 @@ Wersja reguł: `olcys-score/1.0.0`.
 npm test
 ```
 
-57 testów automatycznych, działających bez dostępu do sieci:
+61 testów automatycznych, działających bez dostępu do sieci:
 
 - walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne)
 - Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów)
@@ -413,10 +414,10 @@ npm test
 - heurystyka adresu instytucjonalnego, synergia GitHub + GitHub Pages (bez premii)
 - poprawność sum kontrolnych wszystkich adresów w zbiorze etykiet
 - numer telefonu
-- bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów), trop GitHub Pages → konto GitHub, konwersja adresów TRON hex → Base58
+- bezpieczeństwo (ochrona SSRF, allowlista API, protokoły, ponawianie zapytań po błędzie sieci, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów), trop GitHub Pages → konto GitHub, konwersja adresów TRON hex → Base58
 - plan kont testowych zespołu (GitHub + dev.to + Reddit) od wejścia do wyniku, odtworzony z nagrań: synergia GitHub + dev.to, pułapki USDT i Binance = 0%, giveaway na Reddicie = szum bez synergii, wyszukiwanie po samym adresie, warianty nicku
 
-**Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na dwóch fikcyjnych personach z kontami w GitHub, Gravatar, na stronie WWW i w Telegramie: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md) – co wpisać i co zobaczyć, w 2 minuty.
+**Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na dwóch fikcyjnych personach z kontami w GitHub, Gravatar, na stronie WWW i w Telegramie: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md) – co wpisać i jaki wynik powinien się pojawić.
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
 

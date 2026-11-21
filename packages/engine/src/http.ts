@@ -105,6 +105,27 @@ function createReplayFetch(dir: string, log?: (e: EgressLogEntry) => void): Safe
   };
 }
 
+/** Delays before retrying a request that failed transiently (dropped connection, DNS hiccup, 502/503/504). */
+export const RETRY_DELAYS_MS = [400, 1200];
+
+/**
+ * Retries a GET after a transient failure so one dropped connection does not empty a whole analysis.
+ * Rate limits (429) and other HTTP errors are returned as-is: retrying them would only add load on the source.
+ */
+export async function withRetry(method: string, run: () => Promise<Response>, delays: number[] = RETRY_DELAYS_MS): Promise<Response> {
+  const retryable = method.toUpperCase() === 'GET';
+  for (let attempt = 0; ; attempt++) {
+    const last = !retryable || attempt >= delays.length;
+    try {
+      const res = await run();
+      if (last || ![502, 503, 504].includes(res.status)) return res;
+    } catch (e) {
+      if (last || (e as Error).name === 'TimeoutError') throw e;
+    }
+    await new Promise((r) => setTimeout(r, delays[attempt]));
+  }
+}
+
 function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void): SafeFetch {
   const allowed = new Set(config.egressAllowlist.map((h) => h.toLowerCase()));
   const isAllowed = (u: URL) => allowed.has(u.host.toLowerCase()) || allowed.has(u.hostname.toLowerCase());
@@ -126,13 +147,16 @@ function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void
       // przekierowania obsługiwane ręcznie: każdy przeskok przechodzi kontrolę ZANIM zostanie wykonany
       for (let hop = 0; hop <= 5; hop++) {
         await check(new URL(current), kind);
-        const res = await fetch(current, {
-          method: hop === 0 ? (init?.method ?? 'GET') : 'GET',
-          body: hop === 0 ? init?.body : undefined,
-          headers: { 'user-agent': config.userAgent, accept: '*/*', 'accept-language': 'pl,en;q=0.8', ...(init?.headers ?? {}) },
-          signal: AbortSignal.timeout(init?.timeoutMs ?? config.requestTimeoutMs),
-          redirect: 'manual',
-        });
+        const method = hop === 0 ? (init?.method ?? 'GET') : 'GET';
+        const res = await withRetry(method, () =>
+          fetch(current, {
+            method,
+            body: hop === 0 ? init?.body : undefined,
+            headers: { 'user-agent': config.userAgent, accept: '*/*', 'accept-language': 'pl,en;q=0.8', ...(init?.headers ?? {}) },
+            signal: AbortSignal.timeout(init?.timeoutMs ?? config.requestTimeoutMs),
+            redirect: 'manual',
+          }),
+        );
         const loc = res.headers.get('location');
         if (res.status >= 300 && res.status < 400 && loc) {
           current = new URL(loc, current).toString();

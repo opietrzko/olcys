@@ -23,6 +23,7 @@ import {
   Plus,
   ScrollText,
   ShieldCheck,
+  TriangleAlert,
   Wallet,
 } from 'lucide-react';
 import { api, type Run } from './api';
@@ -88,6 +89,7 @@ export function RunView({ run, runs = [] }: { run: Run; runs?: Run[] }) {
   return (
     <div className="run">
       <Pipeline r={r} />
+      <SourceFailures r={r} />
 
       {hasDiff && (
         <Panel
@@ -469,6 +471,27 @@ function coverage(r: AnalysisResult) {
   const queried = r.connectorsUsed.filter((c) => (c.queries ?? 0) > 0);
   const pages = r.egress.filter((e) => e.kind === 'page' && typeof e.status === 'number').length;
   return { sources: queried.length, sourceIds: queried.map((c) => c.id), pages };
+}
+
+/**
+ * An empty result is only meaningful when the sources actually answered. If nothing was found and a source
+ * failed (dropped connection, rate limit), say so – otherwise it reads as "this person publishes nothing".
+ */
+/** Optional sources that fail on every run without extra setup (Reddit keys, a SearXNG instance) – not a sign of a flaky run. */
+const OPTIONAL_SOURCES = new Set(['reddit', 'search']);
+
+function SourceFailures({ r }: { r: AnalysisResult }) {
+  if (r.evidence.length > 0) return null;
+  const failed = r.connectorsUsed.filter((c) => c.errors.length > 0 && !OPTIONAL_SOURCES.has(c.id));
+  if (!failed.length) return null;
+  return (
+    <div className="banner warn" role="status">
+      <TriangleAlert size={16} aria-hidden="true" />
+      <span>
+        Nie znaleziono śladów, ale część źródeł nie odpowiedziała poprawnie ({failed.map((c) => c.id).join(', ')}). Wynik może być niepełny: uruchom analizę ponownie. Szczegóły błędów są w zakładce „Przebieg i parametry”.
+      </span>
+    </div>
+  );
 }
 
 type StepState = 'done' | 'empty' | 'skipped';
