@@ -10,6 +10,7 @@
  */
 import {
   addressKey,
+  LabelRegistry,
   analyzeChain,
   assessContext,
   classifyAddress,
@@ -27,7 +28,6 @@ import {
   type Chain,
   type EvidenceDocument,
   type Identifier,
-  type LabelRegistry,
   type Occurrence,
   type RateTable,
   type Segment,
@@ -43,6 +43,7 @@ import { createSafeFetch, type EgressLogEntry } from './http';
 import { createLlmClient } from './llm';
 import { createChainProvider } from './providers';
 import { buildStatements } from './statements';
+import { fetchLiveRates } from './rates';
 
 export interface AnalysisInput {
   identifiers: Identifier[];
@@ -93,8 +94,21 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
     const q = identities.find((i) => idKey(i) === idKey(doc.query));
     if (q) candidates.push({ strength: q.strength, identity: `${q.type}:${q.value}`, via: q.via });
   }
-  const rank = { DIRECT: 0, PIVOT: 1, WEAK: 2 } as const;
+  // Otwarte przestrzenie nazw (ENS, Keybase): zgodność nazwy bez wzajemnego potwierdzenia = powiązanie słabe
+  if (doc.meta.weakOwnership === true && candidates.length) {
+    const c = candidates.find((x) => x.strength !== 'WEAK') ?? candidates[0];
+    return { strength: 'WEAK', identity: c.identity, via: `nazwa w otwartej przestrzeni nazw (${doc.family}) zgodna z identyfikatorem – brak wzajemnego potwierdzenia w innym profilu` };
+  }
+  const rank = { DIRECT: 0, PIVOT: 1, MENTION: 2, WEAK: 3 } as const;
   if (candidates.length) return candidates.sort((a, b) => rank[a.strength] - rank[b.strength])[0];
+  // Wzmianka: identyfikator podmiotu w tym samym fragmencie co adres (np. strona z wyników wyszukiwania)
+  const lower = seg.text.toLowerCase();
+  const mention = identities.find((i) => {
+    if (!['nick', 'email', 'telegram'].includes(i.type) || i.value.length < 4) return false;
+    const v = i.value.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^a-z0-9_])@?${v}($|[^a-z0-9_])`).test(lower);
+  });
+  if (mention) return { strength: 'MENTION', identity: `${mention.type}:${mention.value}`, via: `identyfikator „${mention.value}” wymieniony w tym samym fragmencie (autor treści niepotwierdzony)` };
   const display = seg.author?.displayName ?? doc.owner?.displayName;
   if (display) {
     const n = identities.find((i) => i.type === 'name' && norm(i.value) === norm(display));
@@ -112,7 +126,8 @@ function localContext(text: string, start: number, end: number): string {
 }
 
 export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promise<PipelineOutput> {
-  const { config, labels, rates } = deps;
+  const { config } = deps;
+  const labels = new LabelRegistry(deps.labels.all()); // kopia na przebieg – uzupełniana etykietami z API
   const startedAt = new Date().toISOString();
   const trace: TraceStep[] = [];
   const t = (step: string, message: string) => trace.push({ at: new Date().toISOString(), step, message });
@@ -120,6 +135,13 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   const fetch = createSafeFetch(config, (e) => egress.push(e));
   const chain = createChainProvider(config, fetch);
   const llm = createLlmClient(config, fetch);
+  let rates = deps.rates;
+  if (config.chain.liveRates) {
+    const lr = await fetchLiveRates(fetch, deps.rates);
+    rates = lr.rates;
+    for (const e of lr.errors) t('rates', `Uwaga: ${e}`);
+    t('rates', `Kursy: ${rates.source}`);
+  }
   const maxDepth = input.options?.maxDepth ?? config.maxDepth;
   const disabled = new Set(input.options?.disabledConnectors ?? []);
   const connectors = (deps.connectors ?? ALL_CONNECTORS).filter((c) => c.enabled(config) && !disabled.has(c.id));
@@ -135,7 +157,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     seen.add(idKey(i));
     identities.push({ ...i, strength: 'DIRECT', via: 'Wejście analityka', depth: 0 });
   }
-  t('input', `Identyfikatory wejściowe: ${identities.map((i) => `${i.type}=${i.value}`).join(', ')}; tryb ${config.mode}; maks. głębokość pivotowania ${maxDepth}`);
+  t('input', `Identyfikatory wejściowe: ${identities.map((i) => `${i.type}=${i.value}`).join(', ')}; maks. głębokość pivotowania ${maxDepth}`);
 
   const evidence = new Map<string, EvidenceDocument>();
   const rawContent: Record<string, string> = {};
@@ -151,7 +173,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   const queue = [...identities];
   while (queue.length) {
     const id = queue.shift()!;
-    for (const c of connectors.filter((x) => x.accepts.includes(id.type))) {
+    for (const c of connectors.filter((x) => x.accepts.includes(id.type) && (x.maxIdentityDepth === undefined || id.depth <= x.maxIdentityDepth))) {
       const ctx: ConnectorContext = { config, fetch, log: (m) => t(c.id, m), warn: (m) => { stats.get(c.id)!.errors.push(m); t(c.id, `Uwaga: ${m}`); } };
       let docs;
       try {
@@ -170,7 +192,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
         if (id.depth >= maxDepth) continue;
         const owned = ev.segments.some((s) => {
           const l = linkFor(s, ev, identities);
-          return l && l.strength !== 'WEAK';
+          return l && (l.strength === 'DIRECT' || l.strength === 'PIVOT');
         });
         if (!owned) continue;
         for (const link of ev.links) {
@@ -187,9 +209,23 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     }
   }
 
+  // 2b. Wzajemne potwierdzenie (ENS): inny dokument podmiotu wskazuje nazwę .eth lub adres
+  for (const d of evidence.values()) {
+    const needles = (d.meta.reciprocalNeedles as string[] | undefined)?.map((n) => n.toLowerCase());
+    if (!d.meta.weakOwnership || !needles?.length) continue;
+    const confirmedBy = [...evidence.values()].find(
+      (o) => o.id !== d.id && !o.meta.weakOwnership && o.segments.some((s) => ['DIRECT', 'PIVOT'].includes(linkFor(s, o, identities)?.strength ?? '') && needles.some((n) => s.text.toLowerCase().includes(n))),
+    );
+    if (confirmedBy) {
+      d.meta.weakOwnership = false;
+      d.meta.confirmedBy = confirmedBy.id;
+      t('reciprocal', `${d.title}: potwierdzone wzajemnie w ${confirmedBy.url}`);
+    } else t('reciprocal', `${d.title}: brak wzajemnego potwierdzenia – powiązanie słabe`);
+  }
+
   // 3. Historia zasobów należących do podmiotu
   const ownDocs = [...evidence.values()].filter(
-    (d) => (d.sourceKind === 'OWN_PROFILE' || d.sourceKind === 'OWN_WEBSITE') && /^https?:/.test(d.url) && !d.archivedAt && d.segments.some((s) => linkFor(s, d, identities)?.strength !== 'WEAK' && linkFor(s, d, identities)),
+    (d) => (d.sourceKind === 'OWN_PROFILE' || d.sourceKind === 'OWN_WEBSITE') && /^https?:/.test(d.url) && !d.archivedAt && d.segments.some((s) => ['DIRECT', 'PIVOT'].includes(linkFor(s, d, identities)?.strength ?? '')),
   );
   for (const h of historyConnectors) {
     const ctx: ConnectorContext = { config, fetch, log: (m) => t(h.id, m), warn: (m) => { stats.get(h.id)!.errors.push(m); t(h.id, `Uwaga: ${m}`); } };
@@ -260,7 +296,20 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     const foreignOcc = g.occ.filter((o) => !o.identityLink);
     if (!subjectOcc.length && !inputKeys.has(key)) continue;
     const code = g.chain === 'ETH' ? await chain.getCode(g.chain, g.address) : null;
-    const isContract = code === null ? null : !/^0x0*$/.test(code);
+    let isContract = code === null ? null : !/^0x0*$/.test(code);
+    // KROK 3.1: etykiety z API eksploratora (gdy brak w lokalnym rejestrze)
+    if (!labels.get(g.chain, g.address)) {
+      const info = await chain.getInfo(g.chain, g.address);
+      if (info) {
+        if (isContract === null && info.isContract !== undefined) isContract = info.isContract;
+        const tagText = info.tags.join(' ').toLowerCase();
+        const cex = /(binance|kraken|coinbase|okx|okex|bybit|kucoin|bitfinex|huobi|htx|gate\.io|bitstamp|gemini|crypto\.com|zonda|bitbay|exchange|hot wallet|deposit)/.test(tagText);
+        if (cex) labels.add({ chain: g.chain, address: g.address, entity: info.tags.join(', '), category: 'CEX', source: info.source });
+        else if (/(tornado|mixer)/.test(tagText)) labels.add({ chain: g.chain, address: g.address, entity: info.tags.join(', '), category: 'MIXER', source: info.source });
+        else if (info.isContract && info.name) labels.add({ chain: g.chain, address: g.address, entity: `Kontrakt ${info.name}`, category: /router|swap|dex|pool|pair/i.test(info.name) ? 'DEX' : /token|erc20|usd/i.test(info.name) ? 'TOKEN_CONTRACT' : 'SMART_CONTRACT', source: `${info.source} (zweryfikowany kontrakt)` });
+        if (info.tags.length || info.name) t('labels', `${key}: ${info.source} → ${[info.name, ...info.tags].filter(Boolean).join(', ')}`);
+      }
+    }
     const classification = classifyAddress(g.chain, g.address, labels, isContract);
     const excluded = isExcluded(classification.category);
     const transfers = excluded ? null : await chain.getTransfers(g.chain, g.address);
@@ -275,6 +324,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
         if (nt) neighbours.set(n, nt);
       }
       activity = analyzeChain({ chain: g.chain, address: g.address, transfers, neighbours, labels, rates, dataSource: chain.sourceFor(g.chain) });
+      if (transfers.length >= 1000) t('chain', `${key}: pobrano pierwsze ${transfers.length} transferów – historia może być niepełna`);
     }
     findings.push({ key, chain: g.chain, address: g.address, classification, attribution, occurrences: subjectOcc, foreignOccurrences: foreignOcc, activity, explorerUrl: chain.explorerUrl(g.chain, g.address) });
     t('score', `${key}: ${classification.category} → ${attribution.score}% (${attribution.band})${activity ? `, ${activity.indicators.length} wskaźnik(ów) aktywności` : ''}`);
@@ -298,7 +348,6 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     finishedAt: new Date().toISOString(),
     input: input.identifiers,
     params: {
-      mode: config.mode,
       maxDepth,
       useHistory: historyConnectors.length > 0,
       connectors: connectors.map((c) => c.id),
@@ -307,6 +356,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       egressAllowlist: config.egressAllowlist,
       labelDatasets: deps.labelDatasets,
       rates: { source: rates.source, asOf: rates.asOf, usdPln: rates.usdPln },
+      webFetch: config.webFetch,
       llm: llm ? llm.model : null,
     },
     identities,

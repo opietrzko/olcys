@@ -10,12 +10,12 @@ import type { ConnectorContext, SourceConnector } from './types';
 export const webConnector: SourceConnector = {
   id: 'web',
   title: 'Strony WWW (linkowane z profili)',
-  compliance: 'Pobranie publicznej strony bez logowania; tylko hosty z allowlisty.',
+  compliance: 'Pobranie publicznej strony (GET) bez logowania; dowolny host publiczny z blokadą adresów wewnętrznych (ochrona SSRF).',
   accepts: ['url'],
   isLive: () => true,
   enabled: () => true,
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
-    const res = await ctx.fetch(q.value);
+    const res = await ctx.fetch(q.value, { kind: 'page' });
     if (res.status !== 200 || !/html|text/.test(res.contentType)) return [];
     const $ = cheerio.load(res.body);
     $('script,style,noscript').remove();
@@ -27,7 +27,7 @@ export const webConnector: SourceConnector = {
       .filter(Boolean);
     return [
       {
-        family: familyOf(q.value, ctx.config),
+        family: familyOf(q.value),
         sourceKind: 'OWN_WEBSITE',
         url: q.value,
         title: $('title').text().trim() || q.value,

@@ -1,18 +1,18 @@
 /**
  * Publiczny podgląd kanału Telegram (t.me/s/<kanał>) – dostępny bez logowania i bez API.
- * Selektory zgodne ze znacznikami strony podglądu; w trybie demo kierowany na syntetyczny kanał.
+ * Selektory zgodne ze znacznikami strony podglądu t.me/s/.
  */
 import * as cheerio from 'cheerio';
 import type { Identifier } from '@olcys/core';
 import type { CollectedDocument } from '../evidence';
-import { isMock, type ConnectorContext, type SourceConnector } from './types';
+import { type ConnectorContext, type SourceConnector } from './types';
 
 export const telegramConnector: SourceConnector = {
   id: 'telegram',
   title: 'Telegram – publiczny podgląd kanału',
   compliance: 'Wyłącznie publiczny podgląd kanału (t.me/s/), bez logowania i bez konta.',
   accepts: ['telegram'],
-  isLive: (c) => !isMock(c.urls.telegram, c),
+  isLive: () => true,
   enabled: () => true,
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
     const handle = q.value.replace(/^@/, '');

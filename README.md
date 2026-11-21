@@ -2,7 +2,7 @@
 
 Narzędzie OSINT dla analityków **Krajowej Administracji Skarbowej**. Na podstawie co najmniej jednego identyfikatora (nick, e-mail, telefon, Telegram, imię i nazwisko, URL, adres krypto) automatycznie przeszukuje publiczne źródła, wyodrębnia adresy kryptowalutowe i liczy **Wskaźnik Pewności** powiązania adresu z osobą. Odrzuca fałszywe trafienia (giełdy, kontrakty, miksery, zbiórki). Analizuje aktywność adresów w blockchainie pod kątem **wyjścia do walut tradycyjnych (cash-out)**. Wynik to raport z pełnym łańcuchem dowodowym.
 
-> HackNation 2026 · zadanie Ministerstwa Finansów „OŁCyŚ”. Repozytorium zawiera wyłącznie dane **syntetyczne** – fikcyjna persona „Jan Testowy” i wygenerowane adresy.
+> HackNation 2026 · zadanie Ministerstwa Finansów „OŁCyŚ”. Narzędzie działa na realnych, publicznie dostępnych źródłach Internetu. Scenariusze testowe korzystają z fikcyjnych kont testowych założonych przez zespół, a nie z danych prawdziwych osób.
 
 ---
 
@@ -47,8 +47,29 @@ Identyfikatory ──► Konektory Web2 ──► Dowody (URL, czas, SHA-256, ko
 
 Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne powiązanie). Wyniki wyszukiwania po samym imieniu i nazwisku nie rozszerzają poszukiwań.
 
-**Źródła Web2:** GitHub (profil, README, FUNDING.yml), Gravatar (e-mail → hash → portfele krypto i zweryfikowane konta), strony WWW (linki `rel=me`), publiczny podgląd kanałów Telegram (`t.me/s/`), forum branżowe, portal ogłoszeń P2P, ENS (`.eth` → adres i rekordy tekstowe; przez JSON-RPC) oraz archiwum Internetu (Wayback CDX).
-**Web3:** Etherscan API v2 (EVM), Esplora (BTC – możliwy self-hosting, np. mempool), TronGrid (USDT TRC20). Do demo i testów służą fixtures.
+### Źródła w trybie Internet (live) – sprawdzone na żywo
+
+| Źródło | Co daje | Dostęp |
+|---|---|---|
+| GitHub API + raw | profil, bio, strona, profilowe README (także organizacji), FUNDING.yml | publiczne API; zalecany `GITHUB_TOKEN` (bez uprawnień) |
+| Keybase | **kryptograficznie podpisane** adresy krypto i dowody kont (GitHub, X, Reddit, WWW) | publiczne API |
+| Gravatar v3 | e-mail (hash) → profil i zweryfikowane konta | publiczne API (portfele tylko z kluczem API) |
+| Telegram `t.me/s/` | publiczny podgląd kanału | bez logowania |
+| ENS (RPC) | nazwa `.eth` → adres i rekordy tekstowe | publiczny RPC lub własny węzeł |
+| SearXNG (self-hosted) | wyszukiwanie nicku, e-maila, telefonu i adresu w otwartym Internecie + pobranie stron wyników (bez eksploratorów blockchain) | własna instancja w `docker compose` |
+| Strony WWW | strony linkowane z profili i z wyników | GET z ochroną SSRF |
+| Wayback CDX | historyczne wersje profili i stron → podmiana adresu | publiczne API |
+| Blockscout / Etherscan | historia ETH i tokenów, **etykiety i nazwy zweryfikowanych kontraktów** (krok 3.1) | Blockscout bez klucza |
+| `eth_getCode` | flaga kontraktu (krok 3.2) | publiczny RPC |
+| Esplora (Blockstream) | historia BTC (do 100 tx) | bez klucza |
+| TronGrid | transfery USDT TRC20 | bez klucza |
+| NBP + CoinGecko | kurs USD/PLN (tabela A) i bieżące ceny krypto | bez klucza; przy awarii kurs zapasowy z adnotacją |
+
+**Otwarte przestrzenie nazw (ENS, Keybase):** nazwę `.eth` czy konto Keybase o danej nazwie może zarejestrować każdy. Zgodność z nickiem daje tylko powiązanie **słabe** (−35), dopóki nie ma wzajemnego potwierdzenia. Dla Keybase to zweryfikowany dowód konta o tym nicku, dla ENS inny profil podmiotu wskazujący tę nazwę `.eth` albo adres. Przykład z testu na żywo: `torproject.eth` bez potwierdzenia ma 55% zamiast 90%.
+
+**Wzmianka (MENTION, −20):** strona z wyników wyszukiwania, na której identyfikator podmiotu występuje w tym samym fragmencie co adres. Autor treści pozostaje niepotwierdzony.
+
+**Ograniczenia źródeł na żywo:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP. NBP bywa chwilowo niedostępne i wtedy używany jest kurs zapasowy z adnotacją w raporcie. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
 
 ## 4. Wskaźnik Pewności (`olcys-score/1.0.0`)
 
@@ -97,7 +118,16 @@ npm install
 npm run dev
 ```
 
-Polecenie uruchamia mini-internet (`:4100`), API (`:4000`) i UI (`:5173`). Otwórz http://localhost:5173, kliknij **Wczytaj scenariusz demo**, a potem **Uruchom analizę**.
+Polecenie uruchamia API (`:4000`) i UI (`:5173`). Otwórz http://localhost:5173, wpisz identyfikator i kliknij **Uruchom analizę**.
+
+Do wyszukiwania w otwartym Internecie uruchom własną instancję SearXNG i skopiuj konfigurację (domyślne wartości działają bez kluczy):
+```bash
+docker compose up -d searxng
+```
+```bash
+cp .env.example .env
+```
+**Ustaw `GITHUB_TOKEN`** (token bez uprawnień, tylko dane publiczne). Bez niego GitHub pozwala na 60 zapytań/h na adres IP, a we wspólnej sieci limit bywa wyczerpany od razu. Narzędzie zgłasza to wtedy jako błąd konektora w raporcie i pobiera tylko pliki raw (README, FUNDING.yml).
 
 ### Docker (PostgreSQL, tryb docelowy)
 ```bash
@@ -105,52 +135,28 @@ docker compose up --build
 ```
 UI i API: http://localhost:4000. Opcjonalny lokalny model AI: `docker compose --profile ai up`, a w `.env` ustaw `LLM_BASE_URL=http://ollama:11434/v1`.
 
-### Tryb live (realne źródła)
-Skopiuj `.env.example` do `.env`, ustaw `OLCYS_MODE=live` i `CHAIN_PROVIDER=live`, dopisz zatwierdzone hosty do `EGRESS_ALLOWLIST` oraz klucze API. **Ustaw `GITHUB_TOKEN`**: bez niego GitHub pozwala na 60 zapytań/h na adres IP, a we wspólnej sieci limit bywa wyczerpany od razu. Narzędzie zgłasza to wtedy jako błąd konektora w raporcie i pobiera tylko pliki raw (README, FUNDING.yml).
-
-```bash
-OLCYS_MODE=live EGRESS_ALLOWLIST=api.github.com,raw.githubusercontent.com,web.archive.org npm run demo:cli -- nick=<konto_testowe>
-```
-
 ### Analiza z linii poleceń
 ```bash
-npm run demo:cli -- nick=krypto_janek email=jan.testowy@example.com --html raport.html
+npm run cli -- nick=<login_testowy> email=<adres> phone=<numer> --html raport.html
 ```
 
-### Demo analizy cyklicznej (zmiana w czasie)
-Utwórz analizę z harmonogramem i przełącz mini-internet w stan „po zmianie”:
-```bash
-curl "localhost:4100/__scenario?v=2"
-```
-W stanie v2 nowy adres pojawia się w bio GitHub i na kanale Telegram. Kolejny przebieg pokaże kartę **Zmiany względem poprzedniego przebiegu**. Powrót do stanu początkowego: `?v=1`.
+### Analiza cykliczna (zmiana w czasie)
+Ustaw harmonogram analizy (np. co 5 min) i zmień coś na koncie testowym, np. podmień adres w bio. Kolejny przebieg pokaże kartę **Zmiany względem poprzedniego przebiegu**.
 
-## 7. Scenariusze testowe (dane syntetyczne)
+## 7. Testy i scenariusze testowe
 
 ```bash
 npm test
 ```
 
-38 testów jednostkowych i akceptacyjnych. Scenariusze akceptacyjne (`packages/engine/test/scenario.test.ts`) przechodzą pełny przebieg wymagany w zadaniu na mini-internecie:
+28 testów automatycznych, działających bez sieci:
+- walidacja i ekstrakcja adresów (sumy kontrolne, zaciemnione zapisy, znaki niewidoczne);
+- Wskaźnik Pewności (przedziały, synergia, bramki, homonim, adres cudzy, adres u wielu autorów);
+- wskaźniki cash-out (swap na stablecoiny, wnioskowany adres depozytowy giełdy);
+- numer telefonu;
+- bezpieczeństwo trybu live (ochrona SSRF, allowlista API, protokoły, wzajemne potwierdzenie ENS/Keybase, filtr eksploratorów).
 
-| # | Sprawdza | Oczekiwany wynik |
-|---|---|---|
-| S1 | odnajdywanie adresów i łączenie źródeł | portfel ETH z GitHub + Gravatar + WWW (zapis zaciemniony) → 100%; pivot GitHub → Telegram; TRON z P2P i kanału → 85% |
-| S2 | odrzucanie fałszywych trafień | Binance (etykieta), router Uniswap, kontrakt NFT (bytecode), zbiórka → 0%; adres organizatora giveaway → 0%; giveaway → <40%; homonim → <40% |
-| S3 | aktywność blockchain | swap ETH → USDT, wysyłka na Krakena, wnioskowany depozyt Binance; mikser na starym adresie |
-| S5 | telefon łączy konto alias | strona WWW → telefon → ogłoszenie P2P innego konta (`jt_handel`) → forum → adres 85% z synergią |
-| S4 | źródła i odtwarzalność | podmiana adresu na stronie WWW (archiwum 2024 → 2025); każdy dowód ma URL, czas i SHA-256; raport rozróżnia fakty, obliczenia i wnioski; host spoza allowlisty jest zablokowany |
-
-Przykładowy wynik (`npm run demo:cli`):
-```
-100%  BARDZO_WYSOKIE  ETH  0x1a04d94f740Ec5024E8Fb48b96b9e8792CcD1531  UNHOSTED
-      BASE_OFFICIAL_PROFILE(+85) OWNERSHIP_CLAIM(+5) SYNERGY(+15) CAP_100(-5)
-      ⚑ CEX_DIRECT / CEX_DEPOSIT_INFERRED / STABLECOIN_SWAP / HIGH_VOLUME
- 85%  BARDZO_WYSOKIE  TRON TURVC3w6WpExTAAggpTV7DbFuURQsJPtrd  UNHOSTED
-      BASE_SALE_OR_SETTLEMENT(+70) SYNERGY(+15)       ⚑ OFFRAMP / P2P_PATTERN
- 35%  NISKIE          ETH  0xad3A…76Bf (homonim)       BASE_SALE_OR_SETTLEMENT(+70) IDENTITY_WEAK(-35)
-  0%  WYKLUCZONE      ETH  0x28C6…1d60  CEX – Binance 14 (hot wallet)   GATE_CEX
-  0%  WYKLUCZONE      ETH  0x24cC…346b  SMART_CONTRACT                  GATE_SMART_CONTRACT
-```
+**Scenariusze akceptacyjne** wykonuje się na prawdziwym Internecie, na fikcyjnych kontach testowych zespołu (GitHub, Keybase, Telegram, strona WWW, …) z opublikowanymi adresami portfeli testowych. Każdy scenariusz opisuje, co wpisać do narzędzia i jaki wynik jest oczekiwany. Opis scenariuszy: `docs/scenariusze-testowe.md` (do uzupełnienia przez zespół).
 
 ## 8. Architektura (monorepo, npm workspaces)
 
@@ -160,9 +166,7 @@ Przykładowy wynik (`npm run demo:cli`):
 | `packages/engine` | konektory Web2, dostawcy blockchain, kontrolowany `fetch` (allowlista), pipeline, raport HTML, opcjonalny klient LLM |
 | `apps/api` | Fastify + PostgreSQL / pamięć: analizy, przebiegi, harmonogram, diff, dowody, eksport, dziennik audytu |
 | `apps/web` | React + Vite: formularz, etapy scenariusza, graf powiązań (Cytoscape), rozpisanie wyniku regułami, chronologia przepływów, fakty / obliczenia / wnioski, źródła |
-| `apps/mock-web` | syntetyczny mini-internet o kształcie realnych API (GitHub API, Gravatar v3, `t.me/s`, Wayback CDX) |
 | `data/labels` | zbiory etykiet adresów (JSON, z opisem pochodzenia i licencji) |
-| `fixtures` | syntetyczne transakcje i kursy (`scripts/build-demo-fixtures.ts`) |
 
 Bezpieczeństwo: kopie dowodów serwowane są jako `text/plain` z CSP `sandbox` (żaden skrypt ze źródła się nie wykona). Każda operacja trafia do dziennika audytu. Nagłówek `x-olcys-user` to miejsce na integrację z SSO/RBAC KAS. Brak telemetrii.
 

@@ -4,7 +4,7 @@
  */
 import type { Identifier } from '@olcys/core';
 import { extractIdentifiers, type CollectedDocument } from '../evidence';
-import { isMock, type ConnectorContext, type SourceConnector } from './types';
+import { type ConnectorContext, type SourceConnector } from './types';
 
 interface GhUser {
   login: string;
@@ -22,11 +22,11 @@ export const githubConnector: SourceConnector = {
   title: 'GitHub (profil, README, FUNDING.yml)',
   compliance: 'Publiczne REST API GitHub (opcjonalnie token tylko do odczytu danych publicznych), w limitach API; przy wyczerpaniu limitu – jawne ostrzeżenie i pliki raw.',
   accepts: ['nick'],
-  isLive: (c) => !isMock(c.urls.githubApi, c),
+  isLive: () => true,
   enabled: () => true,
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
     const { githubApi, githubRaw } = ctx.config.urls;
-    const auth: Record<string, string> = ctx.config.githubToken && !isMock(githubApi, ctx.config) ? { authorization: `Bearer ${ctx.config.githubToken}` } : {};
+    const auth: Record<string, string> = ctx.config.githubToken ? { authorization: `Bearer ${ctx.config.githubToken}` } : {};
     const res = await ctx.fetch(`${githubApi}/users/${encodeURIComponent(q.value)}`, { headers: { accept: 'application/vnd.github+json', ...auth } });
     if (res.status === 404) return [];
     const docs: CollectedDocument[] = [];
@@ -63,6 +63,7 @@ export const githubConnector: SourceConnector = {
     const owner = { handle: u.login, displayName: u.name ?? undefined };
     for (const [repo, file, title] of [
       [u.login, 'README.md', 'Profilowe README'],
+      ['.github', 'profile/README.md', 'Profilowe README organizacji'],
       ['.github', 'FUNDING.yml', 'FUNDING.yml (sponsorowanie)'],
       [u.login, '.github/FUNDING.yml', 'FUNDING.yml (sponsorowanie)'],
     ] as const) {

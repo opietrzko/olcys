@@ -9,7 +9,8 @@ export type Chain = 'BTC' | 'ETH' | 'TRON' | 'LTC' | 'SOL';
 export type IdentifierType = 'name' | 'nick' | 'email' | 'phone' | 'telegram' | 'url' | 'address';
 
 /** Siła powiązania identyfikatora z badanym podmiotem. */
-export type LinkStrength = 'DIRECT' | 'PIVOT' | 'WEAK';
+/** MENTION = identyfikator podmiotu wymieniony w tym samym fragmencie co adres (autor niepotwierdzony). */
+export type LinkStrength = 'DIRECT' | 'PIVOT' | 'MENTION' | 'WEAK';
 
 export interface Identifier {
   type: IdentifierType;

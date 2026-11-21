@@ -41,9 +41,6 @@ h4 { margin: 14px 0 6px; font-size: 13px; text-transform: uppercase; letter-spac
 .top nav { display: flex; gap: 4px; }
 .top nav a { color: #dbe7f5; text-decoration: none; padding: 6px 12px; border-radius: 6px; }
 .top nav a.active, .top nav a:hover { background: rgba(255,255,255,.14); color: #fff; }
-.mode { margin-left: auto; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: .04em; }
-.mode-demo { background: #fde68a; color: #713f12; }
-.mode-live { background: #fecaca; color: #7f1d1d; }
 main { flex: 1; padding: 20px 24px; max-width: 1500px; width: 100%; margin: 0 auto; }
 .foot { text-align: center; color: var(--muted); font-size: 11px; padding: 12px; }
 
@@ -168,3 +165,7 @@ mark { background: #fde68a; padding: 0 2px; border-radius: 3px; font-family: ui-
 .trace { padding-left: 18px; font-size: 12.5px; }
 .trace li { margin: 3px 0; }
 .egress { max-height: 240px; overflow: auto; padding-left: 16px; word-break: break-all; }
+
+.pill.live { background: #dcfce7; color: #14532d; }
+.allow { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.allow code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; }

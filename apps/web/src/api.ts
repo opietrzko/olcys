@@ -31,15 +31,21 @@ export interface Analysis {
   lastRun?: Run | null;
   runCount?: number;
 }
+export interface SourcesInfo {
+  chainProvider: string;
+  egressAllowlist: string[];
+  webFetch: 'public' | 'allowlist';
+  connectors: { id: string; title: string; accepts: string[]; compliance: string; enabled: boolean; live: boolean; kind: string }[];
+  githubToken: boolean;
+  searxng: string | null;
+  liveRates: boolean;
+}
 export interface Meta {
   engineVersion: string;
   rulesVersion: string;
-  mode: 'demo' | 'live';
   store: string;
-  chainProvider: string;
-  egressAllowlist: string[];
+  sources: SourcesInfo;
   llm: { model: string; baseUrl: string } | null;
-  connectors: { id: string; title: string; accepts: string[]; compliance: string; enabled: boolean; live: boolean; kind: string }[];
   labelDatasets: { name: string; description: string; license: string; count: number }[];
   labelsCount: number;
   rates: { source: string; asOf: string; usdPln: number; usd: Record<string, number> };

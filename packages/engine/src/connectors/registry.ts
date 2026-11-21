@@ -1,16 +1,16 @@
 import type { EngineConfig } from '../config';
 import { ensConnector } from './ens';
-import { forumConnector } from './forum';
 import { githubConnector } from './github';
 import { gravatarConnector } from './gravatar';
-import { p2pConnector } from './p2p';
+import { keybaseConnector } from './keybase';
+import { searxngConnector } from './search';
 import { telegramConnector } from './telegram';
 import type { HistoryConnector, SourceConnector } from './types';
 import { waybackConnector } from './wayback';
 import { webConnector } from './web';
 
 /** Rejestr konektorów. Dodanie źródła = dopisanie konektora do tej listy. */
-export const ALL_CONNECTORS: SourceConnector[] = [githubConnector, gravatarConnector, webConnector, forumConnector, p2pConnector, telegramConnector, ensConnector];
+export const ALL_CONNECTORS: SourceConnector[] = [githubConnector, keybaseConnector, gravatarConnector, webConnector, telegramConnector, ensConnector, searxngConnector];
 export const HISTORY_CONNECTORS: HistoryConnector[] = [waybackConnector];
 
 export function describeConnectors(config: EngineConfig) {

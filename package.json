@@ -9,10 +9,10 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n mock,api,web -c gray,blue,green \"npm run dev -w @olcys/mock-web\" \"npm run dev -w @olcys/api\" \"npm run dev -w @olcys/web\"",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @olcys/api\" \"npm run dev -w @olcys/web\"",
     "test": "vitest run",
-    "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p apps/api && tsc -p apps/web && tsc -p apps/mock-web",
-    "demo:cli": "tsx scripts/demo-cli.ts",
+    "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p apps/api && tsc -p apps/web",
+    "cli": "tsx --env-file-if-exists=.env scripts/cli.ts",
     "gen:address": "tsx scripts/gen-address.ts",
     "licenses": "npx --yes license-checker-rseidelsohn --summary --excludePrivatePackages"
   },

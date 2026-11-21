@@ -45,14 +45,9 @@ export function App() {
             Audyt
           </a>
         </nav>
-        {meta && (
-          <span className={`mode mode-${meta.mode}`} title={`magazyn: ${meta.store}, blockchain: ${meta.chainProvider}`}>
-            {meta.mode === 'demo' ? 'TRYB DEMO · dane syntetyczne' : 'TRYB LIVE'}
-          </span>
-        )}
       </header>
       <main>
-        {parts[0] === '' && <Home />}
+        {parts[0] === '' && <Home meta={meta} />}
         {parts[0] === 'a' && parts[1] && <AnalysisPage id={parts[1]} runId={parts[3]} />}
         {parts[0] === 'metodyka' && meta && <Methodology meta={meta} />}
         {parts[0] === 'zrodla' && meta && <Sources meta={meta} />}
@@ -66,16 +61,16 @@ export function App() {
 /* ---------- Lista + nowa analiza ---------- */
 
 const TYPES: { v: IdentifierType; l: string; ph: string }[] = [
-  { v: 'nick', l: 'Nick / login', ph: 'np. krypto_janek' },
+  { v: 'nick', l: 'Nick / login', ph: 'np. login z forum lub GitHub' },
   { v: 'email', l: 'E-mail', ph: 'np. jan@example.com' },
-  { v: 'telegram', l: 'Telegram', ph: 'np. @janek_p2p' },
+  { v: 'telegram', l: 'Telegram', ph: 'np. @nazwa_kanalu' },
   { v: 'phone', l: 'Telefon', ph: 'np. +48 600 123 456' },
-  { v: 'name', l: 'Imię i nazwisko', ph: 'np. Jan Testowy' },
+  { v: 'name', l: 'Imię i nazwisko', ph: 'np. Jan Kowalski' },
   { v: 'url', l: 'URL profilu / strony', ph: 'https://…' },
   { v: 'address', l: 'Adres krypto', ph: '0x… / bc1… / T…' },
 ];
 
-function Home() {
+function Home({ meta }: { meta: Meta | null }) {
   const [list, setList] = useState<Analysis[] | null>(null);
   const load = useCallback(() => api.analyses().then(setList), []);
   useEffect(() => {
@@ -85,10 +80,10 @@ function Home() {
   }, [load]);
   return (
     <div className="grid-home">
-      <NewAnalysis />
+      <NewAnalysis meta={meta} />
       <Card title="Analizy">
         {!list && <p className="muted">Ładowanie…</p>}
-        {list?.length === 0 && <p className="muted">Brak analiz. Utwórz pierwszą – lub wczytaj scenariusz demonstracyjny.</p>}
+        {list?.length === 0 && <p className="muted">Brak analiz. Utwórz pierwszą.</p>}
         <ul className="analyses">
           {list?.map((a) => (
             <li key={a.id}>
@@ -116,21 +111,15 @@ function Home() {
   );
 }
 
-function NewAnalysis() {
+function NewAnalysis({ meta }: { meta: Meta | null }) {
   const [name, setName] = useState('');
   const [ids, setIds] = useState<Identifier[]>([{ type: 'nick', value: '' }]);
   const [schedule, setSchedule] = useState<number | ''>('');
   const [history, setHistory] = useState(true);
   const [depth, setDepth] = useState(3);
+  const live = meta?.sources;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const demo = () => {
-    setName('Scenariusz demo – Jan Testowy');
-    setIds([
-      { type: 'nick', value: 'krypto_janek' },
-      { type: 'email', value: 'jan.testowy@example.com' },
-    ]);
-  };
   const submit = async () => {
     const identifiers = ids.filter((i) => i.value.trim());
     if (!identifiers.length) return setErr('Podaj co najmniej jeden identyfikator.');
@@ -146,7 +135,14 @@ function NewAnalysis() {
     }
   };
   return (
-    <Card title="Nowa analiza" actions={<button className="btn ghost" onClick={demo}>Wczytaj scenariusz demo</button>}>
+    <Card title="Nowa analiza">
+      {live && (
+        <p className="small muted">
+          Źródła: {live.connectors.filter((c) => c.enabled && c.kind === 'source').map((c) => c.id).join(', ')} + archiwum.
+          {!live.githubToken && <span className="neg"> Brak GITHUB_TOKEN – limit 60 zapytań/h na IP.</span>}
+          {!live.searxng && <span> Wyszukiwarka wyłączona (ustaw SEARXNG_URL).</span>}
+        </p>
+      )}
       <label className="field">
         Nazwa sprawy
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Czynności sprawdzające 2026/123" />
@@ -187,7 +183,7 @@ function NewAnalysis() {
           Analiza cykliczna
           <select value={schedule} onChange={(e) => setSchedule(e.target.value ? Number(e.target.value) : '')}>
             <option value="">jednorazowo</option>
-            <option value={5}>co 5 min (demo)</option>
+            <option value={5}>co 5 min</option>
             <option value={60}>co godzinę</option>
             <option value={1440}>codziennie</option>
             <option value={10080}>co tydzień</option>
@@ -360,45 +356,54 @@ function Methodology({ meta }: { meta: Meta }) {
 
 function Sources({ meta }: { meta: Meta }) {
   return (
-    <div className="grid2">
-      <Card title="Konektory źródeł">
-        <table className="kv">
-          <tbody>
-            {meta.connectors.map((c) => (
-              <tr key={c.id}>
-                <td>
-                  <b>{c.title}</b>
-                  <div className="small muted">{c.compliance}</div>
-                  <div className="small">przyjmuje: {c.accepts.join(', ')}</div>
-                </td>
-                <td>
-                  {c.enabled ? <span className={`pill ${c.live ? 'warn' : ''}`}>{c.live ? 'Internet' : 'syntetyczne'}</span> : <span className="pill ghost">wyłączony</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div>
+      {[meta.sources].map((info) => {
+        return (
+          <div className="grid2" key="sources">
+            <Card title="Konektory źródeł publicznych">
+              <table className="kv">
+                <tbody>
+                  {info.connectors.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <b>{c.title}</b>
+                        <div className="small muted">{c.compliance}</div>
+                        <div className="small">przyjmuje: {c.accepts.join(', ')}</div>
+                      </td>
+                      <td>{c.enabled ? <span className="pill live">aktywny</span> : <span className="pill ghost">wyłączony</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+            <Card title="Kontrola ruchu wychodzącego">
+              <p className="small">
+                Zapytania API (zawierające identyfikatory) trafiają <b>wyłącznie</b> do zatwierdzonych hostów. Pobieranie stron odkrytych w dowodach:{' '}
+                <b>{info.webFetch === 'public' ? 'dowolna publiczna strona (GET), z blokadą adresów wewnętrznych – ochrona SSRF' : 'tylko allowlista'}</b>. Każde żądanie jest logowane w przebiegu.
+              </p>
+              <div className="allow">
+                {info.egressAllowlist.map((h) => (
+                  <code key={h}>{h}</code>
+                ))}
+              </div>
+              <p className="small">
+                Blockchain: {info.chainProvider}
+                <br />
+                Kursy: {info.liveRates ? 'NBP (USD/PLN) + CoinGecko' : 'zapasowe'} · GitHub token: {info.githubToken ? 'tak' : 'brak'} · Wyszukiwarka: {info.searxng ?? 'wyłączona'}
+              </p>
+            </Card>
+          </div>
+        );
+      })}
+      <Card title="Zbiory etykiet adresów">
+        {meta.labelDatasets.map((d) => (
+          <div key={d.name} className="small">
+            <b>{d.name}</b> ({d.count}) – {d.description} <span className="muted">Licencja: {d.license}</span>
+          </div>
+        ))}
+        <p className="small muted">Dodatkowo: etykiety i nazwy zweryfikowanych kontraktów z API Blockscout oraz flaga kontraktu z eth_getCode.</p>
       </Card>
-      <div>
-        <Card title="Kontrola ruchu wychodzącego (allowlista)">
-          <p className="small">Aplikacja łączy się wyłącznie z zatwierdzonymi hostami. Każde żądanie jest logowane w przebiegu analizy, próby połączeń poza listą są blokowane.</p>
-          <ul>
-            {meta.egressAllowlist.map((h) => (
-              <li key={h}>
-                <code>{h}</code>
-              </li>
-            ))}
-          </ul>
-          <p className="small">Blockchain: {meta.chainProvider} · AI: {meta.llm ? `${meta.llm.model} @ ${meta.llm.baseUrl}` : 'wyłączone (opcjonalnie lokalny model przez API zgodne z OpenAI)'}</p>
-        </Card>
-        <Card title="Zbiory etykiet adresów">
-          {meta.labelDatasets.map((d) => (
-            <div key={d.name} className="small">
-              <b>{d.name}</b> ({d.count}) – {d.description} <span className="muted">Licencja: {d.license}</span>
-            </div>
-          ))}
-        </Card>
-      </div>
+      <p className="small muted">AI: {meta.llm ? `${meta.llm.model} @ ${meta.llm.baseUrl}` : 'wyłączone (opcjonalnie lokalny model przez API zgodne z OpenAI)'}</p>
     </div>
   );
 }

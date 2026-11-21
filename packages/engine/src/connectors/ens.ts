@@ -86,7 +86,8 @@ export const ensConnector: SourceConnector = {
         owner: { handle: q.value },
         segments: [{ id: 'records', author: { handle: q.value }, text }],
         links,
-        meta: { rpc: new URL(rpc).host, ownedByQuery: true },
+        // Nazwę .eth może zarejestrować każdy – wymagamy potwierdzenia w innym profilu podmiotu (nazwa lub adres).
+        meta: { rpc: new URL(rpc).host, ownedByQuery: true, weakOwnership: true, reciprocalNeedles: [name, ...(address ? [address] : [])] },
         raw,
       },
     ];

@@ -1,10 +1,7 @@
 /**
- * Dostawcy danych blockchain. FixtureProvider = dane syntetyczne (demo, testy, praca offline);
- * Etherscan (API v2, wiele sieci EVM), Esplora (BTC – możliwy self-hosting, np. mempool.space), TronGrid.
+ * Dostawcy danych blockchain: Etherscan (API v2, wiele sieci EVM), Esplora (BTC – możliwy self-hosting, np. mempool.space), TronGrid.
  * Interfejs pozwala podmienić źródło na węzeł własny KAS bez zmian w logice analizy.
  */
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { addressKey, toChecksumAddress, type Chain, type Transfer } from '@olcys/core';
 import type { EngineConfig } from '../config';
 import type { SafeFetch } from '../http';
@@ -16,7 +13,16 @@ export interface ChainProvider {
   getTransfers(chain: Chain, address: string): Promise<Transfer[] | null>;
   /** Bytecode adresu (EVM). null = nie sprawdzono. */
   getCode(chain: Chain, address: string): Promise<string | null>;
+  /** Etykieta / nazwa adresu z API eksploratora (KROK 3.1 załącznika). */
+  getInfo?(chain: Chain, address: string): Promise<AddressInfo | null>;
   explorerUrl(chain: Chain, address: string): string | undefined;
+}
+
+export interface AddressInfo {
+  isContract?: boolean;
+  name?: string;
+  tags: string[];
+  source: string;
 }
 
 const EXPLORERS: Partial<Record<Chain, (a: string) => string>> = {
@@ -28,48 +34,19 @@ const EXPLORERS: Partial<Record<Chain, (a: string) => string>> = {
 };
 const explorer = (chain: Chain, a: string) => EXPLORERS[chain]?.(a);
 
-interface FixtureFile {
-  chain: Chain;
-  address: string;
-  code?: string;
-  transfers: Transfer[];
-}
-
-export class FixtureProvider implements ChainProvider {
-  id = 'fixtures (dane syntetyczne)';
-  private index = new Map<string, FixtureFile>();
-  constructor(dir: string) {
-    if (!existsSync(dir)) return;
-    for (const chain of readdirSync(dir)) {
-      for (const f of readdirSync(join(dir, chain))) {
-        const data = JSON.parse(readFileSync(join(dir, chain, f), 'utf8')) as FixtureFile;
-        data.transfers = data.transfers.map((t) => ({ ...t, chain: data.chain }));
-        this.index.set(addressKey(data.chain, data.address), data);
-      }
-    }
-  }
-  supports() {
-    return true;
-  }
-  async getTransfers(chain: Chain, address: string) {
-    return this.index.get(addressKey(chain, address))?.transfers ?? null;
-  }
-  async getCode(chain: Chain, address: string) {
-    if (chain !== 'ETH') return null;
-    return this.index.get(addressKey(chain, address))?.code ?? null;
-  }
-  explorerUrl = explorer;
-}
-
+/** API zgodne z Etherscan: Etherscan v2 (z kluczem) albo Blockscout (open source, bez klucza, możliwy self-hosting w KAS). */
 export class EtherscanProvider implements ChainProvider {
-  id = 'etherscan-v2';
-  constructor(private cfg: EngineConfig, private fetch: SafeFetch, private chainId = 1) {}
+  id: string;
+  constructor(private cfg: EngineConfig, private fetch: SafeFetch, private chainId = 1) {
+    this.id = cfg.chain.evmApiKey ? 'etherscan-v2' : `blockscout (${new URL(cfg.chain.evmApiUrl).host})`;
+  }
   supports(chain: Chain) {
-    return chain === 'ETH' && Boolean(this.cfg.chain.etherscanApiKey);
+    return chain === 'ETH';
   }
   private async q(params: Record<string, string>) {
-    const u = new URL(this.cfg.chain.etherscanUrl);
-    for (const [k, v] of Object.entries({ chainid: String(this.chainId), ...params, apikey: this.cfg.chain.etherscanApiKey ?? '' })) u.searchParams.set(k, v);
+    const u = new URL(this.cfg.chain.evmApiUrl);
+    const extra: Record<string, string> = this.cfg.chain.evmApiKey ? { chainid: String(this.chainId), apikey: this.cfg.chain.evmApiKey } : {};
+    for (const [k, v] of Object.entries({ ...params, ...extra })) u.searchParams.set(k, v);
     const r = await this.fetch(u.toString());
     return JSON.parse(r.body);
   }
@@ -82,20 +59,40 @@ export class EtherscanProvider implements ChainProvider {
       const out: Transfer[] = [];
       for (const t of Array.isArray(native.result) ? native.result : []) {
         if (t.isError === '1') continue;
-        out.push({ chain, hash: t.hash, timestamp: new Date(Number(t.timeStamp) * 1000).toISOString(), from: toChecksumAddress(t.from), to: t.to ? toChecksumAddress(t.to) : '', asset: 'ETH', amount: Number(t.value) / 1e18, method: t.functionName?.split('(')[0] || undefined });
+        if (!t.to) continue;
+        out.push({ chain, hash: t.hash, timestamp: new Date(Number(t.timeStamp) * 1000).toISOString(), from: toChecksumAddress(t.from), to: toChecksumAddress(t.to), asset: 'ETH', amount: Number(t.value) / 1e18, method: t.functionName?.split('(')[0] || (t.methodId && t.methodId !== '0x' ? t.methodId : undefined) });
       }
       for (const t of Array.isArray(tokens.result) ? tokens.result : []) {
-        out.push({ chain, hash: t.hash, timestamp: new Date(Number(t.timeStamp) * 1000).toISOString(), from: toChecksumAddress(t.from), to: toChecksumAddress(t.to), asset: t.tokenSymbol, amount: Number(t.value) / 10 ** Number(t.tokenDecimal), tokenContract: toChecksumAddress(t.contractAddress), method: t.functionName?.split('(')[0] || undefined });
+        out.push({ chain, hash: t.hash, timestamp: new Date(Number(t.timeStamp) * 1000).toISOString(), from: toChecksumAddress(t.from), to: toChecksumAddress(t.to), asset: t.tokenSymbol, amount: Number(t.value) / 10 ** Number(t.tokenDecimal || 18), tokenContract: toChecksumAddress(t.contractAddress), method: t.functionName?.split('(')[0] || undefined });
       }
+      if (!Array.isArray(native.result) && !Array.isArray(tokens.result)) return null;
       return out;
     } catch {
       return null;
     }
   }
   async getCode(_chain: Chain, address: string) {
+    const rpc = this.cfg.chain.ethRpcUrl;
     try {
+      if (rpc) {
+        const r = await this.fetch(rpc, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [address, 'latest'] }) });
+        const code = JSON.parse(r.body).result;
+        return typeof code === 'string' ? code : null;
+      }
       const r = await this.q({ module: 'proxy', action: 'eth_getCode', address, tag: 'latest' });
       return typeof r.result === 'string' ? r.result : null;
+    } catch {
+      return null;
+    }
+  }
+  /** Blockscout v2: nazwa zweryfikowanego kontraktu, publiczne tagi (np. „Binance”, „Exchange”). */
+  async getInfo(_chain: Chain, address: string): Promise<AddressInfo | null> {
+    try {
+      const r = await this.fetch(`${this.cfg.chain.blockscoutUrl}/api/v2/addresses/${address}`, { headers: { accept: 'application/json' }, timeoutMs: 8000 });
+      if (r.status !== 200) return null;
+      const d = JSON.parse(r.body) as { is_contract?: boolean; name?: string | null; public_tags?: { display_name?: string; label?: string }[]; metadata?: { tags?: { name?: string; tagType?: string }[] } | null };
+      const tags = [...(d.public_tags ?? []).map((t) => t.display_name ?? t.label ?? ''), ...(d.metadata?.tags ?? []).map((t) => t.name ?? '')].filter(Boolean);
+      return { isContract: d.is_contract, name: d.name ?? undefined, tags, source: `Blockscout ${new URL(this.cfg.chain.blockscoutUrl).host}` };
     } catch {
       return null;
     }
@@ -111,9 +108,20 @@ export class EsploraProvider implements ChainProvider {
   }
   async getTransfers(chain: Chain, address: string): Promise<Transfer[] | null> {
     try {
+      type EsTx = { txid: string; status: { confirmed?: boolean; block_time?: number }; vin: { prevout?: { scriptpubkey_address?: string; value: number } }[]; vout: { scriptpubkey_address?: string; value: number }[] };
       const r = await this.fetch(`${this.cfg.chain.esploraUrl}/address/${address}/txs`);
       if (r.status !== 200) return null;
-      const txs = JSON.parse(r.body) as { txid: string; status: { block_time?: number }; vin: { prevout?: { scriptpubkey_address?: string; value: number } }[]; vout: { scriptpubkey_address?: string; value: number }[] }[];
+      const txs = JSON.parse(r.body) as EsTx[];
+      // stronicowanie historii potwierdzonych transakcji (po 25), maks. 4 strony
+      for (let page = 0; page < 3 && txs.length >= 25 * (page + 1); page++) {
+        const last = [...txs].reverse().find((t) => t.status.confirmed !== false);
+        if (!last) break;
+        const n = await this.fetch(`${this.cfg.chain.esploraUrl}/address/${address}/txs/chain/${last.txid}`);
+        if (n.status !== 200) break;
+        const more = JSON.parse(n.body) as EsTx[];
+        if (!more.length) break;
+        txs.push(...more);
+      }
       const out: Transfer[] = [];
       for (const tx of txs) {
         const ts = new Date((tx.status.block_time ?? Date.now() / 1000) * 1000).toISOString();
@@ -176,6 +184,9 @@ export class CompositeProvider implements ChainProvider {
   async getCode(chain: Chain, address: string) {
     return (await this.pick(chain)?.getCode(chain, address)) ?? null;
   }
+  async getInfo(chain: Chain, address: string) {
+    return (await this.pick(chain)?.getInfo?.(chain, address)) ?? null;
+  }
   explorerUrl = explorer;
   sourceFor(chain: Chain) {
     return this.pick(chain)?.id ?? 'brak dostawcy';
@@ -183,6 +194,5 @@ export class CompositeProvider implements ChainProvider {
 }
 
 export function createChainProvider(cfg: EngineConfig, fetch: SafeFetch): CompositeProvider {
-  if (cfg.chain.provider === 'fixture') return new CompositeProvider([new FixtureProvider(cfg.chain.fixturesDir)]);
   return new CompositeProvider([new EtherscanProvider(cfg, fetch), new EsploraProvider(cfg, fetch), new TronGridProvider(cfg, fetch)]);
 }

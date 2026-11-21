@@ -5,7 +5,7 @@
 import * as cheerio from 'cheerio';
 import type { EvidenceDocument } from '@olcys/core';
 import type { CollectedDocument } from '../evidence';
-import { isMock, type ConnectorContext, type HistoryConnector } from './types';
+import { type ConnectorContext, type HistoryConnector } from './types';
 
 const tsToIso = (ts: string) => `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)}T${ts.slice(8, 10)}:${ts.slice(10, 12)}:${ts.slice(12, 14)}Z`;
 
@@ -13,7 +13,7 @@ export const waybackConnector: HistoryConnector = {
   id: 'wayback',
   title: 'Archiwum Internetu (Wayback CDX)',
   compliance: 'Publiczne API CDX archive.org; pobierane wyłącznie zarchiwizowane wersje publicznych stron.',
-  isLive: (c) => !isMock(c.urls.wayback, c),
+  isLive: () => true,
   async history(doc: EvidenceDocument, ctx: ConnectorContext): Promise<CollectedDocument[]> {
     const base = ctx.config.urls.wayback;
     const cdx = await ctx.fetch(`${base}/cdx/search/cdx?url=${encodeURIComponent(doc.url)}&output=json&filter=statuscode:200&collapse=digest&limit=-5`);

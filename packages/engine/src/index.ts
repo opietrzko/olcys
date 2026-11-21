@@ -1,6 +1,7 @@
 import { loadConfig, type EngineConfig } from './config';
 import { describeConnectors } from './connectors/registry';
-import { loadLabels, loadRates } from './labels';
+import { loadLabels } from './labels';
+import { FALLBACK_RATES } from './rates';
 import { runAnalysis, type AnalysisInput } from './pipeline';
 
 export * from './config';
@@ -16,7 +17,7 @@ export type { SourceConnector, HistoryConnector, ConnectorContext } from './conn
 /** Fasada silnika: ładuje konfigurację, etykiety i kursy raz, uruchamia analizy. */
 export function createEngine(config: EngineConfig = loadConfig()) {
   const { registry, datasets } = loadLabels(config.labelsDir);
-  const rates = loadRates(config.chain.ratesFile);
+  const rates = FALLBACK_RATES;
   return {
     config,
     labels: registry,

@@ -1,36 +1,41 @@
 /**
- * Konfiguracja silnika (zmienne środowiskowe). Domyślnie tryb DEMO: wszystkie konektory wskazują na
- * syntetyczny mini-internet, dane blockchain pochodzą z fixtures, ruch wychodzący ograniczony do allowlisty.
+ * Konfiguracja silnika (zmienne środowiskowe). Narzędzie działa na realnych publicznych źródłach Internetu:
+ * zapytania API tylko do zatwierdzonych hostów (allowlista), dane blockchain z publicznych API, kursy z NBP i CoinGecko.
  */
 import { join, resolve } from 'node:path';
 
-export type EngineMode = 'demo' | 'live';
-
 export interface EngineConfig {
-  mode: EngineMode;
-  mockWebUrl: string;
+  /** Zatwierdzone hosty API (wysyłamy do nich identyfikatory w zapytaniach). */
   egressAllowlist: string[];
+  /**
+   * Pobieranie publicznych stron odkrytych w dowodach (linki z profili, wyniki wyszukiwania):
+   *  'public'    – dowolny publiczny host (GET bez danych analizy), z blokadą adresów prywatnych/wewnętrznych (SSRF),
+   *  'allowlist' – tylko hosty z allowlisty.
+   */
+  webFetch: 'public' | 'allowlist';
   userAgent: string;
   requestTimeoutMs: number;
   maxDepth: number;
+  /** Maks. liczba wyników wyszukiwarki pobieranych na zapytanie. */
+  searchResults: number;
   urls: {
     githubApi: string;
     githubRaw: string;
     gravatarApi: string;
+    keybaseApi: string;
     wayback: string;
     telegram: string;
-    forum?: string;
-    p2p?: string;
+    searxng?: string;
   };
   chain: {
-    provider: 'fixture' | 'live';
-    fixturesDir: string;
-    ratesFile: string;
-    etherscanUrl: string;
-    etherscanApiKey?: string;
+    /** API zgodne z Etherscan: Etherscan v2 (z kluczem) lub Blockscout (bez klucza, open source, możliwy self-hosting). */
+    evmApiUrl: string;
+    evmApiKey?: string;
+    blockscoutUrl: string;
     esploraUrl: string;
     tronGridUrl: string;
     ethRpcUrl?: string;
+    liveRates: boolean;
   };
   labelsDir: string;
   /** Token GitHub (tylko odczyt danych publicznych) – podnosi limit API z 60 do 5000 zapytań/h. */
@@ -38,41 +43,65 @@ export interface EngineConfig {
   llm?: { baseUrl: string; model: string; apiKey?: string };
 }
 
-export const ENGINE_VERSION = 'olcys-engine/0.1.0';
+export const ENGINE_VERSION = 'olcys-engine/0.3.0';
 export const REPO_ROOT = resolve(import.meta.dirname, '..', '..', '..');
 
+/** Zatwierdzone publiczne źródła trybu LIVE (do których trafiają identyfikatory w zapytaniach API). */
+export const DEFAULT_LIVE_SOURCES = [
+  'api.github.com',
+  'raw.githubusercontent.com',
+  'api.gravatar.com',
+  'keybase.io',
+  'web.archive.org',
+  't.me',
+  'eth.blockscout.com',
+  'ethereum-rpc.publicnode.com',
+  'blockstream.info',
+  'api.trongrid.io',
+  'api.coingecko.com',
+  'api.nbp.pl',
+];
+
 const list = (v?: string) => (v ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+const hostOf = (u?: string) => {
+  try {
+    return u ? new URL(u).host : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
-  const mode: EngineMode = env.OLCYS_MODE === 'live' ? 'live' : 'demo';
-  const mock = (env.MOCK_WEB_URL ?? 'http://localhost:4100').replace(/\/$/, '');
-  const mockHost = new URL(mock).host;
-  const demo = mode === 'demo';
+  const searxng = env.SEARXNG_URL?.replace(/\/$/, '') || undefined;
+  const evmApiKey = env.ETHERSCAN_API_KEY || undefined;
+  const blockscoutUrl = env.BLOCKSCOUT_URL ?? 'https://eth.blockscout.com';
+  const evmApiUrl = env.EVM_API_URL ?? (evmApiKey ? 'https://api.etherscan.io/v2/api' : `${blockscoutUrl}/api`);
+  const ethRpcUrl = env.ETH_RPC_URL || 'https://ethereum-rpc.publicnode.com';
+  const allow = [...DEFAULT_LIVE_SOURCES, ...list(env.EGRESS_ALLOWLIST), hostOf(searxng), hostOf(evmApiUrl), hostOf(ethRpcUrl), hostOf(env.ESPLORA_URL), hostOf(env.LLM_BASE_URL)].filter(Boolean) as string[];
   return {
-    mode,
-    mockWebUrl: mock,
-    egressAllowlist: [...new Set([mockHost, 'localhost', '127.0.0.1', ...list(env.EGRESS_ALLOWLIST)])],
-    userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.1 (+analiza danych publicznych)',
-    requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 10000),
+    egressAllowlist: [...new Set(allow)],
+    webFetch: env.OLCYS_WEB_FETCH === 'allowlist' ? 'allowlist' : 'public',
+    userAgent: env.OLCYS_USER_AGENT ?? 'OLCyS-OSINT/0.3 (+analiza danych publicznych)',
+    requestTimeoutMs: Number(env.OLCYS_TIMEOUT_MS ?? 15000),
     maxDepth: Number(env.OLCYS_MAX_DEPTH ?? 3),
+    searchResults: Number(env.OLCYS_SEARCH_RESULTS ?? 8),
     urls: {
-      githubApi: env.GITHUB_API_URL ?? (demo ? `${mock}/github/api` : 'https://api.github.com'),
-      githubRaw: env.GITHUB_RAW_URL ?? (demo ? `${mock}/github/raw` : 'https://raw.githubusercontent.com'),
-      gravatarApi: env.GRAVATAR_API_URL ?? (demo ? `${mock}/gravatar/v3` : 'https://api.gravatar.com/v3'),
-      wayback: env.WAYBACK_URL ?? (demo ? `${mock}/archive` : 'https://web.archive.org'),
-      telegram: env.TELEGRAM_PREVIEW_URL ?? (demo ? `${mock}/tg` : 'https://t.me'),
-      forum: env.FORUM_URL ?? (demo ? `${mock}/forum` : undefined),
-      p2p: env.P2P_URL ?? (demo ? `${mock}/p2p` : undefined),
+      githubApi: env.GITHUB_API_URL ?? 'https://api.github.com',
+      githubRaw: env.GITHUB_RAW_URL ?? 'https://raw.githubusercontent.com',
+      gravatarApi: env.GRAVATAR_API_URL ?? 'https://api.gravatar.com/v3',
+      keybaseApi: env.KEYBASE_API_URL ?? 'https://keybase.io/_/api/1.0',
+      wayback: env.WAYBACK_URL ?? 'https://web.archive.org',
+      telegram: env.TELEGRAM_PREVIEW_URL ?? 'https://t.me',
+      searxng,
     },
     chain: {
-      provider: env.CHAIN_PROVIDER === 'live' ? 'live' : 'fixture',
-      fixturesDir: env.FIXTURES_DIR ?? join(REPO_ROOT, 'fixtures', 'chain'),
-      ratesFile: env.RATES_FILE ?? join(REPO_ROOT, 'fixtures', 'rates.json'),
-      etherscanUrl: env.ETHERSCAN_URL ?? 'https://api.etherscan.io/v2/api',
-      etherscanApiKey: env.ETHERSCAN_API_KEY,
-      esploraUrl: env.ESPLORA_URL ?? 'https://mempool.space/api',
+      evmApiUrl,
+      evmApiKey,
+      blockscoutUrl,
+      esploraUrl: env.ESPLORA_URL ?? 'https://blockstream.info/api',
       tronGridUrl: env.TRONGRID_URL ?? 'https://api.trongrid.io',
-      ethRpcUrl: env.ETH_RPC_URL,
+      ethRpcUrl,
+      liveRates: env.OLCYS_LIVE_RATES !== 'false',
     },
     labelsDir: env.LABELS_DIR ?? join(REPO_ROOT, 'data', 'labels'),
     githubToken: env.GITHUB_TOKEN || undefined,
@@ -80,12 +109,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
   };
 }
 
-/** Niezależna „rodzina źródeł” dla URL – w trybie demo rozróżniamy serwisy po pierwszym segmencie ścieżki. */
-export function familyOf(url: string, config: EngineConfig): string {
+/** Niezależna „rodzina źródeł” = domena (bez www). */
+export function familyOf(url: string): string {
   try {
-    const u = new URL(url);
-    if (url.startsWith(config.mockWebUrl)) return `mock:${u.pathname.split('/')[1] || 'root'}`;
-    return u.hostname.replace(/^www\./, '');
+    return new URL(url).hostname.replace(/^www\./, '');
   } catch {
     return 'unknown';
   }

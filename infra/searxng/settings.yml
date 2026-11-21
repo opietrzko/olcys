@@ -1,0 +1,16 @@
+# SearXNG – self-hosted wyszukiwarka meta dla OŁCyŚ (zapytania nie trafiają do usług zewnętrznych bez pośrednika).
+use_default_settings: true
+general:
+  instance_name: "OLCyS search"
+server:
+  secret_key: "olcys-change-me-in-production"
+  limiter: false
+  image_proxy: false
+  public_instance: false
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
+ui:
+  default_locale: "pl"

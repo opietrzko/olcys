@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 import type { Identifier } from '@olcys/core';
 import { extractIdentifiers, type CollectedDocument } from '../evidence';
-import { isMock, type ConnectorContext, type SourceConnector } from './types';
+import { type ConnectorContext, type SourceConnector } from './types';
 
 interface GravatarProfile {
   hash: string;
@@ -22,7 +22,7 @@ export const gravatarConnector: SourceConnector = {
   title: 'Gravatar (profil e-mail, portfele krypto)',
   compliance: 'Publiczne API profili Gravatar; e-mail przekazywany wyłącznie jako hash SHA-256.',
   accepts: ['email'],
-  isLive: (c) => !isMock(c.urls.gravatarApi, c),
+  isLive: () => true,
   enabled: () => true,
   async collect(q: Identifier, ctx: ConnectorContext): Promise<CollectedDocument[]> {
     const hash = createHash('sha256').update(q.value.trim().toLowerCase()).digest('hex');

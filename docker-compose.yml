@@ -13,19 +13,11 @@ services:
       interval: 3s
       retries: 20
 
-  mock-web:
-    build: .
-    command: ["npx", "tsx", "apps/mock-web/src/server.ts"]
-    environment: { PORT: "4100" }
-    ports: ["4100:4100"]
-
   api:
     build: .
     environment:
       DATABASE_URL: postgres://olcys:${POSTGRES_PASSWORD:-olcys-dev-only}@db:5432/olcys
-      OLCYS_MODE: ${OLCYS_MODE:-demo}
-      MOCK_WEB_URL: http://mock-web:4100
-      CHAIN_PROVIDER: ${CHAIN_PROVIDER:-fixture}
+      SEARXNG_URL: ${SEARXNG_URL:-http://searxng:8080}
       EGRESS_ALLOWLIST: ${EGRESS_ALLOWLIST:-}
       ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
@@ -35,7 +27,14 @@ services:
     ports: ["4000:4000"]
     depends_on:
       db: { condition: service_healthy }
-      mock-web: { condition: service_started }
+      searxng: { condition: service_started }
+
+  searxng:
+    image: searxng/searxng:latest
+    volumes: ["./infra/searxng/settings.yml:/etc/searxng/settings.yml:ro"]
+    environment: { SEARXNG_BASE_URL: "http://searxng:8080/" }
+    ports: ["8888:8080"]
+    restart: unless-stopped
 
   ollama:
     profiles: ["ai"]

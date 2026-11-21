@@ -248,7 +248,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
         {f.occurrences.map((o) => (
           <div key={o.id} className="occ">
             <div className="occ-head">
-              <span className="pill">{o.family.replace('mock:', '')}</span>
+              <span className="pill">{o.family}</span>
               <span className="pill ghost">{o.context.category}</span>
               <span className={`pill link-${o.identityLink?.strength}`}>{o.identityLink?.strength}</span>
               {o.archivedAt && <span className="pill warn">archiwum {o.archivedAt.slice(0, 10)}</span>}

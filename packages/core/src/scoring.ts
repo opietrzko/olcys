@@ -31,6 +31,7 @@ export const SCORING_RULES = {
   identity: {
     DIRECT: { value: 0, label: 'Autor = identyfikator podany przez analityka' },
     PIVOT: { value: -5, label: 'Autor powiązany pośrednio (identyfikator odkryty w innym źródle)' },
+    MENTION: { value: -20, label: 'Identyfikator podmiotu wymieniony obok adresu – autor treści niepotwierdzony' },
     WEAK: { value: -35, label: 'Powiązanie słabe – zgodność wyłącznie imienia i nazwiska' },
   } satisfies Record<LinkStrength, { value: number; label: string }>,
   ownershipClaim: { value: 5, label: 'Autor deklaruje adres jako własny' },
@@ -128,7 +129,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
   }
 
   // SYNERGIA – niezależne rodziny źródeł (wielokrotność w jednym serwisie się nie liczy)
-  const strong = subjectOccurrences.filter((o) => o.identityLink!.strength !== 'WEAK' && o.context.category !== 'THIRD_PARTY_REFERENCE' && o.context.category !== 'MASS_COMMENT');
+  const strong = subjectOccurrences.filter((o) => (o.identityLink!.strength === 'DIRECT' || o.identityLink!.strength === 'PIVOT') && o.context.category !== 'THIRD_PARTY_REFERENCE' && o.context.category !== 'MASS_COMMENT');
   const families = [...new Set(strong.map((o) => o.family))];
   if (families.length >= SCORING_RULES.synergy.minFamilies) {
     rules.push({

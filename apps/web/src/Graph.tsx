@@ -33,7 +33,7 @@ export function Graph({ result, onSelect }: { result: AnalysisResult; onSelect?:
         const edgeId = `o:${src}:${f.key}:${o.family}`;
         if (seen.has(edgeId) || !els.some((e) => e.data.id === src)) continue;
         seen.add(edgeId);
-        els.push({ data: { id: edgeId, source: src, target: `a:${f.key}`, label: o.family.replace('mock:', ''), gated: f.attribution.gated ? 1 : 0, strength: o.identityLink?.strength } });
+        els.push({ data: { id: edgeId, source: src, target: `a:${f.key}`, label: o.family, gated: f.attribution.gated ? 1 : 0, strength: o.identityLink?.strength } });
       }
     }
     const cy = cytoscape({

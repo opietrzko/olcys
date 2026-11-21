@@ -18,6 +18,8 @@ export interface SourceConnector {
   /** Opis legalności / zgodności z regulaminem źródła – prezentowany w UI i dokumentacji. */
   compliance: string;
   accepts: IdentifierType[];
+  /** Maks. głębokość pivotu identyfikatora, dla której konektor jest wywoływany (np. wyszukiwarka – tylko blisko wejścia). */
+  maxIdentityDepth?: number;
   /** Czy w bieżącej konfiguracji konektor sięga do realnego Internetu. */
   isLive(config: EngineConfig): boolean;
   enabled(config: EngineConfig): boolean;
@@ -33,4 +35,3 @@ export interface HistoryConnector {
   history(doc: EvidenceDocument, ctx: ConnectorContext): Promise<CollectedDocument[]>;
 }
 
-export const isMock = (url: string, config: EngineConfig) => url.startsWith(config.mockWebUrl);

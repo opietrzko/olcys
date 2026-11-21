@@ -57,19 +57,23 @@ async function startRun(a: AnalysisRow, trigger: RunRow['trigger'], actor: strin
 }
 
 /* ---------- Metadane / metodyka ---------- */
-app.get('/api/health', async () => ({ ok: true, store: store.kind, mode: engine.config.mode }));
+app.get('/api/health', async () => ({ ok: true, store: store.kind }));
 app.get('/api/meta', async () => ({
   engineVersion: ENGINE_VERSION,
   rulesVersion: RULES_VERSION,
-  mode: engine.config.mode,
   store: store.kind,
-  chainProvider: engine.config.chain.provider,
-  egressAllowlist: engine.config.egressAllowlist,
+  sources: {
+    chainProvider: `${engine.config.chain.evmApiUrl} · ${engine.config.chain.esploraUrl} · ${engine.config.chain.tronGridUrl}`,
+    egressAllowlist: engine.config.egressAllowlist,
+    webFetch: engine.config.webFetch,
+    connectors: engine.connectors(),
+    githubToken: Boolean(engine.config.githubToken),
+    searxng: engine.config.urls.searxng ?? null,
+    liveRates: engine.config.chain.liveRates,
+  },
   llm: engine.config.llm ? { model: engine.config.llm.model, baseUrl: engine.config.llm.baseUrl } : null,
-  connectors: engine.connectors(),
   labelDatasets: engine.datasets,
   labelsCount: engine.labels.size,
-  rates: engine.rates,
   scoring: { rules: SCORING_RULES, bands: BANDS },
   activityThresholds: ACTIVITY_THRESHOLDS,
 }));
@@ -194,4 +198,4 @@ if (existsSync(webDist)) {
 await store.init();
 setInterval(() => void schedulerTick().catch((e) => app.log.error(e)), Number(process.env.SCHEDULER_TICK_MS ?? 30_000));
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: process.env.HOST ?? '0.0.0.0' });
-app.log.info(`OŁCyŚ API – tryb ${engine.config.mode}, magazyn ${store.kind}`);
+app.log.info(`OŁCyŚ API – magazyn ${store.kind}`);

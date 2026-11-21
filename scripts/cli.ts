@@ -1,6 +1,6 @@
 /**
- * Uruchomienie analizy z linii poleceń (bez API/bazy) – szybki test scenariusza.
- * npm run demo:cli -- nick=krypto_janek email=jan.testowy@example.com [--html raport.html] [--json wynik.json]
+ * Uruchomienie analizy z linii poleceń (bez API/bazy) na realnych źródłach Internetu.
+ * npm run cli -- nick=<login> email=<adres> phone=<numer> [--html raport.html] [--json wynik.json]
  */
 import { writeFileSync } from 'node:fs';
 import { createEngine, renderReportHtml } from '@olcys/engine';
@@ -11,7 +11,10 @@ const ids: Identifier[] = args.filter((a) => a.includes('=') && !a.startsWith('-
   const [type, ...rest] = a.split('=');
   return { type: type as IdentifierType, value: rest.join('=') };
 });
-if (!ids.length) ids.push({ type: 'nick', value: 'krypto_janek' });
+if (!ids.length) {
+  console.error('Podaj co najmniej jeden identyfikator, np.: npm run cli -- nick=login_testowy');
+  process.exit(1);
+}
 const flag = (n: string) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
 
 const engine = createEngine();

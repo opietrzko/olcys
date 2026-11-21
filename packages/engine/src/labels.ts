@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { LabelRegistry, type AddressLabel, type RateTable } from '@olcys/core';
+import { LabelRegistry, type AddressLabel } from '@olcys/core';
 
 export interface LabelDataset {
   name: string;
@@ -19,9 +19,4 @@ export function loadLabels(dir: string): { registry: LabelRegistry; datasets: La
     datasets.push({ name: d.name, description: d.description, license: d.license, count: d.labels.length });
   }
   return { registry, datasets };
-}
-
-export function loadRates(file: string): RateTable {
-  if (!existsSync(file)) return { source: 'brak kursów', asOf: '', usdPln: 4, usd: {} };
-  return JSON.parse(readFileSync(file, 'utf8')) as RateTable;
 }
