@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { AtSign, Check, CircleAlert, Copy, Globe, Hash, Mail, Phone, Send, User, Wallet, type LucideIcon } from 'lucide-react';
 
 export const BAND_LABEL: Record<string, string> = {
@@ -48,7 +48,7 @@ export const LINK_LABEL: Record<string, string> = {
 export function Score({ band, score, label = true, value = true }: { band: string; score: number; label?: boolean; value?: boolean }) {
   const steps = BAND_STEPS[band] ?? 0;
   return (
-    <span className={`score b-${band}`} title={`Wskaźnik Pewności ${score}% – ${BAND_LABEL[band] ?? band}`}>
+    <span className={`score b-${band}`} title={`Wskaźnik Pewności ${score}% - ${BAND_LABEL[band] ?? band}`}>
       {value && <span className="score-val num">{score}%</span>}
       <span className="meter" aria-hidden="true">
         {[1, 2, 3, 4].map((i) => (
@@ -139,11 +139,11 @@ export function Skeleton({ rows = 3, height = 12 }: { rows?: number; height?: nu
   );
 }
 
-/** Faktycznie użyty motyw – potrzebny grafowi (Cytoscape nie czyta zmiennych CSS). */
+/** Faktycznie użyty motyw - potrzebny grafowi (Cytoscape nie czyta zmiennych CSS). */
 export const ThemeCtx = createContext<'light' | 'dark'>('light');
 
 export const short = (a: string, n = 8) => (a.length > n * 2 + 2 ? `${a.slice(0, n + 2)}…${a.slice(-n)}` : a);
-export const dt = (s?: string | null) => (s ? new Date(s).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' }) : '—');
+export const dt = (s?: string | null) => (s ? new Date(s).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' }) : '-');
 export const money = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
 /** Kwota krypto: do 8 miejsc po przecinku dla małych wartości, 4 dla większych (pełna wartość w podpowiedzi). */
 export const amount = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: Math.abs(n) < 1 ? 8 : 4 });
@@ -190,7 +190,7 @@ export function useTheme() {
     mq.addEventListener('change', on);
     return () => mq.removeEventListener('change', on);
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     if (pref === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', pref);
@@ -198,7 +198,7 @@ export function useTheme() {
       if (pref === 'system') localStorage.removeItem('olcys-theme');
       else localStorage.setItem('olcys-theme', pref);
     } catch {
-      /* brak dostępu do magazynu – motyw działa w obrębie sesji */
+      /* brak dostępu do magazynu - motyw działa w obrębie sesji */
     }
   }, [pref]);
   const resolved: 'light' | 'dark' = pref === 'system' ? (sysDark ? 'dark' : 'light') : pref;

@@ -18,11 +18,11 @@ const BAND_VAR: Record<string, [string, string]> = {
 const COL_W = 250;
 const ROW_H = 92;
 const MIN_FIT_ZOOM = 0.7;
-/** Strefa węzła z etykietą pod spodem (px w układzie grafu) – krawędzie omijają ją łukiem. */
+/** Strefa węzła z etykietą pod spodem (px w układzie grafu) - krawędzie omijają ją łukiem. */
 const NODE_CLEAR_UP = 26;
 const NODE_CLEAR_DOWN = 58;
 
-/** Dopasowanie do widoku, ale nie mniej niż 0,7 – przy dużych sprawach etykiety zostają czytelne, a widok zaczyna się od podmiotu. */
+/** Dopasowanie do widoku, ale nie mniej niż 0,7 - przy dużych sprawach etykiety zostają czytelne, a widok zaczyna się od podmiotu. */
 function fitClamped(cy: cytoscape.Core) {
   cy.fit(undefined, 48);
   if (cy.zoom() < MIN_FIT_ZOOM) {
@@ -69,6 +69,8 @@ interface Props {
 export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, hideExcluded }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
+  // widok (przybliżenie i przesunięcie) przeżywa przebudowę grafu dla tego samego wyniku - np. po „Ukryj wykluczone” czy zmianie motywu
+  const viewRef = useRef<{ result: unknown; zoom: number; pan: { x: number; y: number } } | null>(null);
   const theme = useContext(ThemeCtx);
   // wąski kontener (telefon): kolumny stają się wierszami, graf czyta się z góry na dół
   const [narrow, setNarrow] = useState(false);
@@ -134,7 +136,7 @@ export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, 
         els.push({ data: { id: `o:${src}:${f.key}`, source: src, target: id, label: o.family, strength: o.identityLink?.strength, gated: f.attribution.gated ? 1 : 0 } });
       }
       if (!seen.size) {
-        // adres podany na wejściu: krawędź od jego węzła-identyfikatora, a gdy go brak – od podmiotu
+        // adres podany na wejściu: krawędź od jego węzła-identyfikatora, a gdy go brak - od podmiotu
         const inputId = [...idIds].find((k) => k === identityNodeId('address', f.address));
         els.push({ data: { id: `o:in:${f.key}`, source: inputId ?? 'subject', target: id, label: 'wejście', strength: 'DIRECT', gated: f.attribution.gated ? 1 : 0 } });
       }
@@ -186,7 +188,7 @@ export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, 
       { selector: 'edge[gated=1]', style: { 'line-style': 'dashed' } },
       { selector: 'edge[strength="WEAK"]', style: { 'line-style': 'dotted', 'line-color': v('--warn'), 'target-arrow-color': v('--warn') } },
       { selector: 'edge[strength="MENTION"]', style: { 'line-style': 'dashed' } },
-      // źródło (np. „github”) pokazujemy tylko na podświetlonej ścieżce – w spoczynku graf jest czysty
+      // źródło (np. „github”) pokazujemy tylko na podświetlonej ścieżce - w spoczynku graf jest czysty
       { selector: 'edge.path', style: { width: 2.5, 'line-color': v('--accent'), 'target-arrow-color': v('--accent'), color: v('--accent'), 'z-index': 10, label: 'data(label)' } },
       // przygaszenie poza ścieżką: kształty i linie bledną, etykiety węzłów zostają czytelne (WCAG AA)
       { selector: 'node.faded', style: { 'background-opacity': 0.25, 'border-opacity': 0.3, 'text-opacity': 0.9 } },
@@ -212,15 +214,19 @@ export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, 
       e.target.removeClass('hover');
       if (ref.current) ref.current.style.cursor = '';
     });
-    fitClamped(cy);
+    const saved = viewRef.current;
+    if (saved && saved.result === result) {
+      cy.viewport({ zoom: saved.zoom, pan: saved.pan });
+    } else fitClamped(cy);
     cyRef.current = cy;
     return () => {
+      viewRef.current = { result, zoom: cy.zoom(), pan: { ...cy.pan() } };
       cy.destroy();
       cyRef.current = null;
     };
-  }, [elements, theme, onSelect, onSelectNode]);
+  }, [elements, theme, onSelect, onSelectNode, result]);
 
-  // Podświetlenie: dla adresu – ścieżka dowodowa od podmiotu; dla tożsamości – skąd przyszła i dokąd prowadzi
+  // Podświetlenie: dla adresu - ścieżka dowodowa od podmiotu; dla tożsamości - skąd przyszła i dokąd prowadzi
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
