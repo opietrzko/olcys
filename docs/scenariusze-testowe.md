@@ -100,7 +100,7 @@ Wszystko, z czego korzysta narzędzie, jest publiczne:
 
 ## Jeśli macie więcej czasu
 
-- **Szukanie po samym adresie.** Wpiszcie adres krypto `0x396343362be2A4dA1cE0C1C210945346fb82Aa49` (wymaga `GITHUB_TOKEN`). Narzędzie znajdzie plik na GitHubie, w którym go opublikowano, i dojdzie do konta `blazejrzepdev`.
+- **Szukanie po samym adresie** (wymaga `GITHUB_TOKEN`). Wpiszcie adres Kordasa `0xd3e785eFf14Af8454Af1DCe3bA63321123bCE61C`. Narzędzie znajdzie README na GitHubie, w którym go opublikowano, i dojdzie do konta `kordas-dev`. Dla porównania wpiszcie adres Błażeja `0x396343362be2A4dA1cE0C1C210945346fb82Aa49`: występuje w ponad 1800 cudzych plikach (dokumentacja, narzędzia MEV), więc narzędzie traktuje go jako adres szeroko publikowany i nie przypisuje go autorom tych plików.
 - **Zmiana w czasie.** Przy analizie ustawcie harmonogram „Co 5 minut”. Gdy na profilu zmieni się portfel, kolejny przebieg pokaże kartę **„Zmiany względem poprzedniego przebiegu”**. Najłatwiej sprawdzić to na własnym koncie GitHub: wpiszcie swój nick, a potem dopiszcie adres w bio.
 - **Bez Internetu.** Ustawcie w `.env` `OLCYS_REPLAY_DIR=data/recordings/demo` i uruchomcie aplikację ponownie. Analizy z nagrania działają bez sieci, a przebieg jest oznaczony jako tryb offline.
 - **Źródła i zgodność** (menu po lewej). Lista źródeł, podstawa korzystania z każdego z nich i lista zatwierdzonych hostów. Zapytania do innych usług są blokowane i logowane.

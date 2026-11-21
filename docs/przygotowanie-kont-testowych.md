@@ -45,8 +45,8 @@ Wcześniej przy limicie zapytań Blockscout heurystyka instytucjonalna nie wykon
 ## Do zrobienia przed oddaniem
 
 1. **Opcjonalnie: własny portfel Błażeja.** Żeby pokazać scenariusz „prawdziwy portfel osoby = 100%” z aktywnością w blockchainie, załóżcie nowy adres ETH, który kontrolujecie, zróbcie na nim kilka drobnych transakcji (np. wypłata z giełdy i odesłanie części na adres depozytowy), podmieńcie go w README na GitHubie i na Telegramie, a potem w `packages/engine/test/plan-scenarios.test.ts` i w przewodniku dla jury.
-2. **Nagranie offline**, na które powołuje się przewodnik: w `.env` ustaw `OLCYS_RECORD_DIR=data/recordings/demo`, wykonaj trzy analizy z przewodnika (oraz wejście `address=0x3963…`), potem zacommituj katalog `data/recordings/demo`.
-3. **Sprawdź szukanie po adresie** (`address=0x3963…Aa49`), gdy GitHub zaindeksuje README.
+2. **Nagranie offline**, na które powołuje się przewodnik: w `.env` ustaw `OLCYS_RECORD_DIR=data/recordings/demo`, wykonaj trzy analizy z przewodnika (oraz wejście `address=0xd3e7…E61C`), potem zacommituj katalog `data/recordings/demo`.
+3. **Sprawdź szukanie po adresie** (`address=0xd3e7…E61C`, Kordas). 21.11 wieczorem GitHub nie miał jeszcze w indeksie wyszukiwania kodu README ani Kordasa, ani Błażeja (0 wyników), więc ten scenariusz zadziała dopiero po indeksacji. Adres Błażeja się do tego nie nadaje, bo GitHub zwraca dla niego ponad 1800 cudzych plików.
 4. **Anonimizacja na filmie i w prezentacji:** rozmyjcie pełny adres `0x3963…`, nazwę `quasarbuilder.eth` i kwoty z sekcji „Aktywność w blockchainie” (ustalenie z mentorem powyżej).
 5. **Test zmiany w czasie** do filmu: harmonogram co 5 minut, zmiana portfela w README Błażeja, karta „Zmiany względem poprzedniego przebiegu”; potem przywróć README.
 6. Opcjonalnie: link `http://169.254.169.254/latest/meta-data` na stronie Kordasa, żeby pokazać blokadę SSRF na żywo (wpis „ZABLOKOWANO” w ruchu wychodzącym).
