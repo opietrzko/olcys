@@ -4,3 +4,5 @@ record/frames/
 record/check/
 record/explore/
 public/clips/*.mp4
+# rendered films (npm run render)
+out/
