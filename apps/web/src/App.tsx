@@ -570,12 +570,6 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
             <span>Brak GITHUB_TOKEN: GitHub pozwala na 60 zapytań na godzinę z&nbsp;adresu IP. Przy wyczerpaniu limitu pobierane są tylko pliki README i FUNDING.yml.</span>
           </div>
         )}
-        {live && !live.searxng && (
-          <div className="banner">
-            <CircleAlert size={16} aria-hidden="true" />
-            <span>Wyszukiwarka wyłączona. Ustaw SEARXNG_URL, aby przeszukiwać otwarty Internet.</span>
-          </div>
-        )}
         <label className="field">
           <span>Nazwa sprawy</span>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Czynności sprawdzające 2026/123" />
