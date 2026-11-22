@@ -1,4 +1,4 @@
-// Renders the finished videos to ../ (D:\github-ocys\demo). Usage: node render.mjs [Teaser ScenariuszA ScenariuszB]
+// Renderuje gotowe filmy do ../. Użycie: node render.mjs [Teaser ScenariuszA ScenariuszB]
 import { execFileSync } from 'node:child_process';
 
 const OUT = { Teaser: 'kryptotrop-teaser.mp4', ScenariuszA: 'kryptotrop-scenariusz-a.mp4', ScenariuszB: 'kryptotrop-scenariusz-b.mp4' };

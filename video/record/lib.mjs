@@ -1,5 +1,5 @@
 // Recording toolkit: CDP screencast -> JPEG frames -> H.264 clip, plus a fake cursor,
-// eased mouse moves, smooth scrolling, timeline markers and wallet anonymisation.
+// płynne ruchy myszy, przewijanie, znaczniki osi czasu i anonimizacja portfeli.
 import { chromium } from 'playwright';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
@@ -18,7 +18,7 @@ export function encode(name) {
   return out;
 }
 
-// Real public wallet used in scenario B - must not be readable in the video (MF mentor condition).
+// Prawdziwy publiczny portfel ze scenariusza B - nie może być czytelny na filmie (warunek mentora MF).
 const REAL = /0x396343362be2a4da1ce0c1c210945346fb82aa49/gi;
 const MASK = '0x' + '•'.repeat(40);
 const REAL_SHORT = /0x396343(…|\.\.\.?)82aa49/gi; // server-side shortened form
@@ -147,7 +147,7 @@ export async function session(name) {
         await page.waitForTimeout(delay + Math.random() * delay * 0.6);
       }
     },
-    /** Eased window scroll to absolute y (or element top with offset). */
+    /** Płynne przewinięcie okna do y (albo do góry elementu z przesunięciem). */
     async scrollTo(y, ms = 1400) {
       await page.evaluate(([y, ms]) => new Promise((res) => {
         const from = scrollY, to = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
@@ -172,7 +172,7 @@ export async function session(name) {
       await cdp.send('Page.stopScreencast');
       await Promise.all(writes);
       await browser.close();
-      // concat demuxer list: each frame lasts until the next one
+      // lista dla demuxera concat: każda klatka trwa do następnej
       const end = markers.end + 0.4;
       const lines = frames.map((f, i) => `file '${f.file}'\nduration ${((frames[i + 1]?.t ?? end) - f.t).toFixed(4)}`);
       lines.push(`file '${frames.at(-1).file}'`);
@@ -182,7 +182,7 @@ export async function session(name) {
       encode(name);
       return markers;
     },
-    /** Full-resolution still (1920x1080) for theme-comparison wipes. */
+    /** Kadr w pełnej rozdzielczości (1920x1080) do porównania motywów. */
     async still(file) {
       await page.screenshot({ path: join(ROOT, 'public', 'stills', file) });
     },

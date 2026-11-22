@@ -1,7 +1,7 @@
 /**
  * Opcjonalne wsparcie AI (KROK 4): klasyfikacja kontekstu wystąpienia adresu.
- * Uniwersalne API zgodne z OpenAI /v1/chat/completions → działa z Ollama, vLLM, LocalAI, LiteLLM (lokalnie, bez chmury).
- * Wynik AI jest WYŁĄCZNIE podpowiedzią zapisywaną obok – Wskaźnik Pewności liczony jest regułami.
+ * Uniwersalne API zgodne z OpenAI /v1/chat/completions -> działa z Ollama, vLLM, LocalAI, LiteLLM (lokalnie, bez chmury).
+ * Wynik AI jest WYŁĄCZNIE podpowiedzią zapisywaną obok - Wskaźnik Pewności liczony jest regułami.
  */
 import type { ContextCategory } from '@olcys/core';
 import type { EngineConfig } from './config';

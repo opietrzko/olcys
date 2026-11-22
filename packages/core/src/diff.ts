@@ -36,7 +36,7 @@ export function diffRuns(baseId: string, base: AnalysisResult, headId: string, h
 
 /**
  * Dla zasobu (URL) obserwowanego w wielu wersjach (archiwum + stan bieżący) wylicza zmiany
- * opublikowanych adresów – np. podmianę portfela w bio profilu.
+ * opublikowanych adresów - np. podmianę portfela w bio profilu.
  */
 export function detectProfileChanges(docs: EvidenceDocument[], urlKey: (d: EvidenceDocument) => string): ProfileAddressChange[] {
   const byUrl = new Map<string, EvidenceDocument[]>();

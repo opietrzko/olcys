@@ -1,6 +1,6 @@
 /**
- * The team's test-account plan (GitHub + dev.to + Reddit, persona "blazej_rzep_dev99") run end to end,
- * fully offline: every source response is served from a recording (OLCYS_REPLAY_DIR), as in a demo without Wi-Fi.
+ * Plan kont testowych zespołu (GitHub + dev.to + Reddit, persona "blazej_rzep_dev99") od początku do końca,
+ * w pełni offline: każda odpowiedź źródła pochodzi z nagrania (OLCYS_REPLAY_DIR).
  */
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,7 +34,7 @@ const README = `Cześć, jestem Błażej Rzepecki. Tworzę skrypty w Pythonie i 
 
 function recordPersona(dir: string) {
   const rec = recorder(dir);
-  // GitHub: the plan's nickname does not exist (underscore), the hyphen variant does.
+  // GitHub: nick z planu nie istnieje (podkreślenie), istnieje wariant z myślnikiem.
   rec(`https://api.github.com/users/${NICK}`, 404, { message: 'Not Found' });
   rec(`https://api.github.com/users/${GH}`, 200, {
     login: GH,
@@ -54,7 +54,7 @@ function recordPersona(dir: string) {
     user: { username: NICK, name: 'Błażej Rzepecki' },
     body_markdown: `Rozliczenie bezpośrednie w ETH lub USDT na mój portfel: ${MAIN}. Pisać na TG @${NICK}.`,
   });
-  // Reddit: four posts on the user's own profile.
+  // Reddit: cztery posty na profilu użytkownika.
   const post = (id: string, title: string, selftext: string) => ({ kind: 't3', data: { id, author: NICK, title, selftext, permalink: `/user/${NICK}/comments/${id}/`, created_utc: 1795300000 } });
   rec(`https://www.reddit.com/user/${NICK}/submitted.json?limit=50&raw_json=1`, 200, {
     data: {
@@ -67,7 +67,7 @@ function recordPersona(dir: string) {
     },
   });
   rec(`https://www.reddit.com/user/${NICK}/comments.json?limit=50&raw_json=1`, 200, { data: { children: [] } });
-  // Blockchain: the private wallets have no code (externally owned accounts).
+  // Blockchain: prywatne portfele nie mają kodu (konta EOA).
   for (const a of [MAIN, NOISE]) rec(RPC, 200, { jsonrpc: '2.0', id: 1, result: '0x' }, getCode(a));
 }
 
@@ -104,7 +104,7 @@ describe('plan kont testowych (GitHub + dev.to + Reddit), odtworzony offline', (
     expect(ids).toContain('SYNERGY');
     expect(new Set(f.occurrences.map((o) => o.family))).toEqual(new Set(['github', 'dev.to']));
     const dev = f.occurrences.find((o) => o.family === 'dev.to')!;
-    expect(dev.context.category).toBe('SALE_OR_SETTLEMENT'); // 60–79% on its own: 70 + 5 (mój portfel)
+    expect(dev.context.category).toBe('SALE_OR_SETTLEMENT'); // 60-79% on its own: 70 + 5 (mój portfel)
     expect(dev.identityLink?.strength).toBe('DIRECT');
   });
 
@@ -164,7 +164,7 @@ describe('S3: wyszukiwanie po samym adresie (GitHub code search, wymaga tokena)'
     const rec = recorder(dir);
     const docHit = { path: 'docs/tutorial.md', html_url: 'https://github.com/ethereum/docs-site/blob/main/docs/tutorial.md', repository: { name: 'docs-site', full_name: 'ethereum/docs-site', owner: { login: 'ethereum' } } };
     const profileHit = { path: 'README.md', html_url: `https://github.com/${GH}/${GH}/blob/main/README.md`, repository: { name: GH, full_name: `${GH}/${GH}`, owner: { login: GH } } };
-    // The profile README is the last of many hits – it must still be picked first.
+    // README profilu jest ostatnim z wielu trafień, a i tak musi zostać wybrane pierwsze.
     rec(SEARCH, 200, { total_count: 1824, items: [docHit, docHit, docHit, docHit, docHit, profileHit] });
     rec(
       `${RAW}/ethereum/docs-site/HEAD/docs/tutorial.md`,
@@ -180,7 +180,7 @@ describe('S3: wyszukiwanie po samym adresie (GitHub code search, wymaga tokena)'
     expect(ids).not.toContain('nick:features');
     expect(ids.filter((i) => i.startsWith('url:'))).toEqual([]);
     expect(result.trace.some((t) => t.message.includes('1824 plikach'))).toBe(true);
-    // The documentation file stays as context evidence, but it is not the subject's own profile.
+    // Plik dokumentacji zostaje jako dowód kontekstowy, ale nie jest profilem podmiotu.
     const doc = result.evidence.find((e) => e.url.includes('docs-site'))!;
     expect(doc.sourceKind).toBe('UNKNOWN');
   });

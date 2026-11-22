@@ -1,10 +1,10 @@
 /**
  * Pipeline analizy KryptoTrop:
- *  1. Identyfikatory wejściowe → konektory Web2 → dokumenty-dowody (URL, czas, SHA-256, surowa treść)
- *  2. Pivotowanie: identyfikatory odkryte na profilach podmiotu (Telegram, WWW, e-mail…) → kolejne źródła
- *  3. Historia zasobów (archiwum) → wykrywanie podmiany adresów
+ *  1. Identyfikatory wejściowe -> konektory Web2 -> dokumenty-dowody (URL, czas, SHA-256, surowa treść)
+ *  2. Pivotowanie: identyfikatory odkryte na profilach podmiotu (Telegram, WWW, e-mail...) -> kolejne źródła
+ *  3. Historia zasobów (archiwum) -> wykrywanie podmiany adresów
  *  4. Ekstrakcja i walidacja adresów, przypisanie autora do tożsamości podmiotu, ocena kontekstu
- *  5. Klasyfikacja adresów (etykiety, bytecode) → odrzucanie fałszywych trafień
+ *  5. Klasyfikacja adresów (etykiety, bytecode) -> odrzucanie fałszywych trafień
  *  6. Wskaźnik Pewności (reguły) + analiza aktywności blockchain (cash-out)
  *  7. Fakty / obliczenia / wnioski + pełny ślad przebiegu
  */
@@ -69,7 +69,7 @@ export interface EngineDeps {
   history?: HistoryConnector[];
 }
 
-/** Limit bezpieczeństwa liczby identyfikatorów w jednym przebiegu (ochrona przed „rozlaniem” analizy). */
+/** Limit bezpieczeństwa liczby identyfikatorów w jednym przebiegu (ochrona przed "rozlaniem" analizy). */
 const MAX_IDENTITIES = Number(process.env.OLCYS_MAX_IDENTITIES ?? 60);
 
 /** Kolejność przyjmowania tropów z dokumentu przy limicie: identyfikatory osoby przed linkami do stron. */
@@ -83,7 +83,7 @@ export function normalizeIdentifier(i: Identifier): Identifier {
   if (i.type === 'nick' || i.type === 'telegram') v = v.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
   if (i.type === 'email') v = v.toLowerCase();
   if (i.type === 'phone') v = normalizePhone(v) ?? v;
-  // https://host/ i https://host to ten sam zasób – bez tego strona byłaby pobierana i liczona dwa razy
+  // https://host/ i https://host to ten sam zasób - bez tego strona byłaby pobierana i liczona dwa razy
   if (i.type === 'url') v = v.replace(/^(https?:\/\/[^/?#]+)\/$/i, '$1');
   return { type: i.type, value: v };
 }
@@ -96,7 +96,7 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
     const m = identities.find((i) => (i.type === 'nick' || i.type === 'telegram') && i.value.toLowerCase() === handle);
     if (m) candidates.push({ strength: m.strength, identity: `${m.type}:${m.value}`, via: m.via });
   }
-  // Numer telefonu podmiotu w treści (np. kontakt w ogłoszeniu) – wiąże autora z podmiotem także przy innym nicku.
+  // Numer telefonu podmiotu w treści (np. kontakt w ogłoszeniu) - wiąże autora z podmiotem także przy innym nicku.
   const phones = identities.filter((i) => i.type === 'phone');
   if (phones.length) {
     const inText = new Set(extractPhones(seg.text));
@@ -136,7 +136,7 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
 }
 
 const CEX_TAG = /(binance|kraken|coinbase|okx|okex|bybit|kucoin|bitfinex|huobi|htx|gate\.io|bitstamp|gemini|crypto\.com|zonda|bitbay|kanga|exchange|hot wallet|deposit)/;
-/** Bramki krypto-fiat (on/off-ramp), kantory internetowe i wydawcy kart krypto – sprawdzane przed CEX_TAG, bo ich tagi też zawierają „hot wallet”/„deposit”. */
+/** Bramki krypto-fiat (on/off-ramp), kantory internetowe i wydawcy kart krypto - sprawdzane przed CEX_TAG, bo ich tagi też zawierają "hot wallet"/"deposit". */
 const OFFRAMP_TAG = /(moonpay|transak|ramp network|mercuryo|banxa|simplex|wirex|baanx|paybis|changelly|utorg|guardarian|alchemy pay|revolut|ari10|cashify|walutomat)/;
 /** Platformy handlu P2P / escrow. */
 const P2P_TAG = /(paxful|localcryptos|localcoinswap|localbitcoins|noones|hodl ?hodl|bisq|p2p)/;
@@ -159,7 +159,7 @@ export function labelFromInfo(chain: Chain, address: string, info: AddressInfo):
   return undefined;
 }
 
-/** Linia tekstu zawierająca adres – zawężony kontekst do oceny słów kluczowych. */
+/** Linia tekstu zawierająca adres - zawężony kontekst do oceny słów kluczowych. */
 function localContext(text: string, start: number, end: number): string {
   const ls = text.lastIndexOf('\n', start) + 1;
   const le = text.indexOf('\n', end);
@@ -169,7 +169,7 @@ function localContext(text: string, start: number, end: number): string {
 
 export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promise<PipelineOutput> {
   const { config } = deps;
-  const labels = new LabelRegistry(deps.labels.all()); // kopia na przebieg – uzupełniana etykietami z API
+  const labels = new LabelRegistry(deps.labels.all()); // kopia na przebieg - uzupełniana etykietami z API
   const startedAt = new Date().toISOString();
   const trace: TraceStep[] = [];
   const t = (step: string, message: string) => trace.push({ at: new Date().toISOString(), step, message });
@@ -213,7 +213,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     return true;
   };
 
-  // 1–2. Zbieranie i pivotowanie (BFS po identyfikatorach)
+  // 1-2. Zbieranie i pivotowanie (BFS po identyfikatorach)
   const queue = [...identities];
   let capped = false;
   let maxReached = 0;
@@ -245,7 +245,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       for (const d of docs) {
         const { evidence: ev, raw } = toEvidence(d, c.id, { type: id.type, value: id.value });
         if (addDoc(ev, raw, c.id)) added++;
-        // „Macki”: podążamy za tropami z dokumentów należących do podmiotu, aż się wyczerpią (z limitem bezpieczeństwa).
+        // "Macki": podążamy za tropami z dokumentów należących do podmiotu, aż się wyczerpią (z limitem bezpieczeństwa).
         if (id.depth >= maxDepth) continue;
         const links = ev.segments.map((s) => linkFor(s, ev, identities)).filter(Boolean);
         const strong = links.some((l) => l!.strength === 'DIRECT' || l!.strength === 'PIVOT');
@@ -372,7 +372,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
   }
   t('extract', `Wykryto ${groups.size} unikalnych adresów w ${evidence.size} dokumentach (${occN} wystąpień)`);
 
-  // 5–6. Klasyfikacja, scoring, analiza blockchain
+  // 5-6. Klasyfikacja, scoring, analiza blockchain
   const findings: AddressFinding[] = [];
   const inputKeys = new Set(inputAddresses.map((v) => addressKey(v.chain!, v.canonical!)));
   const infoChecked = new Set<string>();
@@ -409,7 +409,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     const subjectOcc = g.occ.filter((o) => o.identityLink);
     const foreignOcc = g.occ.filter((o) => !o.identityLink);
     if (!subjectOcc.length && !inputKeys.has(key)) continue;
-    // KROK 3.2: flaga kontraktu – Ethereum (eth_getCode), TRON (/wallet/getcontract), Solana (konto wykonywalne = program)
+    // KROK 3.2: flaga kontraktu - Ethereum (eth_getCode), TRON (/wallet/getcontract), Solana (konto wykonywalne = program)
     const code = g.chain === 'ETH' || g.chain === 'TRON' || g.chain === 'SOL' ? await chain.getCode(g.chain, g.address) : null;
     let isContract = code === null ? null : !/^0x0*$/.test(code);
     // KROK 3.1: etykiety z API eksploratora (gdy brak w lokalnym rejestrze)
@@ -428,8 +428,8 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
     for (const n of chain.takeNotes(g.chain)) t('chain', `${key}: ${n}`);
     if (!excluded && transfers === null && chain.errorFor(g.chain)) t('chain', `Uwaga: ${key} – brak danych blockchain: ${chain.errorFor(g.chain)}`);
     // Heurystyka adresu instytucjonalnego (adres bez etykiety, ale z aktywnością typową dla giełdy / usługi)
-    // Counters are fetched even when the transfer history failed (e.g. rate limit): the tx count alone is enough
-    // to recognise an exchange or service. Without either, the score gets a penalty instead of a silent 100%.
+    // Liczniki pobieramy nawet, gdy historia transferów zawiodła - sama liczba tx wystarcza do rozpoznania giełdy.
+    // Bez obu danych wynik dostaje karę zamiast cichego 100%.
     let activityChecked = true;
     if (!excluded) {
       const stats = await chain.getStats(g.chain, g.address);
@@ -457,7 +457,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       const neighbours = new Map<string, Transfer[]>();
       const outCps = [...new Set(transfers.filter((x) => (x.network ?? 'ethereum') === 'ethereum' || g.chain !== 'ETH').filter((x) => addressKey(g.chain, x.from) === key).map((x) => x.to))].filter((a) => !labels.get(g.chain, a)).slice(0, 8);
       for (const n of outCps) {
-        // kontrahent: tylko sieć główna i krótka historia (wystarcza do wykrycia „sweep” na giełdę)
+        // kontrahent: tylko sieć główna i krótka historia (wystarcza do wykrycia "sweep" na giełdę)
         const nt = await chain.getTransfers(g.chain, n, { mainOnly: true, maxTx: 15 });
         if (nt) neighbours.set(n, nt);
       }
@@ -466,7 +466,7 @@ export async function runAnalysis(input: AnalysisInput, deps: EngineDeps): Promi
       if (activity.ignoredTokenTransfers) t('chain', `${key}: pominięto ${activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny)`);
       if (transfers.length >= 1000) t('chain', `${key}: pobrano pierwsze ${transfers.length} transferów – historia może być niepełna`);
     }
-    // BTC: klaster adresów współwydawanych (common-input-ownership) – wniosek do weryfikacji, bez wpływu na wynik
+    // BTC: klaster adresów współwydawanych (common-input-ownership) - wniosek do weryfikacji, bez wpływu na wynik
     const utxo = !excluded && transfers ? chain.utxoTxs(g.chain, g.address) : undefined;
     const cluster = utxo ? clusterCommonInputs(g.address, utxo, labels) : undefined;
     if (cluster) t('cluster', `${key}: ${cluster.members.length} adres(ów) współwydawanych w ${cluster.multiInputTxs} transakcjach${cluster.coinjoinSkipped.length ? `, pominięto ${cluster.coinjoinSkipped.length} tx o cechach CoinJoin` : ''}${cluster.labeledMembers ? `, ${cluster.labeledMembers} z etykietą instytucji` : ''}`);

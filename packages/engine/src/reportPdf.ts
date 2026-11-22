@@ -1,6 +1,6 @@
 /// <reference path="./pdfmake.d.ts" />
 /**
- * Raport OSINT jako dokument PDF generowany na serwerze (pdfmake, czysty JavaScript – bez przeglądarki, działa on-prem).
+ * Raport OSINT jako dokument PDF generowany na serwerze (pdfmake, czysty JavaScript - bez przeglądarki, działa on-prem).
  * Treść i kolejność sekcji jak w raporcie HTML; kolory z systemu wizualnego aplikacji:
  * pewność w rampie jednego odcienia zawsze z etykietą słowną, czerwień tylko dla cash-out, bursztyn dla wniosków do weryfikacji.
  */
@@ -60,9 +60,9 @@ const KIND: Record<StatementKind, { label: string; color: string; fill: string; 
 /* ---------- pomocnicze ---------- */
 type Node = Record<string, unknown> | string;
 const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
-const dt = (s?: string | null) => (s ? s.slice(0, 19).replace('T', ' ') : '—');
+const dt = (s?: string | null) => (s ? s.slice(0, 19).replace('T', ' ') : '-');
 const num = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
-/** Długie ciągi bez spacji (URL, hash, JSON) muszą móc się łamać – wstawiamy miejsca podziału o zerowej szerokości. */
+/** Długie ciągi bez spacji (URL, hash, JSON) muszą móc się łamać - wstawiamy miejsca podziału o zerowej szerokości. */
 const breakable = (s: string) => s.replace(/([/?&=,:.-])/g, '$1\u200b').replace(/([^\s\u200b]{18})(?=[^\s\u200b])/g, '$1\u200b');
 const ascii = (s: string) => /^[\x20-\x7e]*$/.test(s);
 /** Tekst o stałej szerokości: Courier dla ASCII (czcionka standardowa nie ma polskich znaków), inaczej Roboto. */
@@ -116,7 +116,7 @@ function statement(kind: StatementKind, text: string, refs: string[] = []): Node
   };
 }
 
-/** Roboto nie ma strzałek ani znaczka ✓ – zamieniamy je na znaki, które czcionka zawiera (inaczej w PDF byłyby puste prostokąty). */
+/** Roboto nie ma strzałek ani znaczka ✓ - zamieniamy je na znaki, które czcionka zawiera (inaczej w PDF byłyby puste prostokąty). */
 const GLYPH_FIX: [RegExp, string][] = [
   [/[→⟶⇒➔⬆⬇↑↓]/g, '›'],
   [/[←⟵⇐]/g, '‹'],
@@ -177,7 +177,7 @@ export async function renderReportPdf(r: AnalysisResult, meta: { runId: string; 
       layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 9, paddingRight: () => 9, paddingTop: () => 7, paddingBottom: () => 7 },
       margin: [0, 0, 0, 10],
     },
-    // pasek liczb – szybki obraz wyniku przed szczegółami
+    // pasek liczb - szybki obraz wyniku przed szczegółami
     {
       table: {
         widths: ['*', '*', '*', '*'],
@@ -218,7 +218,7 @@ export async function renderReportPdf(r: AnalysisResult, meta: { runId: string; 
             str(f.classification.category),
             bandPill(f.attribution.band, f.attribution.score),
             [...new Set(f.occurrences.map((o) => o.family))].join(', '),
-            indicatorsOf(f).length ? { stack: indicatorsOf(f).map((i) => ({ text: i.title, color: C.danger })) } : muted('—'),
+            indicatorsOf(f).length ? { stack: indicatorsOf(f).map((i) => ({ text: i.title, color: C.danger })) } : muted('-'),
           ]),
           ['*', 32, 58, 'auto', 62, 80],
         )
@@ -228,7 +228,7 @@ export async function renderReportPdf(r: AnalysisResult, meta: { runId: string; 
         { text: `Odrzucone / niepowiązane (${rejected.length}): `, bold: true },
         ...(rejected.length
           ? rejected.flatMap((f, i) => [i ? '; ' : '', { text: f.address, font: 'Courier', fontSize: 7.5 }, ` – ${str(f.classification.entity ?? f.attribution.rules[0]?.label)}`])
-          : ['—']),
+          : ['-']),
       ],
       margin: [0, 0, 0, 4],
     },
@@ -339,8 +339,8 @@ export async function renderReportPdf(r: AnalysisResult, meta: { runId: string; 
                 dt(x.timestamp),
                 x.direction === 'IN' ? 'wpływ' : { text: 'wypływ' },
                 { text: [`${x.amount} ${str(x.asset)}`, x.network ? { text: ` (${x.network})`, color: C.text3 } : ''] },
-                { text: x.usd === null ? '—' : `${num(x.usd)}${x.priceBasis === 'current' ? '*' : ''}`, alignment: 'right' },
-                { text: x.pln === null || x.pln === undefined ? '—' : num(x.pln), alignment: 'right' },
+                { text: x.usd === null ? '-' : `${num(x.usd)}${x.priceBasis === 'current' ? '*' : ''}`, alignment: 'right' },
+                { text: x.pln === null || x.pln === undefined ? '-' : num(x.pln), alignment: 'right' },
                 x.nbp ? `${x.nbp.mid} z ${x.nbp.date} (${x.nbp.no})` : muted('kurs bieżący'),
                 mono(x.counterpartyLabel ?? x.counterparty),
                 mono(`${x.hash.slice(0, 14)}…`.replace('…', '...')),

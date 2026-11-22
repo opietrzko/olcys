@@ -1,5 +1,5 @@
 /**
- * Archiwum Internetu (Wayback Machine CDX API) – historyczne wersje profili/stron.
+ * Archiwum Internetu (Wayback Machine CDX API) - historyczne wersje profili/stron.
  * Umożliwia wykrycie podmiany adresu portfela publikowanego w różnych okresach (kryterium opcjonalne).
  */
 import * as cheerio from 'cheerio';

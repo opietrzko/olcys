@@ -1,20 +1,20 @@
 /**
  * Aktualizacja zbiorów etykiet w data/labels/ z otwartych, publicznych źródeł.
  *
- *  1. OFAC SDN (U.S. Treasury, domena publiczna) – adresy kryptowalut osób i podmiotów objętych sankcjami
- *     (pola „Digital Currency Address - …” w sdn.xml) → data/labels/ofac-sdn.json, kategoria SANCTIONED.
- *  2. Polskie giełdy i kantory krypto – publiczne tagi adresów w eksploratorze Blockscout (Open Labels Initiative
- *     i etykiety eksploratora) → data/labels/pl-vasp-blockscout.json, kategoria CEX.
- *  3. Bramki krypto-fiat (on/off-ramp) i wydawcy kart krypto – te same publiczne tagi Blockscout
- *     → data/labels/offramp-blockscout.json, kategoria OFFRAMP.
+ *  1. OFAC SDN (U.S. Treasury, domena publiczna) - adresy kryptowalut osób i podmiotów objętych sankcjami
+ *     (pola "Digital Currency Address - ..." w sdn.xml) -> data/labels/ofac-sdn.json, kategoria SANCTIONED.
+ *  2. Polskie giełdy i kantory krypto - publiczne tagi adresów w eksploratorze Blockscout (Open Labels Initiative
+ *     i etykiety eksploratora) -> data/labels/pl-vasp-blockscout.json, kategoria CEX.
+ *  3. Bramki krypto-fiat (on/off-ramp) i wydawcy kart krypto - te same publiczne tagi Blockscout
+ *     -> data/labels/offramp-blockscout.json, kategoria OFFRAMP.
  *
  * Każdy adres przechodzi walidację sumy kontrolnej (@olcys/core). Adresy sieci, których KryptoTrop nie obsługuje
  * (np. XMR, ZEC, BCH), są pomijane i liczone w opisie zbioru.
  *
- *   npm run labels:update            – wszystkie zbiory
- *   npm run labels:update -- ofac    – tylko OFAC
- *   npm run labels:update -- pl      – tylko polskie giełdy
- *   npm run labels:update -- offramp – tylko bramki krypto-fiat i karty
+ *   npm run labels:update            - wszystkie zbiory
+ *   npm run labels:update -- ofac    - tylko OFAC
+ *   npm run labels:update -- pl      - tylko polskie giełdy
+ *   npm run labels:update -- offramp - tylko bramki krypto-fiat i karty
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -42,7 +42,7 @@ interface Dataset {
 }
 
 async function updateOfac() {
-  // OFAC_SDN_FILE – wcześniej pobrany sdn.xml (serwer OFAC bywa wolny: ~30 MB)
+  // OFAC_SDN_FILE - wcześniej pobrany sdn.xml (serwer OFAC bywa wolny: ~30 MB)
   let xml: string;
   if (process.env.OFAC_SDN_FILE) xml = readFileSync(process.env.OFAC_SDN_FILE, 'utf8');
   else {
@@ -73,7 +73,7 @@ interface BsItem {
   metadata?: { name?: string; tagType?: string; slug?: string } | null;
 }
 
-/** Publiczne tagi Blockscout dla listy podmiotów → zbiór etykiet jednej kategorii. */
+/** Publiczne tagi Blockscout dla listy podmiotów -> zbiór etykiet jednej kategorii. */
 async function tagsFromBlockscout(names: string[], category: AddressLabel['category'], note: string): Promise<AddressLabel[]> {
   const labels = new Map<string, AddressLabel>();
   for (const q of names) {
@@ -98,7 +98,7 @@ async function tagsFromBlockscout(names: string[], category: AddressLabel['categ
       n++;
     }
     console.log(`Blockscout „${q}”: ${n} tag(ów)`);
-    await new Promise((res) => setTimeout(res, 1000)); // publiczne API – bez zalewania zapytaniami
+    await new Promise((res) => setTimeout(res, 1000)); // publiczne API - bez zalewania zapytaniami
   }
   return [...labels.values()].sort((a, b) => a.entity.localeCompare(b.entity));
 }

@@ -31,7 +31,7 @@ const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] 
 const LINES = 10;
 const PARTICLES = 14;
 
-/** Only the flowing lines by default; `dots` adds the points travelling along them. */
+/** Domyślnie same linie; `dots` dodaje punkty płynące po nich. */
 export function Wave({ energy = 0, dots = false }: { energy?: number; dots?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const theme = useContext(ThemeCtx);
@@ -54,7 +54,7 @@ export function Wave({ energy = 0, dots = false }: { energy?: number; dots?: boo
     let visible = true;
     let last = performance.now();
     let t = 0;
-    let amp = reduced.matches || risen.current ? 1 : 0; // fala „wstaje” z płaskiej linii tylko przy pierwszym wejściu
+    let amp = reduced.matches || risen.current ? 1 : 0; // fala "wstaje" z płaskiej linii tylko przy pierwszym wejściu
     risen.current = true;
     let en = energyRef.current;
     const pointer = { x: -1, k: 0, target: 0 };

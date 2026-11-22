@@ -5,7 +5,7 @@ import { C, FONT, FRAME, FPS, H, MONO, W } from './theme';
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 const easeIO = Easing.bezier(0.65, 0, 0.35, 1);
 
-/* ---------------- backdrop: deterministic signal wave (echo of the app's header wave) ---------------- */
+/** tło: deterministyczna fala sygnału (jak fala w nagłówku aplikacji) */
 export const WaveBg: React.FC<{ intensity?: number; light?: boolean }> = ({ intensity = 1, light = false }) => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
@@ -36,7 +36,7 @@ export const WaveBg: React.FC<{ intensity?: number; light?: boolean }> = ({ inte
           <path key={i} d={d} fill="none" stroke="url(#wl)" strokeWidth={1.2 + (i % 3 === 0 ? 1 : 0)} opacity={0.18 + 0.5 * Math.sin(k * Math.PI)} />
         ))}
       </svg>
-      {/* fine grid of dots */}
+      {/* drobna siatka kropek */}
       <AbsoluteFill style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px', opacity: light ? 0.0 : 1 }} />
     </AbsoluteFill>
   );
@@ -88,8 +88,8 @@ export const Caption: React.FC<Cap & { durationInFrames: number }> = ({ step, ti
   );
 };
 
-/* ---------------- app footage in a frame, with zoom keyframes and speed badge ---------------- */
-export type Zoom = { at: number; s: number; x: number; y: number }; // at: seconds into shot, focus x/y in 0..1
+/** nagranie aplikacji w ramce, z klatkami kluczowymi zoomu i plakietką prędkości */
+export type Zoom = { at: number; s: number; x: number; y: number }; // at: sekunda ujęcia, fokus x/y w zakresie 0..1
 
 const zoomAt = (zs: Zoom[] | undefined, t: number) => {
   if (!zs?.length) return { s: 1, x: 0.5, y: 0.5 };
@@ -104,7 +104,7 @@ export const Screen: React.FC<{ children: React.ReactNode; zoom?: Zoom[]; badge?
   const z = zoomAt(zoom, t);
   const fw = W * FRAME.scale;
   const fh = H * FRAME.scale;
-  // translate so the focus point moves towards the centre as we zoom in, without exposing edges
+  // przesunięcie, żeby punkt fokusu zbliżał się do środka przy zoomie, bez odsłaniania krawędzi
   const tx = Math.max(-(z.s - 1) / 2, Math.min((z.s - 1) / 2, (0.5 - z.x) * (z.s - 1))) * fw;
   const ty = Math.max(-(z.s - 1) / 2, Math.min((z.s - 1) / 2, (0.5 - z.y) * (z.s - 1))) * fh;
   return (
@@ -138,7 +138,7 @@ export const Footage: React.FC<{ clip: string; from: number; rate?: number }> = 
   <OffthreadVideo src={staticFile(`clips/${clip}.mp4`)} startFrom={Math.round(from * FPS)} playbackRate={rate} muted style={{ width: W, height: H }} />
 );
 
-/* ---------------- theme comparison: circular reveal light -> dark, from the toggle ---------------- */
+/** porównanie motywów: okrągłe odsłonięcie jasny -> ciemny od przełącznika */
 export const ThemeReveal: React.FC<{ light: string; dark: string; ox: number; oy: number; back?: boolean }> = ({ light, dark, ox, oy, back = true }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();

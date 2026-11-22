@@ -168,7 +168,7 @@ export function Highlight({ text, needle }: { text: string; needle: string }) {
   );
 }
 
-/* ---------- Motyw (system / jasny / ciemny) ---------- */
+// Motyw (system / jasny / ciemny)
 export type ThemePref = 'system' | 'light' | 'dark';
 
 function readPref(): ThemePref {

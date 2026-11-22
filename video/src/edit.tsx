@@ -83,7 +83,7 @@ const presentation = (t: Tr): TransitionPresentation<any> => {
   }
 };
 
-/** total length in frames, accounting for transition overlaps */
+/** całkowita długość w klatkach, z uwzględnieniem nakładania przejść */
 export const editLength = (e: Edit) =>
   e.reduce((n, x) => (typeof x === 'string' ? n - (x === 'cut' ? 0 : TR_FRAMES) : n + frames(x)), 0);
 

@@ -1,6 +1,6 @@
 import type { Edit } from './edit';
 
-// Zoom focus points are in 0..1 of the 1920x1080 app screen.
+// Punkty fokusu zoomu w zakresie 0..1 ekranu aplikacji 1920x1080.
 const OUTRO_LINES = ['HackNation 2026 · zadanie MF / KAS „OŁCyŚ”', 'github.com/opietrzko/olcys'];
 
 /* ============================== TEASER (~70 s) ============================== */

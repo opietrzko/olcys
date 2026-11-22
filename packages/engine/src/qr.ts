@@ -1,5 +1,5 @@
 /**
- * Kody QR w obrazach – adresy portfeli publikowane jako grafika (np. „wesprzyj mnie: [QR]”) są niewidoczne dla
+ * Kody QR w obrazach - adresy portfeli publikowane jako grafika (np. "wesprzyj mnie: [QR]") są niewidoczne dla
  * ekstrakcji z tekstu. Obrazy z dokumentów podmiotu (strona WWW, README, posty) są pobierane, dekodowane (PNG/JPEG,
  * czysty JavaScript: pngjs, jpeg-js, jsQR) i zapisywane jako osobny dowód: URL obrazu, SHA-256 kopii, odczytana treść.
  */
@@ -49,13 +49,13 @@ export function pickQrCandidates(images: { src: string; alt?: string }[], base: 
     if (out.some((o) => o.url === u.href)) continue;
     out.push({ url: u.href, hint: HINT.test(`${u.pathname} ${im.alt ?? ''}`) });
   }
-  // obrazy bez podpowiedzi (zdjęcia, ilustracje) – najwyżej 2, żeby nie wydłużać analizy
+  // obrazy bez podpowiedzi (zdjęcia, ilustracje) - najwyżej 2, żeby nie wydłużać analizy
   const hinted = out.filter((o) => o.hint);
   const plain = out.filter((o) => !o.hint).slice(0, 2);
   return [...hinted, ...plain].slice(0, max).map((o) => o.url);
 }
 
-/** Obrazy z Markdown (`![alt](url)`) i HTML (`<img src>`) – np. README. */
+/** Obrazy z Markdown (`![alt](url)`) i HTML (`<img src>`) - np. README. */
 export function imagesInMarkdown(md: string): { src: string; alt?: string }[] {
   const out: { src: string; alt?: string }[] = [];
   for (const m of md.matchAll(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) out.push({ src: m[2], alt: m[1] });
@@ -89,7 +89,7 @@ export async function collectQrEvidence(
         segments: [{ id: 'qr', author: parent.owner, text: `Kod QR (obraz ${url}) opublikowany na ${parent.url}: ${text}`, anchor: parent.url }],
         links: [],
         // kod QR ma tego samego autora co dokument, w którym go opublikowano
-        // kopia obrazu zapisana w base64 (SHA-256 dowodu liczony z tego zapisu); imageSha256 – skrót samych bajtów obrazu
+        // kopia obrazu zapisana w base64 (SHA-256 dowodu liczony z tego zapisu); imageSha256 - skrót samych bajtów obrazu
         meta: { ...(parent.meta ?? {}), qrFrom: parent.url, qrText: text, encoding: 'base64', imageSha256: createHash('sha256').update(bytes).digest('hex') },
         raw: r.body,
       });

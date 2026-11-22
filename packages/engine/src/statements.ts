@@ -1,8 +1,8 @@
 /**
  * Rozdzielenie treści raportu na:
- *  FACT        – co zostało znalezione w źródle (cytat, URL, czas pobrania),
- *  COMPUTATION – co policzył algorytm (Wskaźnik Pewności, wolumeny, wskaźniki obliczeniowe),
- *  CONCLUSION  – interpretacje heurystyczne wymagające weryfikacji przez analityka.
+ *  FACT        - co zostało znalezione w źródle (cytat, URL, czas pobrania),
+ *  COMPUTATION - co policzył algorytm (Wskaźnik Pewności, wolumeny, wskaźniki obliczeniowe),
+ *  CONCLUSION  - interpretacje heurystyczne wymagające weryfikacji przez analityka.
  */
 import type { AddressFinding, EvidenceDocument, ProfileAddressChange, Statement, SubjectIdentity } from '@olcys/core';
 import { BANDS } from '@olcys/core';
@@ -79,7 +79,7 @@ export function buildStatements(findings: AddressFinding[], identities: SubjectI
   }
 
   for (const c of changes) {
-    out.push({ kind: 'FACT', text: `Zasób ${c.url}: wersja z ${c.from?.slice(0, 10)} → wersja z ${c.to.slice(0, 10)}; usunięto: ${c.removed.join(', ') || '—'}; dodano: ${c.added.join(', ') || '—'}.`, evidenceIds: c.evidenceIds });
+    out.push({ kind: 'FACT', text: `Zasób ${c.url}: wersja z ${c.from?.slice(0, 10)} → wersja z ${c.to.slice(0, 10)}; usunięto: ${c.removed.join(', ') || '-'}; dodano: ${c.added.join(', ') || '-'}.`, evidenceIds: c.evidenceIds });
     if (c.removed.length && c.added.length) {
       out.push({ kind: 'CONCLUSION', text: `Na zasobie ${c.url} nastąpiła podmiana adresu portfela – oba adresy należy traktować jako potencjalnie powiązane z podmiotem w różnych okresach.`, evidenceIds: c.evidenceIds });
     }

@@ -2,7 +2,7 @@
 import { APP, session } from './lib.mjs';
 
 async function waitDone(page) {
-  // run view is ready once the result tabs render
+  // widok przebiegu jest gotowy, gdy pojawią się zakładki wyników
   await page.getByRole('tab', { name: /Adresy/ }).waitFor({ timeout: 240_000 });
   await page.waitForTimeout(1500);
 }
@@ -72,7 +72,7 @@ const scenes = {
   },
 
   async scenA() {
-    const reuse = process.env.REUSE_A; // record only the results part from an existing run
+    const reuse = process.env.REUSE_A; // nagrywamy tylko część z wynikami istniejącego przebiegu
     const s = await session(reuse ? 'scenA_res' : 'scenA');
     const { page } = s;
     await page.goto(APP + (reuse ? `#/a/${reuse}` : '#/analizy'));
@@ -104,7 +104,7 @@ const scenes = {
     await s.wait(300);
     await s.click(page.getByRole('button', { name: 'Oddal' }), { ms: 200 });
     await s.wait(2000);
-    // pick the Telegram node found via the website pivot
+    // węzeł Telegram znaleziony przez pivot ze strony WWW
     const picker = page.locator('select').filter({ has: page.locator('option', { hasText: 'Wybierz węzeł' }) }).first();
     await s.hover(picker, 800);
     await s.wait(300);
@@ -148,7 +148,7 @@ const scenes = {
   },
 
   async scenB() {
-    const reuse = process.env.REUSE_B; // record only the results part from an existing run
+    const reuse = process.env.REUSE_B; // nagrywamy tylko część z wynikami istniejącego przebiegu
     const s = await session(reuse ? 'scenB_res' : 'scenB');
     const { page } = s;
     await page.goto(APP + (reuse ? `#/a/${reuse}` : '#/analizy'));
@@ -213,7 +213,7 @@ const scenes = {
     await s.stop();
   },
 
-  /** identical views in light and dark for the circular theme reveal */
+  /** te same widoki w jasnym i ciemnym motywie do okrągłego przejścia motywu */
   async stills() {
     const s = await session('stills');
     const { page } = s;

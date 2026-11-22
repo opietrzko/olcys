@@ -7,3 +7,4 @@ coverage/
 data/prices/
 data/keys/
 data/users*.json
+.claude/

@@ -1,7 +1,7 @@
 /**
  * Numery telefonów jako identyfikator (np. ten sam numer w ogłoszeniu P2P i na stronie WWW).
  * Normalizacja do postaci E.164 (domyślnie +48 dla 9-cyfrowych numerów krajowych).
- * Ekstrakcja wymaga słowa kluczowego przed numerem – ogranicza fałszywe trafienia (kwoty, identyfikatory).
+ * Ekstrakcja wymaga słowa kluczowego przed numerem - ogranicza fałszywe trafienia (kwoty, identyfikatory).
  */
 const PHONE_RE = /(?:\btel\.?|\btelefon\w*|\bphone|\bkom\.?|\bkomórk\w*|\bwhatsapp|\bsignal|\bsms|\bdzwoń|\bzadzwoń)[:\s]*((?:\+|00)?\d[\d \-()]{7,16}\d)/gi;
 

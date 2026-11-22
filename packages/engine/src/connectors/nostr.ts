@@ -1,5 +1,5 @@
 /**
- * Nostr – profil (metadane kind 0) i ostatnie notatki konta wskazanego identyfikatorem NIP-05 (`nazwa@domena`).
+ * Nostr - profil (metadane kind 0) i ostatnie notatki konta wskazanego identyfikatorem NIP-05 (`nazwa@domena`).
  * NIP-05 to potwierdzenie właściciela domeny (plik /.well-known/nostr.json), więc konto jest powiązane z domeną e-maila.
  * Dane z publicznej bramki HTTP njump.me (otwarte oprogramowanie, odczyt z przekaźników Nostr), bez logowania.
  * Do bramki trafia wyłącznie identyfikator NIP-05; domeny skrzynek pocztowych ogólnego przeznaczenia są pomijane,
@@ -12,7 +12,7 @@ import type { ConnectorContext, SourceConnector } from './types';
 
 const MAX_NOTES = 40;
 
-/** Domeny poczty ogólnodostępnej – nie obsługują NIP-05 (zapytanie byłoby zbędnym ujawnieniem identyfikatora). */
+/** Domeny poczty ogólnodostępnej - nie obsługują NIP-05 (zapytanie byłoby zbędnym ujawnieniem identyfikatora). */
 const MAILBOX_DOMAINS = new Set(
   'gmail.com googlemail.com outlook.com hotmail.com live.com msn.com yahoo.com icloud.com me.com aol.com proton.me protonmail.com gmx.com gmx.net mail.com yandex.ru yandex.com zoho.com wp.pl o2.pl onet.pl op.pl interia.pl interia.eu poczta.fm tlen.pl gazeta.pl vp.pl buziaczek.pl autograf.pl'.split(' '),
 );
@@ -28,7 +28,7 @@ export interface NostrPage {
   notes: { id: string; text: string; date?: string }[];
 }
 
-/** Profil i notatki ze strony njump.me (blok „Event JSON” z metadanymi i mikrodane schema.org notatek). */
+/** Profil i notatki ze strony njump.me (blok "Event JSON" z metadanymi i mikrodane schema.org notatek). */
 /** Cloudflare zastępuje adresy e-mail w HTML zakodowanym atrybutem data-cfemail (XOR z pierwszym bajtem). */
 export function decodeCfEmail(hex: string): string {
   const bytes = hex.match(/../g)?.map((b) => parseInt(b, 16)) ?? [];

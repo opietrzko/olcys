@@ -26,7 +26,7 @@ export interface AddressFinding {
   /** Wystąpienia tego samego adresu u obcych autorów (kontekst dla reguły reuse). */
   foreignOccurrences: Occurrence[];
   activity?: ChainActivity;
-  /** BTC: adresy współwydawane z badanym adresem (heurystyka wspólnego wejścia) – wniosek do weryfikacji. */
+  /** BTC: adresy współwydawane z badanym adresem (heurystyka wspólnego wejścia) - wniosek do weryfikacji. */
   cluster?: AddressCluster;
   explorerUrl?: string;
 }

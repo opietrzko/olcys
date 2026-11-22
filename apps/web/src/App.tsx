@@ -42,7 +42,7 @@ function useHash() {
   return hash;
 }
 
-/** Praca analityka – w głównej nawigacji tylko sprawy. */
+/** Praca analityka - w głównej nawigacji tylko sprawy. */
 const NAV = [{ href: '#/analizy', key: 'analizy', label: 'Analizy', icon: FolderSearch }];
 
 /** Treści dla administratora / IT i jury - poza codzienną ścieżką analityka. Metodyka jest linkowana przy wyniku adresu. */
@@ -166,7 +166,7 @@ function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void
     const titles: Record<string, string> = { analizy: 'Analizy', metodyka: 'Metodyka', zrodla: 'Źródła i zgodność', audyt: 'Audyt' };
     document.title = section === 'start' ? 'KryptoTrop – od śladów w sieci do portfeli krypto' : `${titles[section] ?? 'KryptoTrop'} · KryptoTrop`;
   }, [section]);
-  // Moving between the landing page and the panel starts at the top, not at the previous scroll position.
+  // Przejście między stroną startową a panelem zaczyna się od góry strony.
   useEffect(() => {
     scrollTo(0, 0);
   }, [section]);
@@ -180,7 +180,7 @@ function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void
       ))}
     </div>
   );
-  // The landing page lives outside the analyst shell; its calls to action lead to #/analizy.
+  // Strona startowa jest poza powłoką panelu; jej przyciski prowadzą do #/analizy.
   if (section === 'start')
     return (
       <ThemeCtx.Provider value={resolved}>
@@ -193,7 +193,7 @@ function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void
         className="skip"
         href="#main"
         onClick={(e) => {
-          // The app routes on location.hash, so '#main' must not replace the current route.
+          // Routing działa na location.hash, więc '#main' nie może podmienić bieżącej trasy.
           e.preventDefault();
           document.getElementById('main')?.focus();
         }}
@@ -265,7 +265,7 @@ function Shell({ user, onLogout }: { user: AuthUser | null; onLogout: () => void
   );
 }
 
-/* ---------- Lista + nowa analiza ---------- */
+// Lista + nowa analiza
 
 const TYPES: { v: IdentifierType; l: string; ph: string }[] = [
   { v: 'nick', l: 'Nick / login', ph: 'np. login z forum lub GitHub' },
@@ -660,7 +660,7 @@ function NewAnalysis({ meta }: { meta: Meta | null }) {
   );
 }
 
-/* ---------- Analiza ---------- */
+// Analiza
 
 function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
   const [data, setData] = useState<{ analysis: Analysis; runs: Run[] } | null>(null);
@@ -807,7 +807,7 @@ function AnalysisPage({ id, runId }: { id: string; runId?: string }) {
   );
 }
 
-/* ---------- Metodyka ---------- */
+// Metodyka
 
 function Methodology({ meta }: { meta: Meta }) {
   const rules = meta.scoring.rules as Record<string, { value: number; label: string }> & Meta['scoring']['rules'];

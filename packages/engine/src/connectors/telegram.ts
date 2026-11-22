@@ -1,5 +1,5 @@
 /**
- * Publiczny podgląd kanału Telegram (t.me/s/<kanał>) – dostępny bez logowania i bez API.
+ * Publiczny podgląd kanału Telegram (t.me/s/<kanał>) - dostępny bez logowania i bez API.
  * Selektory zgodne ze znacznikami strony podglądu t.me/s/.
  */
 import * as cheerio from 'cheerio';

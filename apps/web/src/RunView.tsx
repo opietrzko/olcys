@@ -474,11 +474,8 @@ function coverage(r: AnalysisResult) {
   return { sources: queried.length, sourceIds: queried.map((c) => c.id), pages };
 }
 
-/**
- * An empty result is only meaningful when the sources actually answered. If nothing was found and a source
- * failed (dropped connection, rate limit), say so - otherwise it reads as "this person publishes nothing".
- */
-/** Optional sources that fail on every run without extra setup (Reddit keys, a SearXNG instance) - not a sign of a flaky run. */
+/** Pusty wynik coś znaczy tylko wtedy, gdy źródła odpowiedziały. Jeśli źródło zawiodło, piszemy o tym wprost. */
+/** Źródła opcjonalne, które bez dodatkowej konfiguracji zawsze zwracają błąd (klucze Reddit, SearXNG). */
 const OPTIONAL_SOURCES = new Set(['reddit', 'search']);
 
 function SourceFailures({ r }: { r: AnalysisResult }) {
@@ -817,7 +814,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
                         </a>
                       </td>
                       <td className="num">{m.txHashes.length}</td>
-                      <td>{m.label ? `${m.label} (${m.category})` : <span className="faint">—</span>}</td>
+                      <td>{m.label ? `${m.label} (${m.category})` : <span className="faint">-</span>}</td>
                     </tr>
                   ))}
                 </tbody>

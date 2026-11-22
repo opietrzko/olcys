@@ -1,6 +1,6 @@
 /**
- * Safety limits of lead-following: a run must finish in bounded time and must not crawl
- * navigation, documentation or sign-in pages as if they were leads to the subject.
+ * Limity śledzenia tropów: przebieg kończy się w ograniczonym czasie i nie chodzi po nawigacji,
+ * dokumentacji ani stronach logowania jak po tropach podmiotu.
  */
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import type { Identifier } from '@olcys/core';
 import { createEngine, extractIdentifiers, githubAccountUrl, isPivotableUrl, loadConfig, runAnalysis, type CollectedDocument, type SourceConnector } from '../src';
 
-/** Offline config: replay from an empty recording, so any real request fails loudly instead of going to the network. */
+/** Konfiguracja offline: odtwarzanie z pustego nagrania, więc każde prawdziwe zapytanie kończy się błędem. */
 const offline = (env: Record<string, string> = {}) => loadConfig({ OLCYS_REPLAY_DIR: mkdtempSync(join(tmpdir(), 'olcys-guard-')), OLCYS_LIVE_RATES: 'false', ...env });
 
 function profile(nick: string, links: Identifier[]): CollectedDocument {
@@ -55,7 +55,7 @@ describe('limity pivotowania', () => {
 
   it('kończy zbieranie po przekroczeniu budżetu czasu i przechodzi do oceny dowodów', async () => {
     let calls = 0;
-    // Every profile links to two new accounts: without a budget this would run until the identity cap.
+    // Każdy profil linkuje do dwóch nowych kont: bez budżetu szłoby to aż do limitu tożsamości.
     const endless = stub(async (q) => {
       calls++;
       await new Promise((r) => setTimeout(r, 15));

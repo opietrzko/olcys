@@ -1,6 +1,6 @@
 /**
  * Generator poprawnych formalnie adresów bez kluczy prywatnych (do testów ekstrakcji i walidacji).
- * UWAGA: na kontach testowych publikujcie adresy z prawdziwych portfeli testowych – te adresy nie mają historii ani właściciela.
+ * UWAGA: na kontach testowych publikujcie adresy z prawdziwych portfeli testowych - te adresy nie mają historii ani właściciela.
  * Użycie: npm run gen:address -- <seed> [eth|btc|btc-legacy|tron|ltc]
  */
 import { synthetic } from '@olcys/core';

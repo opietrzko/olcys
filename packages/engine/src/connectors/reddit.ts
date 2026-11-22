@@ -1,11 +1,11 @@
 /**
- * Reddit – public listings of a user's own posts and comments, no user login.
- * Posts are community discussion (DISCUSSION); giveaway/airdrop wording drops them to MASS_COMMENT,
- * and repeated posts on Reddit stay one source family, so they never earn the synergy bonus on their own.
+ * Reddit - publiczne listy postów i komentarzy użytkownika, bez logowania.
+ * Posty to dyskusja (DISCUSSION); słowa giveaway/airdrop obniżają je do MASS_COMMENT.
+ * Wiele postów na Reddicie to jedna rodzina źródeł, więc same nie dają premii za synergię.
  *
- * Access: with REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (a registered Reddit app, read-only, app-only OAuth)
- * requests go to oauth.reddit.com as Reddit's Data API terms require. Without them the anonymous .json
- * listings are used, which Reddit often refuses (403/429) – reported as a connector error, never bypassed.
+ * Z REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (aplikacja read-only, OAuth app-only) zapytania idą do oauth.reddit.com
+ * zgodnie z Reddit Data API Terms. Bez kluczy używamy anonimowych list .json; odmowę (403/429) zgłaszamy
+ * jako błąd konektora, bez obchodzenia.
  */
 import type { Identifier } from '@olcys/core';
 import { extractIdentifiers, type CollectedDocument } from '../evidence';

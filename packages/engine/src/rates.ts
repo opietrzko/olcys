@@ -1,8 +1,8 @@
 /**
  * Kursy do wyceny:
- *  - bieżące: USD/PLN z API NBP (tabela A) i ceny krypto (CoinGecko) – wartość zapasowa,
+ *  - bieżące: USD/PLN z API NBP (tabela A) i ceny krypto (CoinGecko) - wartość zapasowa,
  *  - historyczne: tabele A NBP z okresu transakcji (kurs z ostatniego dnia roboczego przed transakcją, art. 11a ust. 1
- *    ustawy o PIT) i dzienne ceny krypto: CoinGecko (publiczne API: ostatnie 365 dni) oraz – dla starszych transakcji –
+ *    ustawy o PIT) i dzienne ceny krypto: CoinGecko (publiczne API: ostatnie 365 dni) oraz - dla starszych transakcji –
  *    dzienne notowania Binance (publiczne dane rynkowe, para do USDT, cena zamknięcia dnia ≈ USD).
  *  - archiwum notowań: każda pobrana cena dzienna trafia do lokalnego archiwum (PRICE_ARCHIVE_DIR, domyślnie data/prices),
  *    więc kolejne analizy nie odpytują źródeł o te same dni, a wycena jest powtarzalna także bez dostępu do Internetu.
@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import type { RateTable } from '@olcys/core';
 import type { SafeFetch } from './http';
 
-/** Kursy zapasowe – używane tylko, gdy NBP / CoinGecko są niedostępne (zawsze z adnotacją w raporcie). */
+/** Kursy zapasowe - używane tylko, gdy NBP / CoinGecko są niedostępne (zawsze z adnotacją w raporcie). */
 export const FALLBACK_RATES: RateTable = {
   source: 'kursy zapasowe (orientacyjne) – źródła kursów niedostępne',
   asOf: '2026-11-20',
@@ -31,7 +31,7 @@ export async function fetchLiveRates(fetch: SafeFetch, fallback: RateTable): Pro
   const nbpUrls = [
     'https://api.nbp.pl/api/exchangerates/rates/a/usd/?format=json',
     'https://api.nbp.pl/api/exchangerates/rates/a/usd/last/1/?format=json',
-    // zapas: zakres ostatnich 14 dni (inny punkt końcowy API NBP) – ostatnie notowanie z zakresu
+    // zapas: zakres ostatnich 14 dni (inny punkt końcowy API NBP) - ostatnie notowanie z zakresu
     `https://api.nbp.pl/api/exchangerates/rates/a/usd/${iso(new Date(now.getTime() - 14 * 86400e3))}/${iso(now)}/?format=json`,
     'https://api.nbp.pl/api/exchangerates/tables/a/last/1/?format=json',
   ];
@@ -78,7 +78,7 @@ export function daysBetween(from: string, to: string): string[] {
   return out;
 }
 
-/** Pary Binance do USDT (cena zamknięcia dnia UTC). POL przed migracją z MATIC (2024-09-13) – para MATICUSDT (wymiana 1:1). */
+/** Pary Binance do USDT (cena zamknięcia dnia UTC). POL przed migracją z MATIC (2024-09-13) - para MATICUSDT (wymiana 1:1). */
 export const BINANCE_SYMBOLS: Record<string, string> = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', TRX: 'TRXUSDT', LTC: 'LTCUSDT', SOL: 'SOLUSDT', BNB: 'BNBUSDT', POL: 'POLUSDT', EURC: 'EURUSDT' };
 const POL_SINCE = '2024-09-13';
 /** Pierwszy dzień notowań Binance (wcześniejszych dni nie ma sensu odpytywać). */
@@ -123,18 +123,18 @@ function readArchive(dir: string, asset: string): Record<string, number> {
 function writeArchive(dir: string, asset: string, fresh: Record<string, number>) {
   try {
     mkdirSync(dir, { recursive: true });
-    // dzień bieżący nie jest jeszcze zamknięty – nie archiwizujemy go
+    // dzień bieżący nie jest jeszcze zamknięty - nie archiwizujemy go
     const today = day(new Date());
     const prices = { ...readArchive(dir, asset), ...Object.fromEntries(Object.entries(fresh).filter(([d]) => d < today)) };
     const sorted = Object.fromEntries(Object.entries(prices).sort(([a], [b]) => a.localeCompare(b)));
     writeFileSync(join(dir, `${asset}.json`), JSON.stringify({ asset, currency: 'USD', note: 'Archiwum dziennych cen KryptoTrop (CoinGecko / Binance)', updatedAt: new Date().toISOString(), prices: sorted }, null, 1));
   } catch {
-    /* archiwum to optymalizacja – błąd zapisu nie przerywa analizy */
+    /* archiwum to optymalizacja - błąd zapisu nie przerywa analizy */
   }
 }
 
 /**
- * Dociąga kursy historyczne dla okresu transakcji: tabele A NBP (okna ≤ 93 dni – limit API NBP) i dzienne ceny krypto.
+ * Dociąga kursy historyczne dla okresu transakcji: tabele A NBP (okna ≤ 93 dni - limit API NBP) i dzienne ceny krypto.
  * Wynik jest dopisywany do tabeli kursów przebiegu (cache między adresami w tym samym przebiegu).
  */
 export async function extendHistoricalRates(
@@ -159,7 +159,7 @@ export async function extendHistoricalRates(
       try {
         const url = `https://api.nbp.pl/api/exchangerates/rates/a/usd/${day(s)}/${day(e)}/?format=json`;
         let r = await fetch(url, { headers: { accept: 'application/json' } });
-        // API NBP sporadycznie zwraca 5xx – jedna ponowiona próba po krótkiej przerwie
+        // API NBP sporadycznie zwraca 5xx - jedna ponowiona próba po krótkiej przerwie
         if (r.status >= 500) {
           await new Promise((res) => setTimeout(res, 1500));
           r = await fetch(url, { headers: { accept: 'application/json' } });
@@ -177,8 +177,8 @@ export async function extendHistoricalRates(
     }
     history.nbp.sort((a, b) => a.date.localeCompare(b.date));
   }
-  // Ceny dzienne (USD) – stablecoiny dolarowe wyceniane parytetem 1 USD, więc pomijane.
-  // Kolejność: archiwum lokalne → CoinGecko (ostatnie 365 dni) → Binance (starsze dni i zapas dla CoinGecko).
+  // Ceny dzienne (USD) - stablecoiny dolarowe wyceniane parytetem 1 USD, więc pomijane.
+  // Kolejność: archiwum lokalne -> CoinGecko (ostatnie 365 dni) -> Binance (starsze dni i zapas dla CoinGecko).
   const yearAgo = day(new Date(today.getTime() - 364 * 86400e3));
   const firstDay = need.from.slice(0, 10);
   const lastDay = day(new Date(Math.min(Date.parse(need.to), today.getTime())));
@@ -193,7 +193,7 @@ export async function extendHistoricalRates(
     if (fromArchive) sources.add('archiwum lokalne');
     const missing = (a: string, b: string) => daysBetween(a, b).filter((d) => series[d] === undefined);
     const fresh: Record<string, number> = {};
-    // ostatnie 365 dni – CoinGecko
+    // ostatnie 365 dni - CoinGecko
     const recentMissing = lastDay >= yearAgo ? missing(firstDay > yearAgo ? firstDay : yearAgo, lastDay) : [];
     if (recentMissing.length && COINGECKO_IDS[asset]) {
       try {
@@ -207,7 +207,7 @@ export async function extendHistoricalRates(
       }
       Object.assign(series, fresh);
     }
-    // starsze dni (i braki po CoinGecko) – Binance
+    // starsze dni (i braki po CoinGecko) - Binance
     const oldMissing = missing(firstDay, lastDay);
     if (oldMissing.length && BINANCE_SYMBOLS[asset]) {
       const b = await fetchBinanceDaily(fetch, asset, oldMissing[0], oldMissing[oldMissing.length - 1]);

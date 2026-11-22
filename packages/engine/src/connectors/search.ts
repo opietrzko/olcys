@@ -1,5 +1,5 @@
 /**
- * Wyszukiwarka meta SearXNG (self-hosted, AGPL) – automatyczne przeszukiwanie otwartego Internetu
+ * Wyszukiwarka meta SearXNG (self-hosted, AGPL) - automatyczne przeszukiwanie otwartego Internetu
  * po nicku, e-mailu, telefonie lub adresie krypto. Zapytania trafiają do własnej instancji (on-prem),
  * a nie bezpośrednio do zewnętrznych usług. Wyniki są pobierane jako strony publiczne (kontrola SSRF).
  */
@@ -17,7 +17,7 @@ interface SearxResult {
   engines?: string[];
 }
 
-/** Eksploratory i agregatory blockchain – pokazują adres, ale nie są śladem Web2 (pomijane, by nie zaśmiecać dowodów). */
+/** Eksploratory i agregatory blockchain - pokazują adres, ale nie są śladem Web2 (pomijane, by nie zaśmiecać dowodów). */
 export const EXPLORER_HOSTS = /(^|\.)(etherscan\.io|bscscan\.com|polygonscan\.com|arbiscan\.io|blockscout\.com|blockchain\.com|blockchair\.com|blockcypher\.com|mempool\.space|blockstream\.info|tronscan\.org|oklink\.com|debank\.com|arkm\.com|arkhamintelligence\.com|beaconcha\.in|coinstats\.app|zapper\.xyz|zerion\.io|nansen\.ai|walletexplorer\.com|btc\.com|solscan\.io|ethplorer\.io|tokenview\.io|bitinfocharts\.com|3xpl\.com|chainabuse\.com|etherchain\.org)$/i;
 
 /** Eksplorator rozpoznany po liście lub wzorcu nazwy (np. cronoscan.com, explorer.fuse.io, *.blockscout.com). */
@@ -32,7 +32,7 @@ export function kindForHost(host: string): SourceKind {
   return 'UNKNOWN';
 }
 
-/** Teksty stron z wyników – dzielone na akapity, by wystąpienia adresu i identyfikatora oceniać lokalnie. */
+/** Teksty stron z wyników - dzielone na akapity, by wystąpienia adresu i identyfikatora oceniać lokalnie. */
 function pageSegments(html: string): { title: string; segments: { id: string; text: string }[] } {
   const $ = cheerio.load(html);
   $('script,style,noscript,svg,nav,footer,header').remove();
@@ -70,7 +70,7 @@ export const searxngConnector: SourceConnector = {
         const fold = (s: string) => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[łŁ]/g, 'l').toLowerCase().replace(/\s+/g, ' ');
         const needle = fold(q.value);
         // minimalizacja danych: zachowujemy tylko fragmenty z adresem krypto (strony z samym nazwiskiem/nickiem bez adresu
-        // nic nie wnoszą do celu analizy i mogą dotyczyć homonimu); dla zapytania o adres – fragmenty z tym adresem
+        // nic nie wnoszą do celu analizy i mogą dotyczyć homonimu); dla zapytania o adres - fragmenty z tym adresem
         const hasAddr = (t: string) => /0x[0-9a-fA-F]{40}|\b(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}\b|\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t);
         const relevant = segments.filter((s) => hasAddr(s.text) && (q.type === 'address' ? fold(s.text).includes(needle) : true));
         if (!relevant.length) continue;

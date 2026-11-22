@@ -3,7 +3,7 @@ import type { FlowBucket, FlowMap as Flows } from '@olcys/core';
 import { money, plural } from './ui';
 
 /**
- * Mapa przepływów (Sankey): wpływy według kategorii kontrahenta → badany adres → wypływy.
+ * Mapa przepływów (Sankey): wpływy według kategorii kontrahenta -> badany adres -> wypływy.
  * Grubość pasma = wartość w PLN. Wypływy do giełd, bramek fiat i P2P są wyróżnione jako możliwe wyjście do fiat.
  * Kliknięcie pasma filtruje chronologię przepływu do tej kategorii.
  */
@@ -161,7 +161,7 @@ export function FlowMap({ flows, selected, onSelect }: { flows: Flows; selected:
   );
 }
 
-/** Kategoria wykresu dla kategorii etykiety kontrahenta – ta sama reguła co flowCategory w @olcys/core. */
+/** Kategoria wykresu dla kategorii etykiety kontrahenta - ta sama reguła co flowCategory w @olcys/core. */
 export function flowCategoryOf(category: string | undefined): FlowBucket['category'] {
   switch (category) {
     case 'CEX':

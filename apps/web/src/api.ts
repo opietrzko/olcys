@@ -65,7 +65,7 @@ export interface AuthUser {
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(path, { ...init, credentials: 'same-origin', headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
-  // sesja wygasła / brak logowania – aplikacja pokazuje ekran logowania
+  // sesja wygasła / brak logowania - aplikacja pokazuje ekran logowania
   if (r.status === 401 && !path.startsWith('/api/auth/')) dispatchEvent(new Event('olcys:unauthorized'));
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json() as Promise<T>;

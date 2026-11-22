@@ -1,6 +1,6 @@
 /**
  * Parsery otwartych źródeł etykiet adresów (używane przez scripts/update-labels.ts).
- * OFAC SDN: pola „Digital Currency Address - <kod>” w sdn.xml (U.S. Treasury, domena publiczna).
+ * OFAC SDN: pola "Digital Currency Address - <kod>" w sdn.xml (U.S. Treasury, domena publiczna).
  */
 import { validateAddress, validateSolana, type AddressLabel, type Chain } from '@olcys/core';
 
@@ -10,7 +10,7 @@ const tag = (xml: string, name: string) => {
   return m ? decode(m[1]) : undefined;
 };
 
-/** Kod waluty OFAC → oczekiwana sieć KryptoTrop (dla tokenów: wg formatu adresu). */
+/** Kod waluty OFAC -> oczekiwana sieć KryptoTrop (dla tokenów: wg formatu adresu). */
 const OFAC_CHAINS: Record<string, Chain[]> = {
   XBT: ['BTC'],
   ETH: ['ETH'],
@@ -43,7 +43,7 @@ export function parseSdn(xml: string): { labels: AddressLabel[]; publishDate: st
       if (!m) continue;
       const coin = m[1];
       const value = tag(id[1], 'idNumber') ?? '';
-      // Solana nie ma sumy kontrolnej – validateAddress jej nie zgaduje, więc walidacja formatu wprost dla kodu SOL
+      // Solana nie ma sumy kontrolnej - validateAddress jej nie zgaduje, więc walidacja formatu wprost dla kodu SOL
       const v = coin === 'SOL' ? validateSolana(value) : validateAddress(value);
       const expected = OFAC_CHAINS[coin];
       if (!expected || !v.valid || !v.chain || !expected.includes(v.chain)) {

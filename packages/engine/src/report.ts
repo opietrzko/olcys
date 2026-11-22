@@ -1,11 +1,11 @@
 /**
- * Raport OSINT (HTML do druku / zapisu jako PDF) – czytelny także dla osób bez wiedzy informatycznej.
+ * Raport OSINT (HTML do druku / zapisu jako PDF) - czytelny także dla osób bez wiedzy informatycznej.
  */
 import { BANDS, SCORING_RULES, type AnalysisResult, type StatementKind } from '@olcys/core';
 
 const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const usd = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
-const dt = (s?: string) => (s ? s.slice(0, 19).replace('T', ' ') : '—');
+const dt = (s?: string) => (s ? s.slice(0, 19).replace('T', ' ') : '-');
 
 const KIND: Record<StatementKind, { label: string; cls: string }> = {
   FACT: { label: 'FAKT ŹRÓDŁOWY', cls: 'fact' },
@@ -51,11 +51,11 @@ ul.st{list-style:none;padding:0}ul.st li{padding:5px 8px;margin:3px 0;border-lef
 ${attributed
   .map(
     (f) => `<tr><td class="mono">${esc(f.address)}</td><td>${f.chain}</td><td>${esc(f.classification.category)}</td><td><span class="band ${BAND_CLS[f.attribution.band]}">${f.attribution.score}%</span></td><td>${[...new Set(f.occurrences.map((o) => o.family))].map(esc).join(', ')}</td><td>${
-      (f.activity?.indicators ?? []).filter((i) => i.type !== 'HIGH_VOLUME').map((i) => esc(i.title)).join('<br>') || '—'
+      (f.activity?.indicators ?? []).filter((i) => i.type !== 'HIGH_VOLUME').map((i) => esc(i.title)).join('<br>') || '-'
     }</td></tr>`,
   )
   .join('')}</table>
-<p><b>Odrzucone / niepowiązane (${rejected.length}):</b> ${rejected.map((f) => `<code>${esc(f.address)}</code> – ${esc(f.classification.entity ?? f.attribution.rules[0]?.label)}`).join('; ') || '—'}</p>
+<p><b>Odrzucone / niepowiązane (${rejected.length}):</b> ${rejected.map((f) => `<code>${esc(f.address)}</code> – ${esc(f.classification.entity ?? f.attribution.rules[0]?.label)}`).join('; ') || '-'}</p>
 
 <h2>2. Dane wejściowe i parametry wyszukiwania</h2>
 <table><tr><th>Typ</th><th>Wartość</th></tr>${r.input.map((i) => `<tr><td>${esc(i.type)}</td><td>${esc(i.value)}</td></tr>`).join('')}</table>
@@ -87,7 +87,7 @@ ${f.activity.flows && (f.activity.flows.inflows.length || f.activity.flows.outfl
         .filter((x) => x.verifiedAsset !== false)
         .map(
           (x) =>
-            `<tr><td>${dt(x.timestamp)}</td><td>${x.direction === 'IN' ? '⬇ wpływ' : '⬆ wypływ'}</td><td>${x.amount} ${esc(x.asset)}${x.network ? ` <span class="muted">(${esc(x.network)})</span>` : ''}${x.verifiedAsset === false ? '<br><span class="neg">niezweryfikowany token – pominięty</span>' : ''}</td><td>${x.usd === null ? '—' : usd(x.usd)}${x.priceBasis === 'current' ? '*' : ''}</td><td>${x.pln === null || x.pln === undefined ? '—' : usd(x.pln)}</td><td>${x.nbp ? `${x.nbp.mid} z ${esc(x.nbp.date)} (${esc(x.nbp.no)})` : 'kurs bieżący'}</td><td class="mono">${esc(x.counterpartyLabel ?? x.counterparty)}</td><td class="mono">${esc(x.hash.slice(0, 14))}…</td></tr>`,
+            `<tr><td>${dt(x.timestamp)}</td><td>${x.direction === 'IN' ? '⬇ wpływ' : '⬆ wypływ'}</td><td>${x.amount} ${esc(x.asset)}${x.network ? ` <span class="muted">(${esc(x.network)})</span>` : ''}${x.verifiedAsset === false ? '<br><span class="neg">niezweryfikowany token – pominięty</span>' : ''}</td><td>${x.usd === null ? '-' : usd(x.usd)}${x.priceBasis === 'current' ? '*' : ''}</td><td>${x.pln === null || x.pln === undefined ? '-' : usd(x.pln)}</td><td>${x.nbp ? `${x.nbp.mid} z ${esc(x.nbp.date)} (${esc(x.nbp.no)})` : 'kurs bieżący'}</td><td class="mono">${esc(x.counterpartyLabel ?? x.counterparty)}</td><td class="mono">${esc(x.hash.slice(0, 14))}…</td></tr>`,
         )
         .join('')}</table>
 <p class="muted">${esc(f.activity.plnBasis ?? '')}${f.activity.timeline.some((x) => x.priceBasis === 'current') ? ' * cena krypto bieżąca – brak notowania z dnia transakcji.' : ''}${f.activity.ignoredTokenTransfers ? ` Pominięto ${f.activity.ignoredTokenTransfers} transferów tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe stablecoiny).` : ''}</p>`

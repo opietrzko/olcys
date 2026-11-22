@@ -10,7 +10,7 @@
 
 <br />
 <div align="center">
-  <h2 align="center">🔎 KryptoTrop – od śladów w sieci do portfeli krypto</h2>
+  <h2 align="center">KryptoTrop – od śladów w sieci do portfeli krypto</h2>
   <p align="center">
     Narzędzie OSINT łączące publiczne ślady cyfrowe (Web2) z adresami kryptowalutowymi (Web3) – z wyjaśnialnym Wskaźnikiem Pewności i wykrywaniem wyjścia do walut tradycyjnych.
     <br />

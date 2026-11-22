@@ -10,7 +10,7 @@ export interface Lineage {
   parent: Map<string, string>;
   /** Kolumna węzła tożsamości (podmiot = 0). */
   column: Map<string, number>;
-  /** Węzeł-konto, któremu „należy” dokument: właściciel (nick/Telegram) albo tożsamość, którą o niego zapytano. */
+  /** Węzeł-konto, któremu "należy" dokument: właściciel (nick/Telegram) albo tożsamość, którą o niego zapytano. */
   docNode: Map<string, string>;
   /** Dokumenty przypisane do węzła tożsamości. */
   docsOf: (nodeId: string) => Ev[];
@@ -18,7 +18,7 @@ export interface Lineage {
 
 /**
  * Pochodzenie tropów w jednym miejscu (graf i inspektor czytają to samo):
- * dokument należy do konta, którego właścicielem jest (np. profil GitHub → nick), a gdy właściciela nie ma
+ * dokument należy do konta, którego właścicielem jest (np. profil GitHub -> nick), a gdy właściciela nie ma
  * w grafie - do tożsamości, o którą zapytano. Tropy z dokumentu są dziećmi tego konta.
  */
 export function buildLineage(r: AnalysisResult): Lineage {

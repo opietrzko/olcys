@@ -1,6 +1,6 @@
 /**
  * Rejestr etykiet adresów (giełdy, kontrakty, miksery, zbiórki, bramki fiat).
- * Ładowany z lokalnych plików JSON (data/labels) – brak zależności od płatnych API etykiet.
+ * Ładowany z lokalnych plików JSON (data/labels) - brak zależności od płatnych API etykiet.
  */
 import { addressKey } from './chains';
 import type { AddressCategory, AddressClassification, AddressLabel, Chain } from './types';
@@ -31,7 +31,7 @@ export class LabelRegistry {
 }
 
 /**
- * Klasyfikacja adresu: etykieta (KROK 3.1) → flaga kontraktu (KROK 3.2) → domyślnie kandydat UNHOSTED.
+ * Klasyfikacja adresu: etykieta (KROK 3.1) -> flaga kontraktu (KROK 3.2) -> domyślnie kandydat UNHOSTED.
  * @param isContract wynik eth_getCode (true/false) lub null gdy nie sprawdzono / nie dotyczy.
  */
 export function classifyAddress(
@@ -62,7 +62,7 @@ export function classifyAddress(
   return { category: 'UNHOSTED', isContract, inferred: false, reasons };
 }
 
-/** Progi heurystyki „adres instytucjonalny” – profil aktywności typowy dla giełdy / usługi, a nie osoby. */
+/** Progi heurystyki "adres instytucjonalny" - profil aktywności typowy dla giełdy / usługi, a nie osoby. */
 export const INSTITUTIONAL_THRESHOLDS = { txCount: 5000, distinctCounterparties: 300 };
 
 /**

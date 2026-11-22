@@ -1,5 +1,5 @@
 /**
- * ENS (Ethereum Name Service) – nazwa .eth → adres oraz rekordy tekstowe (twitter, github, e-mail, url).
+ * ENS (Ethereum Name Service) - nazwa .eth -> adres oraz rekordy tekstowe (twitter, github, e-mail, url).
  * Najmocniejsze, kryptograficznie potwierdzone połączenie Web3 ↔ Web2. Odczyt przez JSON-RPC (eth_call),
  * bez zewnętrznych indeksatorów. Aktywny tylko, gdy ustawiono ETH_RPC_URL i host jest na allowliście.
  */
@@ -86,7 +86,7 @@ export const ensConnector: SourceConnector = {
         owner: { handle: q.value },
         segments: [{ id: 'records', author: { handle: q.value }, text }],
         links,
-        // Nazwę .eth może zarejestrować każdy – wymagamy potwierdzenia w innym profilu podmiotu (nazwa lub adres).
+        // Nazwę .eth może zarejestrować każdy - wymagamy potwierdzenia w innym profilu podmiotu (nazwa lub adres).
         meta: { rpc: new URL(rpc).host, ownedByQuery: true, weakOwnership: true, reciprocalNeedles: [name, ...(address ? [address] : [])] },
         raw,
       },

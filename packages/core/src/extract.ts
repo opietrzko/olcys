@@ -18,7 +18,7 @@ const PATTERNS: { name: string; re: RegExp }[] = [
 const SOL_PATTERN = /(?<![0-9A-Za-z])[1-9A-HJ-NP-Za-km-z]{32,44}(?![0-9A-Za-z])/g;
 const SOL_KEYWORDS = /\b(sol|solana|phantom|solflare)\b/i;
 
-/** Kandydaci na adresy zapisane z separatorami: "0x12ab 34cd …", "bc1q-xxxx-yyyy". */
+/** Kandydaci na adresy zapisane z separatorami: "0x12ab 34cd ...", "bc1q-xxxx-yyyy". */
 const OBFUSCATED = /(?<![0-9A-Za-z])(?:0x|bc1|ltc1|T)[0-9A-Za-z]{2,}(?:[ \-_.·|][0-9A-Za-z]{2,}){1,15}/g;
 
 function contextAround(text: string, start: number, end: number): string {
@@ -63,7 +63,7 @@ export function extractAddresses(input: string): ExtractedAddress[] {
     }
   }
 
-  // Zaciemnione zapisy – próbujemy najdłuższego prefiksu grup, który daje poprawny adres.
+  // Zaciemnione zapisy - próbujemy najdłuższego prefiksu grup, który daje poprawny adres.
   for (const m of text.matchAll(OBFUSCATED)) {
     const start = m.index!;
     if (overlaps(start, start + m[0].length)) continue;
@@ -81,7 +81,7 @@ export function extractAddresses(input: string): ExtractedAddress[] {
     }
   }
 
-  // Solana – tylko gdy kontekst zawiera słowo kluczowe (brak sumy kontrolnej => wysokie ryzyko szumu).
+  // Solana - tylko gdy kontekst zawiera słowo kluczowe (brak sumy kontrolnej => wysokie ryzyko szumu).
   for (const m of text.matchAll(SOL_PATTERN)) {
     const start = m.index!;
     const end = start + m[0].length;

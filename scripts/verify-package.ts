@@ -1,7 +1,7 @@
 /**
  * Weryfikacja pakietu dowodowego KryptoTrop (eksport JSON): skróty SHA-256 kopii dowodów, skrót pakietu, podpis Ed25519.
  *   npm run verify:package -- kryptotrop-run_xxx.json
- * Znacznik czasu RFC 3161 zapisywany jest obok jako <plik>.tsr – pełna weryfikacja certyfikatu TSA:
+ * Znacznik czasu RFC 3161 zapisywany jest obok jako <plik>.tsr - pełna weryfikacja certyfikatu TSA:
  *   openssl ts -reply -in <plik>.tsr -text
  *   openssl ts -verify -digest <packageSha256> -in <plik>.tsr -CAfile <certyfikaty TSA>
  */

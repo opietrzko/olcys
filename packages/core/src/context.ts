@@ -1,5 +1,5 @@
 /**
- * Klasyfikacja kontekstu wystąpienia adresu – regułowa, w pełni wyjaśnialna.
+ * Klasyfikacja kontekstu wystąpienia adresu - regułowa, w pełni wyjaśnialna.
  * Rodzaj źródła (z konektora) wyznacza kategorię startową, słowa kluczowe w otoczeniu adresu mogą ją skorygować.
  */
 import type { ContextAssessment, ContextCategory, SourceKind } from './types';

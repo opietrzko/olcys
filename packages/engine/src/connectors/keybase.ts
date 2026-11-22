@@ -1,5 +1,5 @@
 /**
- * Keybase – publiczne profile z KRYPTOGRAFICZNIE PODPISANYMI dowodami: adresy kryptowalut oraz konta
+ * Keybase - publiczne profile z KRYPTOGRAFICZNIE PODPISANYMI dowodami: adresy kryptowalut oraz konta
  * (GitHub, Twitter, Reddit, strony WWW). Podpisany adres = najsilniejsza możliwa przesłanka własności.
  */
 import type { Identifier } from '@olcys/core';
@@ -51,7 +51,7 @@ export const keybaseConnector: SourceConnector = {
         owner,
         segments: [{ id: 'profile', author: owner, text }],
         links,
-        // Konto Keybase o tej samej nazwie nie musi należeć do tej samej osoby – wiarygodne tylko z dowodem konta o tym nicku.
+        // Konto Keybase o tej samej nazwie nie musi należeć do tej samej osoby - wiarygodne tylko z dowodem konta o tym nicku.
         meta: { api: res.url, ownedByQuery: true, signedWallets: wallets.length, weakOwnership: !proofs.some((p) => p.nametag.toLowerCase() === q.value.toLowerCase()) },
         raw: res.body,
       },

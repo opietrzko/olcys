@@ -1,7 +1,7 @@
 /**
  * Kontrolowany ruch wychodzący:
- *  - żądania API (z identyfikatorami w zapytaniu) – wyłącznie do hostów z allowlisty,
- *  - pobieranie publicznych stron (GET adresu odkrytego w dowodach) – w trybie 'public' dowolny host publiczny,
+ *  - żądania API (z identyfikatorami w zapytaniu) - wyłącznie do hostów z allowlisty,
+ *  - pobieranie publicznych stron (GET adresu odkrytego w dowodach) - w trybie 'public' dowolny host publiczny,
  *    z blokadą adresów prywatnych / pętli zwrotnej / link-local (ochrona przed SSRF w sieci wewnętrznej KAS),
  *  - limit czasu, identyfikowalny User-Agent, limit rozmiaru odpowiedzi, log każdego żądania w przebiegu analizy.
  */
@@ -28,7 +28,7 @@ export interface FetchedResource {
 
 export type FetchKind = 'api' | 'page';
 
-/** `binary: true` – treść odpowiedzi (np. obraz) zwracana w base64 zamiast jako tekst. */
+/** `binary: true` - treść odpowiedzi (np. obraz) zwracana w base64 zamiast jako tekst. */
 export type SafeFetch = (url: string, init?: { method?: string; body?: string; headers?: Record<string, string>; kind?: FetchKind; timeoutMs?: number; binary?: boolean }) => Promise<FetchedResource>;
 
 export interface EgressLogEntry {
@@ -36,7 +36,7 @@ export interface EgressLogEntry {
   url: string;
   status: number | 'DENIED' | 'ERROR';
   ms: number;
-  /** Served from an offline recording – no request left the machine. */
+  /** Odpowiedź z nagrania offline - żadne zapytanie nie wyszło z maszyny. */
   replay?: boolean;
   kind: FetchKind;
 }
@@ -60,7 +60,7 @@ async function assertPublicHost(hostname: string): Promise<void> {
   if (addrs.some((a) => isPrivateIp(a.address))) throw new EgressDeniedError(h, 'wskazuje na adres prywatny/wewnętrzny (ochrona SSRF)');
 }
 
-/** Controlled fetch for an analysis run: live, live + recording, or offline replay (see EngineConfig.recording). */
+/** Kontrolowany fetch przebiegu: na żywo, na żywo z nagrywaniem albo odtwarzanie offline (EngineConfig.recording). */
 export function createSafeFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void): SafeFetch {
   const rec = config.recording;
   if (rec?.mode === 'replay') return createReplayFetch(rec.dir, log);
@@ -68,7 +68,7 @@ export function createSafeFetch(config: EngineConfig, log?: (e: EgressLogEntry) 
   return rec?.mode === 'record' ? withRecording(live, rec.dir) : live;
 }
 
-/** Recording key: method, URL and body. Headers are left out on purpose, so tokens never end up on disk. */
+/** Klucz nagrania: metoda, URL i body. Bez nagłówków, żeby tokeny nie trafiały na dysk. */
 export function recordingKey(url: string, init?: { method?: string; body?: string }): string {
   return createHash('sha256')
     .update(`${init?.method ?? 'GET'} ${url}\n${init?.body ?? ''}`)
@@ -106,13 +106,10 @@ function createReplayFetch(dir: string, log?: (e: EgressLogEntry) => void): Safe
   };
 }
 
-/** Delays before retrying a request that failed transiently (dropped connection, DNS hiccup, 502/503/504). */
+/** Opóźnienia przed ponowieniem zapytania po przejściowym błędzie (zerwane połączenie, DNS, 502/503/504). */
 export const RETRY_DELAYS_MS = [400, 1200];
 
-/**
- * Retries a GET after a transient failure so one dropped connection does not empty a whole analysis.
- * Rate limits (429) and other HTTP errors are returned as-is: retrying them would only add load on the source.
- */
+/** Ponawia GET po przejściowym błędzie połączenia. 429 i inne błędy HTTP zwraca bez ponawiania. */
 export async function withRetry(method: string, run: () => Promise<Response>, delays: number[] = RETRY_DELAYS_MS): Promise<Response> {
   const retryable = method.toUpperCase() === 'GET';
   for (let attempt = 0; ; attempt++) {
@@ -166,7 +163,7 @@ function createLiveFetch(config: EngineConfig, log?: (e: EgressLogEntry) => void
         let body: string;
         if (init?.binary) {
           const buf = Buffer.from(await res.arrayBuffer());
-          // obraz ucięty w połowie jest bezużyteczny – zbyt duży plik zwracamy pusty
+          // obraz ucięty w połowie jest bezużyteczny - zbyt duży plik zwracamy pusty
           body = buf.length > MAX_BODY ? '' : buf.toString('base64');
         } else {
           body = await res.text();

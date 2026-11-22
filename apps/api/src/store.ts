@@ -1,6 +1,6 @@
 /**
  * Warstwa trwałości: PostgreSQL (produkcja) lub pamięć (szybki start bez bazy / testy).
- * Każdy przebieg zapisuje pełny wynik oraz surowe kopie dowodów z SHA-256 → odtwarzalność analizy.
+ * Każdy przebieg zapisuje pełny wynik oraz surowe kopie dowodów z SHA-256 -> odtwarzalność analizy.
  */
 import pg from 'pg';
 import type { AnalysisResult, Identifier } from '@olcys/core';

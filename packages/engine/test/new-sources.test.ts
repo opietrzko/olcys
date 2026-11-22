@@ -1,6 +1,6 @@
 /**
- * Offline tests for the sources added in engine 0.4: OFAC SDN parsing, Solana transfer parsing, Bitcointalk / Nostr / Bluesky
- * parsers and the historical-price helpers. All inputs are synthetic.
+ * Testy offline źródeł z engine 0.4: OFAC SDN, transfery Solana, parsery Bitcointalk / Nostr / Bluesky
+ * i ceny historyczne. Dane wejściowe są syntetyczne.
  */
 import { describe, expect, it } from 'vitest';
 import { resolveAsset, synthetic } from '@olcys/core';
@@ -105,7 +105,7 @@ describe('Nostr / Bluesky', () => {
     expect(isNip05Candidate('jan@wp.pl')).toBe(false);
   });
   it('dekoduje adres e-mail ukryty przez Cloudflare', () => {
-    // klucz 0x42, „a@b.c”
+    // klucz 0x42, "a@b.c"
     const hex = '42' + [...'a@b.c'].map((c) => (c.charCodeAt(0) ^ 0x42).toString(16).padStart(2, '0')).join('');
     expect(decodeCfEmail(hex)).toBe('a@b.c');
   });

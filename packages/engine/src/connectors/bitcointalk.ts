@@ -1,6 +1,6 @@
 /**
- * Bitcointalk – profil użytkownika (podpis, strona WWW) i jego posty.
- * Nazwa użytkownika → UID i posty z publicznego archiwum forum ninjastic.space (API bez klucza),
+ * Bitcointalk - profil użytkownika (podpis, strona WWW) i jego posty.
+ * Nazwa użytkownika -> UID i posty z publicznego archiwum forum ninjastic.space (API bez klucza),
  * profil z publicznej strony bitcointalk.org (bez logowania). Cytaty innych użytkowników są usuwane z treści postów,
  * bo adres w cytacie nie jest adresem autora.
  */
@@ -130,7 +130,7 @@ export const bitcointalkConnector: SourceConnector = {
         contentType: ps.contentType,
         owner,
         segments,
-        // linki do innych wątków / profili forum to treści innych osób – nie są tropem do podmiotu
+        // linki do innych wątków / profili forum to treści innych osób - nie są tropem do podmiotu
         links: extractIdentifiers(segments.map((s) => s.text).join('\n')).filter((l) => !(l.type === 'url' && /^https?:\/\/(www\.)?bitcointalk\.org\//i.test(l.value))),
         meta: { api: ps.url, uid, archive: 'ninjastic.space', ownedByQuery: true },
         raw: ps.body,

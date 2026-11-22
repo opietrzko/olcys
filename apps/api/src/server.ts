@@ -1,5 +1,5 @@
 /**
- * KryptoTrop API – zarządzanie analizami, przebiegami (także cyklicznymi), dowodami, raportami i dziennikiem audytu.
+ * KryptoTrop API - zarządzanie analizami, przebiegami (także cyklicznymi), dowodami, raportami i dziennikiem audytu.
  */
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -20,10 +20,10 @@ await app.register(cors, { origin: process.env.CORS_ORIGIN ?? true });
 
 const newId = (p: string) => `${p}_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
 
-/* ---------- Logowanie i role (opcjonalne – włączone, gdy istnieje plik użytkowników) ---------- */
+// Logowanie i role (opcjonalne - włączone, gdy istnieje plik użytkowników)
 const auth = new Auth(process.env.OLCYS_USERS_FILE ?? join(REPO_ROOT, 'data', 'users.json'));
 const sessions = new WeakMap<object, Session>();
-/** Autor operacji w dzienniku audytu: zalogowany użytkownik; bez logowania – nagłówek x-olcys-user (miejsce na SSO KAS). */
+/** Autor operacji w dzienniku audytu: zalogowany użytkownik; bez logowania - nagłówek x-olcys-user (miejsce na SSO KAS). */
 const actorOf = (req: { headers: Record<string, unknown>; raw: object }) => sessions.get(req.raw)?.login ?? (auth.enabled ? 'nieznany' : String(req.headers['x-olcys-user'] ?? 'analityk'));
 
 app.addHook('onRequest', async (req, reply) => {
@@ -41,7 +41,7 @@ app.get('/api/auth/me', async (req) => {
   return { enabled: auth.enabled, user: s ? { login: s.login, role: s.role, name: s.name ?? null } : null };
 });
 
-/** Ochrona przed zgadywaniem haseł: po 5 nieudanych próbach z adresu IP – blokada na 5 minut. */
+/** Ochrona przed zgadywaniem haseł: po 5 nieudanych próbach z adresu IP - blokada na 5 minut. */
 const failures = new Map<string, { n: number; until: number }>();
 app.post('/api/auth/login', async (req, reply) => {
   const body = z.object({ login: z.string().min(1).max(100), password: z.string().min(1).max(500) }).safeParse(req.body);
@@ -105,7 +105,7 @@ async function startRun(a: AnalysisRow, trigger: RunRow['trigger'], actor: strin
   return run;
 }
 
-/* ---------- Metadane / metodyka ---------- */
+// Metadane / metodyka
 app.get('/api/health', async () => ({ ok: true, store: store.kind }));
 app.get('/api/meta', async () => ({
   engineVersion: ENGINE_VERSION,
@@ -128,7 +128,7 @@ app.get('/api/meta', async () => ({
   signing: { keyId: loadSigningKey(engine.config.signing.keyFile).keyId, algorithm: 'Ed25519', tsa: engine.config.signing.tsaUrl ?? null },
 }));
 
-/* ---------- Analizy ---------- */
+// Analizy
 app.get('/api/analyses', async () => store.listAnalyses());
 
 app.post('/api/analyses', async (req, reply) => {
@@ -173,7 +173,7 @@ app.post<{ Params: { id: string } }>('/api/analyses/:id/runs', async (req, reply
   return reply.code(201).send(await startRun(a, 'manual', actorOf(req)));
 });
 
-/* ---------- Przebiegi ---------- */
+// Przebiegi
 app.get<{ Params: { id: string } }>('/api/runs/:id', async (req, reply) => {
   const r = await store.getRun(req.params.id);
   if (!r) return reply.code(404).send({ error: 'not found' });
@@ -204,7 +204,7 @@ app.get<{ Params: { id: string } }>('/api/runs/:id/report.html', async (req, rep
 });
 
 /**
- * Raport PDF generowany przy każdym żądaniu z wyniku przebiegu. `inline` – przeglądarka pokazuje go w swojej przeglądarce PDF
+ * Raport PDF generowany przy każdym żądaniu z wyniku przebiegu. `inline` - przeglądarka pokazuje go w swojej przeglądarce PDF
  * (z przyciskiem pobierania); nazwa pliku jest używana przy zapisie.
  */
 app.get<{ Params: { id: string } }>('/api/runs/:id/report.pdf', async (req, reply) => {
@@ -223,7 +223,7 @@ app.get<{ Params: { id: string } }>('/api/runs/:id/report.pdf', async (req, repl
     .send(pdf);
 });
 
-/** Surowa kopia dowodu – serwowana jako tekst (bez wykonywania skryptów ze źródła). */
+/** Surowa kopia dowodu - serwowana jako tekst (bez wykonywania skryptów ze źródła). */
 app.get<{ Params: { id: string; ev: string } }>('/api/runs/:id/evidence/:ev', async (req, reply) => {
   const e = await store.getEvidence(req.params.id, req.params.ev);
   if (!e) return reply.code(404).send({ error: 'not found' });
@@ -247,7 +247,7 @@ app.get<{ Params: { id: string } }>('/api/runs/:id/export.json', async (req, rep
   if (!r?.result) return reply.code(404).send({ error: 'not found' });
   const evidence = await store.listEvidence(r.id);
   const body = { run: { ...r, result: undefined }, result: r.result, evidence };
-  // JSON.stringify pomija pole result: undefined – pieczęć liczona z dokładnie tej postaci, którą dostaje odbiorca
+  // JSON.stringify pomija pole result: undefined - pieczęć liczona z dokładnie tej postaci, którą dostaje odbiorca
   const plain = JSON.parse(JSON.stringify(body)) as typeof body;
   let integrity = seals.get(r.id);
   if (!integrity) {
@@ -266,7 +266,7 @@ app.get('/api/signing-key', async (_req, reply) => {
 
 app.get('/api/audit', async () => store.listAudit(200));
 
-/* ---------- Harmonogram analiz cyklicznych ---------- */
+// Harmonogram analiz cyklicznych
 async function schedulerTick() {
   const now = new Date().toISOString();
   for (const a of await store.dueAnalyses(now)) {
@@ -276,7 +276,7 @@ async function schedulerTick() {
   }
 }
 
-/* ---------- Frontend (build produkcyjny) ---------- */
+// Frontend (build produkcyjny)
 const webDist = join(REPO_ROOT, 'apps', 'web', 'dist');
 if (existsSync(webDist)) {
   await app.register(fastifyStatic, { root: webDist });

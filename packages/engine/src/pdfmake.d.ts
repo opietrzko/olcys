@@ -1,4 +1,4 @@
-/** Minimalne typy dla pdfmake 0.3 (API serwerowe) – pakiet nie dostarcza własnych deklaracji. */
+/** Minimalne typy dla pdfmake 0.3 (API serwerowe) - pakiet nie dostarcza własnych deklaracji. */
 declare module 'pdfmake' {
   interface OutputDocument {
     getBuffer(): Promise<Buffer>;

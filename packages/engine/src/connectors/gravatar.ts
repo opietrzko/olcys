@@ -1,6 +1,6 @@
 /**
- * Gravatar – publiczny profil powiązany z adresem e-mail (hash SHA-256), zawiera m.in. sekcję portfeli krypto
- * i zweryfikowane konta. Pozwala przejść: e-mail → adresy krypto → profile społecznościowe.
+ * Gravatar - publiczny profil powiązany z adresem e-mail (hash SHA-256), zawiera m.in. sekcję portfeli krypto
+ * i zweryfikowane konta. Pozwala przejść: e-mail -> adresy krypto -> profile społecznościowe.
  */
 import { createHash } from 'node:crypto';
 import type { Identifier } from '@olcys/core';

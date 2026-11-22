@@ -1,12 +1,10 @@
 /**
- * Reverse lookup: crypto address → public GitHub files that contain it (GitHub code search API).
- * Code search requires an authenticated request, so the connector is enabled only with GITHUB_TOKEN.
+ * Wyszukiwanie odwrotne: adres krypto -> publiczne pliki na GitHubie (code search API, wymaga GITHUB_TOKEN).
  *
- * Only files that the account owner publishes about themselves (profile README, FUNDING.yml) tie the address
- * to the owner and are followed further. Any other file (documentation, test data, a config in somebody's project)
- * is kept as context evidence; its repository owner is at most a tentative lead, and nothing else is pivoted
- * from its content. When the address appears in many files it is a widely published address (a service,
- * a contract, a documentation example), so ordinary repositories are not leads at all.
+ * Tylko pliki, które właściciel konta publikuje o sobie (README profilu, FUNDING.yml), wiążą adres z osobą
+ * i są dalej śledzone. Inne pliki zostają jako dowód kontekstowy, a właściciel repo jest co najwyżej tropem
+ * tymczasowym. Adres w wielu plikach to adres szeroko publikowany (usługa, kontrakt, przykład z dokumentacji),
+ * więc zwykłe repozytoria nie są wtedy tropami.
  */
 import type { Identifier } from '@olcys/core';
 import { validateAddress } from '@olcys/core';
@@ -19,13 +17,13 @@ interface CodeHit {
   repository: { name: string; full_name: string; owner: { login: string } };
 }
 
-/** Results requested from the search API (one request) and files actually downloaded. */
+/** Liczba wyników z API wyszukiwania (jedno zapytanie) i faktycznie pobranych plików. */
 const PER_PAGE = 20;
 const MAX_FILES = 5;
-/** Above this many files in public code, the address is treated as widely published, not as somebody's private wallet. */
+/** Powyżej tylu plików w publicznym kodzie adres uznajemy za szeroko publikowany, a nie prywatny portfel. */
 export const WIDELY_PUBLISHED_FILES = 10;
 
-/** File the account owner publishes about themselves: profile README or GitHub Sponsors funding file. */
+/** Plik, który właściciel konta publikuje o sobie: README profilu albo plik GitHub Sponsors. */
 export function isOwnerFile(hit: Pick<CodeHit, 'path' | 'repository'>): 'profile' | 'funding' | null {
   const owner = hit.repository.owner.login.toLowerCase();
   const repo = hit.repository.name.toLowerCase();
@@ -65,12 +63,12 @@ export const githubCodeConnector: SourceConnector = {
         `${address}: adres występuje w ${total} plikach publicznego kodu – adres szeroko publikowany (usługa, kontrakt, przykład z dokumentacji); ` +
           'repozytoria inne niż profil właściciela nie są traktowane jako tropy podmiotu',
       );
-    // Owner-published files first: they are the only ones that can tie the address to a person.
+    // Najpierw pliki publikowane przez właściciela, tylko one mogą powiązać adres z osobą.
     const ranked = [...items].sort((a, b) => Number(!isOwnerFile(a)) - Number(!isOwnerFile(b))).slice(0, MAX_FILES);
     const docs: CollectedDocument[] = [];
     for (const hit of ranked) {
       const login = hit.repository.owner.login;
-      // Same URL shape as the GitHub connector, so an identical file is stored as one piece of evidence.
+      // Ten sam kształt URL co w konektorze GitHub, więc identyczny plik to jeden dowód.
       const url = `${githubRaw}/${encodeURIComponent(login)}/${encodeURIComponent(hit.repository.name)}/HEAD/${hit.path}`;
       const r = await ctx.fetch(url);
       if (r.status !== 200) continue;
@@ -94,7 +92,7 @@ export const githubCodeConnector: SourceConnector = {
         });
         continue;
       }
-      // An ordinary repository file: the owner may have only copied the address (docs, test data, configs).
+      // Zwykły plik w repo: właściciel mógł tylko skopiować adres (dokumentacja, dane testowe, konfiguracja).
       docs.push({
         family: 'github',
         sourceKind: 'UNKNOWN',

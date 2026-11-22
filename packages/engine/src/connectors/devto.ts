@@ -1,7 +1,7 @@
 /**
- * DEV (dev.to, Forem) – public articles of a user via the documented public API, no login.
- * An article authored by the subject is a post on a developer community, so it starts as DISCUSSION;
- * sale/settlement wording ("sprzedam", "P2P", "rozliczenie") lifts it to SALE_OR_SETTLEMENT.
+ * DEV (dev.to) - publiczne artykuły użytkownika przez publiczne API, bez logowania.
+ * Artykuł podmiotu to wpis w społeczności (DISCUSSION); słowa o sprzedaży lub rozliczeniu
+ * ("sprzedam", "P2P", "rozliczenie") podnoszą go do SALE_OR_SETTLEMENT.
  */
 import type { Identifier } from '@olcys/core';
 import { extractIdentifiers, type CollectedDocument } from '../evidence';

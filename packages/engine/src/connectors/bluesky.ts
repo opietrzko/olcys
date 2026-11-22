@@ -1,6 +1,6 @@
 /**
- * Bluesky (AT Protocol) – publiczny profil i posty użytkownika przez publiczny AppView (public.api.bsky.app), bez logowania.
- * Nick bez kropki → `<nick>.bsky.social`; nick z kropką (np. `jan.example.pl`) → handle w domenie, którą właściciel
+ * Bluesky (AT Protocol) - publiczny profil i posty użytkownika przez publiczny AppView (public.api.bsky.app), bez logowania.
+ * Nick bez kropki -> `<nick>.bsky.social`; nick z kropką (np. `jan.example.pl`) -> handle w domenie, którą właściciel
  * potwierdził wpisem DNS / plikiem .well-known (to silna przesłanka, że domena i konto należą do tej samej osoby).
  */
 import type { Identifier } from '@olcys/core';
@@ -52,7 +52,7 @@ export const blueskyConnector: SourceConnector = {
       const feed = await ctx.fetch(`${api}/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(p.did)}&limit=${MAX_POSTS}&filter=posts_with_replies`, { headers: { accept: 'application/json' } });
       const items = feed.status === 200 ? ((JSON.parse(feed.body).feed ?? []) as BskyFeedItem[]) : [];
       if (feed.status !== 200) ctx.warn(`Bluesky ${handle}: posty niedostępne (HTTP ${feed.status})`);
-      // handle `jan.bsky.social` odpowiada nickowi „jan” – do przypisania autora używamy nicku z wejścia
+      // handle `jan.bsky.social` odpowiada nickowi "jan" - do przypisania autora używamy nicku z wejścia
       const ownerHandle = p.handle.endsWith('.bsky.social') ? p.handle.slice(0, -'.bsky.social'.length) : p.handle;
       const owner = { handle: ownerHandle, displayName: p.displayName };
       const url = `https://bsky.app/profile/${p.handle}`;
@@ -60,7 +60,7 @@ export const blueskyConnector: SourceConnector = {
       const texts = [segments[0].text];
       const images: { src: string; alt?: string }[] = [];
       for (const it of items) {
-        // reposty to treści innych osób – pomijamy
+        // reposty to treści innych osób - pomijamy
         if (it.reason || it.post.author.did !== p.did) continue;
         const links = (it.post.record.facets ?? []).flatMap((f) => (f.features ?? []).map((x) => x.uri).filter((u): u is string => Boolean(u)));
         const text = [it.post.record.text ?? '', ...links].join('\n');
@@ -83,7 +83,7 @@ export const blueskyConnector: SourceConnector = {
           meta: { api: res.url, did: p.did, handle: p.handle, ownedByQuery: true, domainHandle: !p.handle.endsWith('.bsky.social') },
           raw: JSON.stringify({ profile: JSON.parse(res.body), feed: items }),
       };
-      // CDN obrazów Bluesky serwuje JPEG – sprawdzamy tylko obrazy z podpowiedzią (QR / portfel) w opisie lub treści posta
+      // CDN obrazów Bluesky serwuje JPEG - sprawdzamy tylko obrazy z podpowiedzią (QR / portfel) w opisie lub treści posta
       const qr = await collectQrEvidence(pickQrCandidates(images, url).filter((u) => images.some((i) => i.src === u && /qr|btc|bitcoin|eth|usdt|wallet|portfel|adres|address|donat|tip/i.test(i.alt ?? ''))), doc, ctx);
       return [doc, ...qr];
     }

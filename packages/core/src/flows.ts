@@ -1,7 +1,7 @@
 /**
  * Mapa przepływów środków (wykres Sankeya): skąd przyszły środki na badany adres i dokąd poszły,
  * zgrupowane według kategorii kontrahenta z rejestru etykiet. Kwoty w PLN wg kursu NBP z chronologii.
- * To WYNIK OBLICZENIA na bezpośrednich kontrahentach (jeden krok od adresu) – bez śledzenia dalszej ścieżki.
+ * To WYNIK OBLICZENIA na bezpośrednich kontrahentach (jeden krok od adresu) - bez śledzenia dalszej ścieżki.
  */
 import { addressKey } from './chains';
 import type { AddressCategory, Chain, ChainActivity, TimelineEntry } from './types';
@@ -21,7 +21,7 @@ export interface FlowBucket {
   direction: 'IN' | 'OUT';
   pln: number;
   txCount: number;
-  /** Wypływ do giełdy, bramki krypto-fiat lub usługi P2P – możliwe wyjście do waluty tradycyjnej. */
+  /** Wypływ do giełdy, bramki krypto-fiat lub usługi P2P - możliwe wyjście do waluty tradycyjnej. */
   cashOut: boolean;
   counterpartyCount: number;
   /** Najwięksi kontrahenci w kategorii (do 5). */
@@ -78,7 +78,7 @@ export function flowCategory(category: AddressCategory | undefined): FlowCategor
   }
 }
 
-/** Wartość transferu w PLN: kurs NBP z chronologii, a gdy go brak – USD po kursie bieżącym. */
+/** Wartość transferu w PLN: kurs NBP z chronologii, a gdy go brak - USD po kursie bieżącym. */
 export const entryPln = (t: TimelineEntry, usdPln: number): number => (t.pln ?? (t.usd === null ? 0 : t.usd * usdPln)) || 0;
 
 export function buildFlowMap(

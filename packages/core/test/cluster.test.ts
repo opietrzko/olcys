@@ -19,7 +19,7 @@ describe('BTC – heurystyka wspólnego wejścia', () => {
     const c = clusterCommonInputs(A, [
       tx('t1', [A, B], [{ address: other(99), value: 15_000 }]),
       tx('t2', [B, A, C], [{ address: other(98), value: 20_000 }]),
-      tx('t3', [A], [{ address: B, value: 5_000 }]), // jedno wejście – nic nie wnosi
+      tx('t3', [A], [{ address: B, value: 5_000 }]), // jedno wejście - nic nie wnosi
       tx('t4', [B, C], [{ address: A, value: 5_000 }]), // badany adres tylko na wyjściu
     ])!;
     expect(c.multiInputTxs).toBe(2);

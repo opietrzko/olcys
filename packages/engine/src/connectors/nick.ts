@@ -1,23 +1,23 @@
 /**
- * Nickname variants across platforms with different username rules.
+ * Warianty nicku na platformach z różnymi zasadami nazw użytkownika.
  *
- * Example: GitHub forbids "_" in logins, so a subject known as "jan_kowal" elsewhere may be "jan-kowal" there.
- * A variant account is only attributed with full strength when its own content mentions the original nickname
- * (self-confirmation); otherwise it is marked as a weak link, because anyone could have registered the variant.
+ * Np. GitHub nie pozwala na "_" w loginie, więc "jan_kowal" może tam być "jan-kowal".
+ * Konto-wariant dostaje pełne powiązanie tylko wtedy, gdy jego treść wspomina oryginalny nick;
+ * inaczej powiązanie jest słabe, bo wariant mógł zarejestrować ktokolwiek.
  */
 
 export type NickRules = 'github' | 'devto';
 
-/** Candidate logins to try on a platform, the original first. */
+/** Loginy do sprawdzenia na platformie, oryginalny jako pierwszy. */
 export function nickVariants(nick: string, rules: NickRules): string[] {
   const n = nick.trim().replace(/^@/, '');
   const out = [n];
   if (rules === 'github') {
-    // GitHub: alphanumerics and single hyphens, no leading/trailing hyphen.
+    // GitHub: litery, cyfry i pojedyncze myślniki, bez myślnika na początku i końcu.
     const v = n.replace(/[_.]+/g, '-').replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
     if (v && v !== n) out.push(v);
   } else if (rules === 'devto') {
-    // DEV (Forem): letters, digits and underscores; accounts created via GitHub may map "-" to "_".
+    // DEV (Forem): litery, cyfry i podkreślenia; konta zakładane przez GitHub mogą mieć "_" zamiast "-".
     const v = n.replace(/[-.]+/g, '_');
     if (v !== n) out.push(v);
     const w = n.replace(/_+/g, '-');
@@ -27,16 +27,16 @@ export function nickVariants(nick: string, rules: NickRules): string[] {
 }
 
 export interface VariantConfirmation {
-  /** Login actually found on the platform. */
+  /** Login faktycznie znaleziony na platformie. */
   login: string;
-  /** True when the found login differs from the analyst's nickname. */
+  /** true, gdy znaleziony login różni się od nicku podanego przez analityka. */
   isVariant: boolean;
-  /** True when a variant account is not confirmed by its own content – the pipeline then treats the link as WEAK. */
+  /** true, gdy treść konta-wariantu go nie potwierdza - pipeline traktuje wtedy powiązanie jako WEAK. */
   weak: boolean;
   note?: string;
 }
 
-/** Decide how strongly a found login belongs to the subject, based on texts published under that login. */
+/** Ocena, jak silnie znaleziony login należy do podmiotu, na podstawie treści opublikowanych pod nim. */
 export function confirmVariant(original: string, login: string, texts: string[]): VariantConfirmation {
   const o = original.trim().replace(/^@/, '');
   if (o.toLowerCase() === login.toLowerCase()) return { login, isVariant: false, weak: false };

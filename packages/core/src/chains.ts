@@ -154,7 +154,7 @@ export function validateTron(addr: string): ValidationResult {
   return { valid: true, chain: 'TRON', canonical: addr, validation: 'checksum', kind: 'TRON', notes: [] };
 }
 
-/** Solana nie ma sumy kontrolnej – walidacja formatu (32 bajty base58). Wymaga potwierdzenia kontekstem. */
+/** Solana nie ma sumy kontrolnej - walidacja formatu (32 bajty base58). Wymaga potwierdzenia kontekstem. */
 export function validateSolana(addr: string): ValidationResult {
   if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr)) return invalid();
   try {

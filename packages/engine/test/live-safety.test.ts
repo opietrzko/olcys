@@ -1,4 +1,4 @@
-/** Zabezpieczenia trybu LIVE – testy bez dostępu do sieci. */
+/** Zabezpieczenia trybu LIVE - testy bez dostępu do sieci. */
 import { describe, expect, it } from 'vitest';
 import type { EvidenceDocument, SubjectIdentity } from '@olcys/core';
 import { createSafeFetch, EgressDeniedError, isPrivateIp, linkFor, loadConfig } from '../src';

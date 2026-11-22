@@ -27,7 +27,7 @@ export const webConnector: SourceConnector = {
       .map((h) => (h.startsWith('mailto:') ? h.slice(7) : h.startsWith('http') ? h : ''))
       .filter(Boolean);
     const links = extractIdentifiers([text, ...hrefs].join('\n')).filter((l) => !(l.type === 'url' && l.value === q.value));
-    // Strona na GitHub Pages (`<login>.github.io`) – opublikować ją może tylko właściciel konta GitHub o tym loginie.
+    // Strona na GitHub Pages (`<login>.github.io`) - opublikować ją może tylko właściciel konta GitHub o tym loginie.
     const owner = pagesOwner(res.url) ?? pagesOwner(q.value);
     if (owner?.service === 'github' && !links.some((l) => l.type === 'nick' && l.value.toLowerCase() === owner.login)) {
       links.unshift({ type: 'nick', value: owner.login });

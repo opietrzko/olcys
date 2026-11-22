@@ -1,7 +1,6 @@
 /**
- * Counterparty tags read live from a block explorer must land in the right category:
- * fiat on/off-ramps and crypto-card issuers are OFFRAMP (even though their tags say "hot wallet"
- * or "deposit"), P2P platforms are P2P_SERVICE, exchanges stay CEX.
+ * Tagi kontrahentów z eksploratora trafiają do właściwej kategorii: on/off-ramp i karty krypto -> OFFRAMP
+ * (mimo tagów "hot wallet"/"deposit"), platformy P2P -> P2P_SERVICE, giełdy zostają CEX.
  */
 import { describe, expect, it } from 'vitest';
 import { EXCLUDED_CATEGORIES } from '@olcys/core';

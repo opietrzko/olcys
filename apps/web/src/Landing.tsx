@@ -4,10 +4,10 @@ import type { Meta } from './api';
 import { Score, plural } from './ui';
 import { Wave } from './Wave';
 
-/** Where the call to action leads: the analyst panel. */
+/** Dokąd prowadzi przycisk: panel analityka. */
 const PANEL = '#/analizy';
 
-/** A real run on the fictional test persona "Ksawery Kordas", started from the e-mail address alone. */
+/** Prawdziwy przebieg na fikcyjnej personie testowej "Ksawery Kordas", uruchomiony tylko z adresu e-mail. */
 const TRAIL: { icon: typeof Mail; source: string; value: string; note: string }[] = [
   { icon: Mail, source: 'E-mail', value: 'ksawery.kordas.dev@proton.me', note: 'jedyne dane na wejściu' },
   { icon: UserRoundCheck, source: 'Gravatar', value: 'zweryfikowane konto GitHub', note: 'profil przypisany do e-maila' },
@@ -60,10 +60,7 @@ const REJECTED: { what: string; why: string }[] = [
   { what: 'Adres zbiórki', why: 'znana zbiórka' },
 ];
 
-/**
- * In-page links must not change location.hash: the app routes on the hash (#/…), so '#lp-trop' would open an empty view.
- * Scroll to the section and move focus there instead.
- */
+/** Linki wewnątrz strony nie mogą zmieniać location.hash (routing działa na #/...), więc przewijamy do sekcji i przenosimy tam fokus. */
 const jump = (id: string) => (e: MouseEvent<HTMLAnchorElement>) => {
   e.preventDefault();
   const el = document.getElementById(id);

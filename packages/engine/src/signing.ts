@@ -1,9 +1,9 @@
 /**
  * Integralność pakietu dowodowego:
- *  1. manifest SHA-256 – skrót każdej surowej kopii dowodu, wyniku analizy i całego pakietu,
+ *  1. manifest SHA-256 - skrót każdej surowej kopii dowodu, wyniku analizy i całego pakietu,
  *  2. podpis Ed25519 skrótu pakietu kluczem instancji KryptoTrop (klucz generowany przy pierwszym użyciu,
- *     w produkcji – klucz KAS z HSM / pliku wskazanego w OLCYS_SIGNING_KEY_FILE),
- *  3. znacznik czasu RFC 3161 skrótu pakietu z zewnętrznego urzędu znacznika czasu (TSA) – dowód, że pakiet istniał
+ *     w produkcji - klucz KAS z HSM / pliku wskazanego w OLCYS_SIGNING_KEY_FILE),
+ *  3. znacznik czasu RFC 3161 skrótu pakietu z zewnętrznego urzędu znacznika czasu (TSA) - dowód, że pakiet istniał
  *     w danej chwili. Do TSA trafia wyłącznie skrót SHA-256 (bez danych analizy).
  *
  * Weryfikacja: `npm run verify:package -- plik.json` (manifest, podpis) oraz `openssl ts -verify` (znacznik czasu).
@@ -17,7 +17,7 @@ export const sha256 = (data: string | Buffer) => createHash('sha256').update(dat
 export interface PackageIntegrity {
   version: 1;
   algorithm: 'sha256';
-  /** SHA-256 z JSON.stringify({ run, result, evidence }) – w tej kolejności pól. */
+  /** SHA-256 z JSON.stringify({ run, result, evidence }) - w tej kolejności pól. */
   packageSha256: string;
   resultSha256: string;
   evidence: { id: string; url: string; sha256: string; matchesRecorded: boolean }[];
@@ -30,7 +30,7 @@ export interface TimestampResult {
   status: 'granted' | 'rejected' | 'error';
   /** Czas z tokenu TSA (GeneralizedTime). */
   genTime?: string;
-  /** Odpowiedź TSA (TimeStampResp, DER) w base64 – do weryfikacji `openssl ts -verify`. */
+  /** Odpowiedź TSA (TimeStampResp, DER) w base64 - do weryfikacji `openssl ts -verify`. */
   tokenBase64?: string;
   error?: string;
 }
@@ -66,7 +66,7 @@ export function buildTimestampRequest(digestHex: string, nonce: Buffer = randomB
 
 /** Status PKIStatusInfo (0/1 = granted) i czas GeneralizedTime z TSTInfo. */
 export function readTimestampResponse(resp: Buffer): { granted: boolean; status: number; genTime?: string } {
-  // TimeStampResp ::= SEQUENCE { status PKIStatusInfo (SEQUENCE { INTEGER … }), timeStampToken … }
+  // TimeStampResp ::= SEQUENCE { status PKIStatusInfo (SEQUENCE { INTEGER ... }), timeStampToken ... }
   const lenAt = (i: number): [number, number] => {
     const b = resp[i];
     if (b < 0x80) return [b, 1];
@@ -131,7 +131,7 @@ export async function sealPackage(body: PackageBody, opts: { keyFile: string; ts
   };
 }
 
-/** Weryfikacja pakietu: skróty dowodów, skrót pakietu i podpis (znacznik czasu – openssl ts -verify). */
+/** Weryfikacja pakietu: skróty dowodów, skrót pakietu i podpis (znacznik czasu - openssl ts -verify). */
 export function verifyPackage(file: PackageBody & { integrity?: PackageIntegrity }): { ok: boolean; checks: { name: string; ok: boolean; detail: string }[] } {
   const checks: { name: string; ok: boolean; detail: string }[] = [];
   const integ = file.integrity;

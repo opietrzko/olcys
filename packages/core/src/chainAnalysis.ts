@@ -1,10 +1,10 @@
 /**
- * Analiza aktywności adresu w blockchainie – wskaźniki wyjścia do fiat (cash-out).
+ * Analiza aktywności adresu w blockchainie - wskaźniki wyjścia do fiat (cash-out).
  * Wejście: znormalizowane transfery adresu + (opcjonalnie) transfery kontrahentów 1 hop dalej.
  *
  * Wycena: cena aktywa w USD z dnia transakcji (gdy dostępna historia), przeliczona na PLN po kursie średnim NBP
  * z ostatniego dnia roboczego poprzedzającego transakcję (art. 11a ust. 1 ustawy o PIT). Tokeny spoza rejestru
- * zweryfikowanych kontraktów nie są wyceniane ani liczone do wskaźników (ochrona przed fałszywymi „USDT”).
+ * zweryfikowanych kontraktów nie są wyceniane ani liczone do wskaźników (ochrona przed fałszywymi "USDT").
  */
 import { addressKey } from './chains';
 import type { LabelRegistry } from './labels';
@@ -13,12 +13,12 @@ import { buildFlowMap } from './flows';
 import type { ActivityIndicator, AddressLabel, ChainActivity, RateTable, TimelineEntry, Transfer, Chain, AddressCategory } from './types';
 
 export const ACTIVITY_THRESHOLDS = {
-  /** Wymiana na stablecoiny uznawana za „znaczną” (USD). */
+  /** Wymiana na stablecoiny uznawana za "znaczną" (USD). */
   significantSwapUsd: 1000,
-  /** Adres pośredni przekazuje ≥ tyle % otrzymanych środków na giełdę → adres depozytowy. */
+  /** Adres pośredni przekazuje ≥ tyle % otrzymanych środków na giełdę -> adres depozytowy. */
   depositForwardRatio: 0.9,
   depositForwardHours: 72,
-  /** Wzorzec P2P: ≥ N przychodzących transferów stablecoin od różnych kontrahentów w „okrągłych” kwotach. */
+  /** Wzorzec P2P: ≥ N przychodzących transferów stablecoin od różnych kontrahentów w "okrągłych" kwotach. */
   p2pMinTransfers: 4,
   p2pRoundTo: 50,
   highVolumeUsd: 20000,
@@ -28,7 +28,7 @@ export interface AnalyzeChainInput {
   chain: Chain;
   address: string;
   transfers: Transfer[];
-  /** Transfery kontrahentów (adres → transfery) – do wykrywania adresów depozytowych giełd. */
+  /** Transfery kontrahentów (adres -> transfery) - do wykrywania adresów depozytowych giełd. */
   neighbours?: Map<string, Transfer[]>;
   labels: LabelRegistry;
   rates: RateTable;
@@ -88,7 +88,7 @@ export function valueTransfer(rates: RateTable, asset: ResolvedAsset, amount: nu
 }
 
 const CASHOUT_CATEGORIES: AddressCategory[] = ['CEX', 'CUSTODIAL'];
-/** Etykiety kontraktów obowiązują tylko w sieci, w której kontrakt wdrożono; etykiety kont EOA (np. giełd) – we wszystkich sieciach EVM (ten sam klucz prywatny). */
+/** Etykiety kontraktów obowiązują tylko w sieci, w której kontrakt wdrożono; etykiety kont EOA (np. giełd) - we wszystkich sieciach EVM (ten sam klucz prywatny). */
 const CONTRACT_CATEGORIES = new Set<AddressCategory>(['DEX', 'TOKEN_CONTRACT', 'SMART_CONTRACT', 'MIXER']);
 
 export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
@@ -196,7 +196,7 @@ export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
     }
   }
 
-  // 2) Wnioskowane adresy depozytowe giełd (adres pośredni → hot wallet giełdy)
+  // 2) Wnioskowane adresy depozytowe giełd (adres pośredni -> hot wallet giełdy)
   if (input.neighbours) {
     for (const [nAddr, nTransfers] of input.neighbours) {
       if (labels.get(chain, nAddr)) continue;
@@ -345,7 +345,7 @@ export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
     counterparties,
     indicators,
     timeline,
-    // bez pełnych serii historycznych (duże) – w wyniku zostaje opis źródła
+    // bez pełnych serii historycznych (duże) - w wyniku zostaje opis źródła
     rates: { source: rates.history ? `${rates.source}; historia: ${rates.history.source}` : rates.source, asOf: rates.asOf, usdPln: rates.usdPln, usd: rates.usd },
     ignoredTokenTransfers,
     plnBasis,

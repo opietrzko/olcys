@@ -1,6 +1,6 @@
 /**
  * Wspólny model domenowy KryptoTrop.
- * Nazewnictwo kategorii odpowiada załącznikowi pojęciowo-metodycznemu KAS (KROK 1–3).
+ * Nazewnictwo kategorii odpowiada załącznikowi pojęciowo-metodycznemu KAS (KROK 1-3).
  */
 
 export type Chain = 'BTC' | 'ETH' | 'TRON' | 'LTC' | 'SOL';
@@ -32,7 +32,7 @@ export interface SubjectIdentity extends Identifier {
   tentative?: string;
 }
 
-/** Rodzaj źródła Web2 – decyduje o wyniku bazowym (KROK 2). */
+/** Rodzaj źródła Web2 - decyduje o wyniku bazowym (KROK 2). */
 export type SourceKind =
   | 'OWN_PROFILE' // autorski profil (GitHub, zweryfikowane social media)
   | 'OWN_WEBSITE' // osobista strona WWW
@@ -53,7 +53,7 @@ export type ContextCategory =
 
 /** Kategoria adresu Web3 (KROK 1). */
 export type AddressCategory =
-  | 'UNHOSTED' // kandydat na prywatny portfel – cel atrybucji
+  | 'UNHOSTED' // kandydat na prywatny portfel - cel atrybucji
   | 'CEX'
   | 'CUSTODIAL'
   | 'DEX'
@@ -67,7 +67,7 @@ export type AddressCategory =
   | 'SANCTIONED'
   | 'UNKNOWN';
 
-/** Kategorie, których NIE przypisujemy osobie (0%) – odnotowujemy tylko interakcję. */
+/** Kategorie, których NIE przypisujemy osobie (0%) - odnotowujemy tylko interakcję. */
 export const EXCLUDED_CATEGORIES: ReadonlySet<AddressCategory> = new Set<AddressCategory>([
   'CEX',
   'CUSTODIAL',
@@ -87,7 +87,7 @@ export interface AddressLabel {
   address: string;
   entity: string;
   category: AddressCategory;
-  /** Pochodzenie etykiety – zbiór danych, API, ręczna weryfikacja. */
+  /** Pochodzenie etykiety - zbiór danych, API, ręczna weryfikacja. */
   source: string;
   note?: string;
 }
@@ -250,7 +250,7 @@ export interface TimelineEntry {
   note?: string;
   /** Sieć transferu, gdy inna niż główna (np. polygon). */
   network?: string;
-  /** false = token spoza rejestru zweryfikowanych kontraktów – pominięty w wycenie i wskaźnikach. */
+  /** false = token spoza rejestru zweryfikowanych kontraktów - pominięty w wycenie i wskaźnikach. */
   verifiedAsset?: boolean;
   /** Podstawa ceny w USD: kurs z dnia transakcji, parytet stablecoina albo kurs bieżący (brak historii). */
   priceBasis?: 'historical' | 'peg' | 'current';
@@ -275,7 +275,7 @@ export interface ChainActivity {
   indicators: ActivityIndicator[];
   timeline: TimelineEntry[];
   rates: RateTable;
-  /** Transfery tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe „USDT”). */
+  /** Transfery tokenów spoza rejestru zweryfikowanych kontraktów (możliwy spam / fałszywe "USDT"). */
   ignoredTokenTransfers?: number;
   /** Opis podstawy przeliczenia na PLN. */
   plnBasis?: string;
@@ -290,7 +290,7 @@ export interface RateTable {
   asOf: string;
   usdPln: number;
   usd: Record<string, number>;
-  /** Kursy historyczne: tabele A NBP (USD/PLN, rosnąco po dacie) i dzienne ceny krypto w USD (klucz → RRRR-MM-DD → cena). */
+  /** Kursy historyczne: tabele A NBP (USD/PLN, rosnąco po dacie) i dzienne ceny krypto w USD (klucz -> RRRR-MM-DD -> cena). */
   history?: {
     nbp: { date: string; no: string; mid: number }[];
     prices: Record<string, Record<string, number>>;

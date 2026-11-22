@@ -1,9 +1,9 @@
 /**
- * Klastrowanie adresów Bitcoina – heurystyka wspólnego wejścia (common-input-ownership, Meiklejohn i in. 2013).
+ * Klastrowanie adresów Bitcoina - heurystyka wspólnego wejścia (common-input-ownership, Meiklejohn i in. 2013).
  *
  * Transakcja wydająca środki z kilku adresów musi być podpisana kluczami każdego z nich, więc zwykle tworzy ją
  * jeden portfel. Adresy współwydawane z badanym adresem to kandydaci na adresy tego samego posiadacza.
- * Wyjątek: CoinJoin (Wasabi, Whirlpool, JoinMarket) celowo łączy wejścia wielu osób – takie transakcje pomijamy.
+ * Wyjątek: CoinJoin (Wasabi, Whirlpool, JoinMarket) celowo łączy wejścia wielu osób - takie transakcje pomijamy.
  * Wynik jest WNIOSKIEM do weryfikacji, a nie faktem: nie wpływa na Wskaźnik Pewności.
  */
 import type { LabelRegistry } from './labels';
@@ -31,7 +31,7 @@ export interface AddressCluster {
   multiInputTxs: number;
   /** Pominięte transakcje o cechach CoinJoin (wejścia wielu osób). */
   coinjoinSkipped: string[];
-  /** Członkowie klastra z etykietą giełdy / usługi – sygnał, że adres może być kontem custodial, a nie portfelem osoby. */
+  /** Członkowie klastra z etykietą giełdy / usługi - sygnał, że adres może być kontem custodial, a nie portfelem osoby. */
   labeledMembers: number;
 }
 

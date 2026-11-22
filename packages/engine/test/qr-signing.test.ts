@@ -83,7 +83,7 @@ describe('Pieczęć pakietu dowodowego', () => {
   });
 
   it('odczyt statusu i czasu z odpowiedzi TSA', () => {
-    // TimeStampResp { status { INTEGER 0 }, … GeneralizedTime 20261121210515Z }
+    // TimeStampResp { status { INTEGER 0 }, ... GeneralizedTime 20261121210515Z }
     const time = Buffer.concat([Buffer.from([0x18, 0x0f]), Buffer.from('20261121210515Z')]);
     const status = Buffer.from([0x30, 0x03, 0x02, 0x01, 0x00]);
     const token = Buffer.concat([Buffer.from([0x30, time.length]), time]);

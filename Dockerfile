@@ -1,4 +1,4 @@
-# KryptoTrop – jeden obraz dla monorepo (API + UI).
+# KryptoTrop - jeden obraz dla monorepo (API + UI).
 FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./

@@ -1,5 +1,5 @@
 /**
- * Dostawcy danych blockchain: Etherscan (API v2, wiele sieci EVM), Esplora (BTC – możliwy self-hosting, np. mempool.space), TronGrid,
+ * Dostawcy danych blockchain: Etherscan (API v2, wiele sieci EVM), Esplora (BTC - możliwy self-hosting, np. mempool.space), TronGrid,
  * JSON-RPC Solany (publiczny węzeł lub własny).
  * Interfejs pozwala podmienić źródło na węzeł własny KAS bez zmian w logice analizy.
  */
@@ -10,20 +10,20 @@ import type { SafeFetch } from '../http';
 export interface ChainProvider {
   id: string;
   supports(chain: Chain): boolean;
-  /** null = brak danych / błąd dostawcy (adres niezweryfikowany). `mainOnly` – tylko sieć główna (np. dla kontrahentów). */
+  /** null = brak danych / błąd dostawcy (adres niezweryfikowany). `mainOnly` - tylko sieć główna (np. dla kontrahentów). */
   getTransfers(chain: Chain, address: string, opts?: { mainOnly?: boolean; maxTx?: number }): Promise<Transfer[] | null>;
-  /** Łączna liczba transakcji adresu (cała historia), gdy dostawca ją udostępnia – do heurystyki adresu instytucjonalnego. */
+  /** Łączna liczba transakcji adresu (cała historia), gdy dostawca ją udostępnia - do heurystyki adresu instytucjonalnego. */
   getStats?(chain: Chain, address: string): Promise<{ txCount?: number } | null>;
-  /** Uwagi z ostatniego zapytania (np. sieć EVM niedostępna) – trafiają do przebiegu analizy. */
+  /** Uwagi z ostatniego zapytania (np. sieć EVM niedostępna) - trafiają do przebiegu analizy. */
   notes?: string[];
   /** Bytecode adresu (EVM). null = nie sprawdzono. */
   getCode(chain: Chain, address: string): Promise<string | null>;
-  /** Powód ostatniego niepowodzenia (np. limit zapytań) – trafia do przebiegu analizy zamiast cichego „brak danych”. */
+  /** Powód ostatniego niepowodzenia (np. limit zapytań) - trafia do przebiegu analizy zamiast cichego "brak danych". */
   lastError?: string;
   /** Etykieta / nazwa adresu z API eksploratora (KROK 3.1 załącznika). */
   getInfo?(chain: Chain, address: string): Promise<AddressInfo | null>;
   explorerUrl(chain: Chain, address: string): string | undefined;
-  /** UTXO (BTC): transakcje adresu z pełną listą wejść i wyjść z ostatniego getTransfers – do klastrowania adresów. */
+  /** UTXO (BTC): transakcje adresu z pełną listą wejść i wyjść z ostatniego getTransfers - do klastrowania adresów. */
   utxoTxs?(chain: Chain, address: string): UtxoTx[] | undefined;
 }
 
@@ -53,7 +53,7 @@ export class EtherscanProvider implements ChainProvider {
     return chain === 'ETH';
   }
   lastError?: string;
-  /** Zapytanie z ponowieniem przy limicie (HTTP 429 / „Too many requests” / „rate limit”): 2 próby, odstęp 1,5 s i 3 s. */
+  /** Zapytanie z ponowieniem przy limicie (HTTP 429 / "Too many requests" / "rate limit"): 2 próby, odstęp 1,5 s i 3 s. */
   private async q(params: Record<string, string>) {
     const u = new URL(this.cfg.chain.evmApiUrl);
     const extra: Record<string, string> = this.cfg.chain.evmApiKey ? { chainid: String(this.chainId), apikey: this.cfg.chain.evmApiKey } : {};
@@ -64,7 +64,7 @@ export class EtherscanProvider implements ChainProvider {
       try {
         body = JSON.parse(r.body);
       } catch {
-        /* odpowiedź nie-JSON – traktujemy jak błąd poniżej */
+        /* odpowiedź nie-JSON - traktujemy jak błąd poniżej */
       }
       const limited = r.status === 429 || /too many requests|rate limit/i.test(`${body.message ?? ''} ${typeof body.result === 'string' ? body.result : ''}`);
       if (!limited) return body as { message?: string; result?: unknown } & Record<string, unknown>;
@@ -75,7 +75,7 @@ export class EtherscanProvider implements ChainProvider {
   async getTransfers(chain: Chain, address: string): Promise<Transfer[] | null> {
     try {
       this.lastError = undefined;
-      // po kolei, nie równolegle – publiczne API mają niskie limity zapytań na sekundę
+      // po kolei, nie równolegle - publiczne API mają niskie limity zapytań na sekundę
       const native = (await this.q({ module: 'account', action: 'txlist', address, sort: 'asc', page: '1', offset: '1000' })) as { result?: any };
       const tokens = (await this.q({ module: 'account', action: 'tokentx', address, sort: 'asc', page: '1', offset: '1000' })) as { result?: any };
       const out: Transfer[] = [];
@@ -132,7 +132,7 @@ export class EtherscanProvider implements ChainProvider {
       return null;
     }
   }
-  /** Blockscout v2: nazwa zweryfikowanego kontraktu, publiczne tagi (np. „Binance”, „Exchange”). */
+  /** Blockscout v2: nazwa zweryfikowanego kontraktu, publiczne tagi (np. "Binance", "Exchange"). */
   async getInfo(_chain: Chain, address: string): Promise<AddressInfo | null> {
     try {
       const r = await this.fetch(`${this.cfg.chain.blockscoutUrl}/api/v2/addresses/${address}`, { headers: { accept: 'application/json' }, timeoutMs: 8000 });
@@ -158,7 +158,7 @@ export class EsploraProvider implements ChainProvider {
   supports(chain: Chain) {
     return chain === 'BTC';
   }
-  /** Instancje Esplora w kolejności: skonfigurowana, potem zapasowe (np. mempool.space) – przy limicie 429 / błędzie. */
+  /** Instancje Esplora w kolejności: skonfigurowana, potem zapasowe (np. mempool.space) - przy limicie 429 / błędzie. */
   private get bases() {
     return [...new Set([this.cfg.chain.esploraUrl, ...this.cfg.chain.esploraFallbacks])];
   }
@@ -246,7 +246,7 @@ export class EsploraProvider implements ChainProvider {
   explorerUrl = explorer;
 }
 
-/** Adres TRON w zapisie hex (41…) → Base58Check (T…). */
+/** Adres TRON w zapisie hex (41...) -> Base58Check (T...). */
 export function tronHexToBase58(hex: string): string {
   const clean = hex.replace(/^0x/, '');
   const bytes = Uint8Array.from(clean.match(/../g)!.map((b) => parseInt(b, 16)));
@@ -270,7 +270,7 @@ export class TronGridProvider implements ChainProvider {
       }
       const data = JSON.parse(r.body).data as { transaction_id: string; block_timestamp: number; from: string; to: string; value: string; token_info: { symbol: string; decimals: number; address: string } }[];
       const out: Transfer[] = data.map((t) => ({ chain, hash: t.transaction_id, timestamp: new Date(t.block_timestamp).toISOString(), from: t.from, to: t.to, asset: t.token_info.symbol, amount: Number(t.value) / 10 ** t.token_info.decimals, tokenContract: t.token_info.address }));
-      // natywne TRX (TransferContract) – kwoty w SUN (1 TRX = 10^6 SUN), adresy w zapisie hex 41…
+      // natywne TRX (TransferContract) - kwoty w SUN (1 TRX = 10^6 SUN), adresy w zapisie hex 41...
       try {
         const n = await this.fetch(`${this.cfg.chain.tronGridUrl}/v1/accounts/${address}/transactions?limit=200&only_confirmed=true`);
         if (n.status === 200) {
@@ -368,7 +368,7 @@ export function parseSolanaTransfers(address: string, signature: string, tx: Sol
   return out;
 }
 
-/** Solana – publiczny JSON-RPC (getSignaturesForAddress + getTransaction jsonParsed); można wskazać własny węzeł (SOLANA_RPC_URL). */
+/** Solana - publiczny JSON-RPC (getSignaturesForAddress + getTransaction jsonParsed); można wskazać własny węzeł (SOLANA_RPC_URL). */
 export class SolanaRpcProvider implements ChainProvider {
   id: string;
   lastError?: string;
@@ -412,7 +412,7 @@ export class SolanaRpcProvider implements ChainProvider {
       } catch (e) {
         failed++;
         this.lastError = (e as Error).message;
-        if (failed >= 3) break; // węzeł odmawia – nie zasypujemy go dalszymi zapytaniami
+        if (failed >= 3) break; // węzeł odmawia - nie zasypujemy go dalszymi zapytaniami
       }
     }
     if (sigs.length >= limit) this.notes.push(`Solana: pobrano ${limit} ostatnich transakcji adresu (SOLANA_MAX_TX) – historia może być niepełna`);
@@ -452,7 +452,7 @@ export class CompositeProvider implements ChainProvider {
   utxoTxs(chain: Chain, address: string) {
     return this.pick(chain)?.utxoTxs?.(chain, address);
   }
-  /** Uwagi dostawcy dla sieci (np. niedostępna sieć EVM) – zbierane i czyszczone przy odczycie. */
+  /** Uwagi dostawcy dla sieci (np. niedostępna sieć EVM) - zbierane i czyszczone przy odczycie. */
   takeNotes(chain: Chain): string[] {
     const p = this.pick(chain);
     const n = p?.notes ?? [];

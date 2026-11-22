@@ -65,11 +65,11 @@ interface Props {
   hideExcluded: boolean;
 }
 
-/** Graf powiązań w układzie kolumnowym: podmiot → identyfikatory (wg głębokości pivotu) → adresy (wg Wskaźnika Pewności). */
+/** Graf powiązań w układzie kolumnowym: podmiot -> identyfikatory (wg głębokości pivotu) -> adresy (wg Wskaźnika Pewności). */
 export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, hideExcluded }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
-  // widok (przybliżenie i przesunięcie) przeżywa przebudowę grafu dla tego samego wyniku - np. po „Ukryj wykluczone” czy zmianie motywu
+  // widok (przybliżenie i przesunięcie) przeżywa przebudowę grafu dla tego samego wyniku - np. po "Ukryj wykluczone" czy zmianie motywu
   const viewRef = useRef<{ result: unknown; zoom: number; pan: { x: number; y: number } } | null>(null);
   const theme = useContext(ThemeCtx);
   // wąski kontener (telefon): kolumny stają się wierszami, graf czyta się z góry na dół
@@ -188,7 +188,7 @@ export function Graph({ result, selected, selectedNode, onSelect, onSelectNode, 
       { selector: 'edge[gated=1]', style: { 'line-style': 'dashed' } },
       { selector: 'edge[strength="WEAK"]', style: { 'line-style': 'dotted', 'line-color': v('--warn'), 'target-arrow-color': v('--warn') } },
       { selector: 'edge[strength="MENTION"]', style: { 'line-style': 'dashed' } },
-      // źródło (np. „github”) pokazujemy tylko na podświetlonej ścieżce - w spoczynku graf jest czysty
+      // źródło (np. "github") pokazujemy tylko na podświetlonej ścieżce - w spoczynku graf jest czysty
       { selector: 'edge.path', style: { width: 2.5, 'line-color': v('--accent'), 'target-arrow-color': v('--accent'), color: v('--accent'), 'z-index': 10, label: 'data(label)' } },
       // przygaszenie poza ścieżką: kształty i linie bledną, etykiety węzłów zostają czytelne (WCAG AA)
       { selector: 'node.faded', style: { 'background-opacity': 0.25, 'border-opacity': 0.3, 'text-opacity': 0.9 } },

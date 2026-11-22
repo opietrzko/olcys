@@ -1,6 +1,6 @@
 /**
- * GitHub – publiczne REST API (bez logowania): profil użytkownika, profilowe README, FUNDING.yml.
- * Adres na własnym profilu = najsilniejsza przesłanka (KROK 2: 80–100%).
+ * GitHub - publiczne REST API (bez logowania): profil użytkownika, profilowe README, FUNDING.yml.
+ * Adres na własnym profilu = najsilniejsza przesłanka (KROK 2: 80-100%).
  *
  * GitHub logins cannot contain "_", so a nickname such as "jan_kowal" is also tried as "jan-kowal".
  * A variant account counts as the subject's only when its own content mentions the original nickname.
@@ -35,7 +35,7 @@ export const githubConnector: SourceConnector = {
     const auth: Record<string, string> = ctx.config.githubToken ? { authorization: `Bearer ${ctx.config.githubToken}` } : {};
     const candidates = nickVariants(q.value, 'github');
 
-    // Find the first login that exists; on rate limit fall back to raw files for every candidate.
+    // Pierwszy istniejący login; przy limicie zapytań pobieramy surowe pliki dla każdego kandydata.
     let u: GhUser | undefined;
     let profileRes: Awaited<ReturnType<typeof ctx.fetch>> | undefined;
     let rateLimited = false;
@@ -65,7 +65,7 @@ export const githubConnector: SourceConnector = {
       if (u.email) links.push({ type: 'email', value: u.email });
       if (u.twitter_username) links.push({ type: 'nick', value: u.twitter_username });
       if (u.name) links.push({ type: 'name', value: u.name });
-      // Konta społecznościowe podpięte przez właściciela profilu – kolejne tropy („macki”)
+      // Konta społecznościowe podpięte przez właściciela profilu - kolejne tropy ("macki")
       const social = await ctx.fetch(`${githubApi}/users/${encodeURIComponent(u.login)}/social_accounts`, { headers: { accept: 'application/vnd.github+json', ...auth } }).catch(() => null);
       const socialLines: string[] = [];
       if (social?.status === 200) {
@@ -117,12 +117,12 @@ export const githubConnector: SourceConnector = {
           raw: r.body,
         };
         docs.push(doc);
-        // kody QR w obrazach README (ścieżki względne – względem repozytorium)
+        // kody QR w obrazach README (ścieżki względne - względem repozytorium)
         if (file.endsWith('.md')) docs.push(...(await collectQrEvidence(pickQrCandidates(imagesInMarkdown(r.body), url), doc, ctx)));
       }
     }
 
-    // Variant logins: confirm against everything published under the login, per login.
+    // Warianty loginu: potwierdzenie na podstawie wszystkiego, co opublikowano pod danym loginem.
     for (const login of new Set(docs.map((d) => d.owner!.handle!))) {
       const own = docs.filter((d) => d.owner!.handle === login);
       const c = confirmVariant(q.value, login, own.flatMap((d) => d.segments.map((s) => s.text)));
@@ -137,7 +137,7 @@ export const githubConnector: SourceConnector = {
 const normName = (s: string) => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').toLowerCase().replace(/\s+/g, ' ').trim();
 
 /**
- * Imię i nazwisko → konta GitHub z identycznym polem „Name” (wyszukiwarka użytkowników, kwalifikator fullname:).
+ * Imię i nazwisko -> konta GitHub z identycznym polem "Name" (wyszukiwarka użytkowników, kwalifikator fullname:).
  * Samo imię i nazwisko to najsłabszy identyfikator (homonimy): znalezione konta dostają powiązanie słabe,
  * dopóki inny ślad podmiotu nie wskaże tego loginu (wzajemne potwierdzenie), i nie są źródłem dalszego pivotu.
  */
@@ -151,7 +151,7 @@ async function collectByName(q: Identifier, ctx: ConnectorContext): Promise<Coll
     return [];
   }
   const logins = ((JSON.parse(res.body).items ?? []) as { login: string }[]).map((i) => i.login).slice(0, 3);
-  ctx.log(`„${q.value}”: ${logins.length} kont(a) do sprawdzenia (${logins.join(', ') || '—'})`);
+  ctx.log(`„${q.value}”: ${logins.length} kont(a) do sprawdzenia (${logins.join(', ') || '-'})`);
   const target = normName(q.value);
   const out: CollectedDocument[] = [];
   for (const login of logins) {

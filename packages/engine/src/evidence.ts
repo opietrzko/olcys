@@ -76,7 +76,7 @@ const GITHUB_RESERVED = new Set(
 
 /**
  * Link do github.com: login konta (adres profilu `github.com/<login>`), `''` dla innych stron GitHuba
- * (repozytorium, nawigacja – nie są tropem; profil i repozytoria konta zbiera konektor GitHub),
+ * (repozytorium, nawigacja - nie są tropem; profil i repozytoria konta zbiera konektor GitHub),
  * `null` gdy to nie jest github.com.
  */
 export function githubAccountUrl(url: string): string | null {
@@ -99,7 +99,7 @@ const NON_PIVOT_HOSTS = /(^|\.)(claude\.ai|chatgpt\.com|chat\.openai\.com|perple
 
 /**
  * Czy link warto odwiedzić jako trop: poprawny publiczny URL, a nie strona logowania / rejestracji,
- * przycisk „udostępnij” ani serwis ogólny (czat AI, wyszukiwarka, encyklopedia).
+ * przycisk "udostępnij" ani serwis ogólny (czat AI, wyszukiwarka, encyklopedia).
  */
 export function isPivotableUrl(url: string): boolean {
   let u: URL;

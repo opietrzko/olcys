@@ -45,11 +45,11 @@ describe('fałszywe tokeny', () => {
 
 describe('kurs NBP do PIT-38 (art. 11a ust. 1)', () => {
   it('bierze kurs z ostatniego dnia roboczego PRZED dniem transakcji', () => {
-    // poniedziałek 2026-03-09 → piątek 2026-03-06 (nie kurs z dnia transakcji)
+    // poniedziałek 2026-03-09 -> piątek 2026-03-06 (nie kurs z dnia transakcji)
     expect(nbpRateBefore(rates, '2026-03-09T12:00:00Z')?.date).toBe('2026-03-06');
-    // niedziela 2026-03-08 → piątek 2026-03-06
+    // niedziela 2026-03-08 -> piątek 2026-03-06
     expect(nbpRateBefore(rates, '2026-03-08T12:00:00Z')?.mid).toBe(3.8);
-    // brak tabeli w ostatnich 7 dniach → brak kursu (bez zgadywania)
+    // brak tabeli w ostatnich 7 dniach -> brak kursu (bez zgadywania)
     expect(nbpRateBefore(rates, '2026-06-01T00:00:00Z')).toBeUndefined();
   });
 

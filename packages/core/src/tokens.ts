@@ -1,21 +1,21 @@
 /**
  * Rejestr zweryfikowanych kontraktów tokenów (stablecoiny, wrapped native).
  *
- * Symbol tokena może nadać każdy, kto wdroży kontrakt – w historii portfeli roi się od fałszywych „USDT”
+ * Symbol tokena może nadać każdy, kto wdroży kontrakt - w historii portfeli roi się od fałszywych "USDT"
  * (spam, zatruwanie adresów). Token liczy się do wyceny i wskaźników cash-out wyłącznie wtedy,
  * gdy adres jego kontraktu jest na tej liście. Kontrakty zweryfikowano wywołaniem symbol() w publicznym RPC
- * danej sieci oraz w eksploratorze (Blockscout) – 2026-11-21.
+ * danej sieci oraz w eksploratorze (Blockscout) - 2026-11-21.
  */
 import type { Transfer } from './types';
 
 export interface KnownToken {
   symbol: string;
-  /** Klucz ceny w tabeli kursów (np. USDC.e → USDC, WETH → ETH). */
+  /** Klucz ceny w tabeli kursów (np. USDC.e -> USDC, WETH -> ETH). */
   priceAs: string;
   stablecoin: boolean;
 }
 
-/** Sieci EVM obsługiwane przez dostawców (nazwa → natywne aktywo). */
+/** Sieci EVM obsługiwane przez dostawców (nazwa -> natywne aktywo). */
 export const EVM_NETWORKS: Record<string, { chainId: number; native: string; label: string }> = {
   ethereum: { chainId: 1, native: 'ETH', label: 'Ethereum' },
   polygon: { chainId: 137, native: 'POL', label: 'Polygon' },
@@ -66,7 +66,7 @@ const KNOWN: Record<string, Record<string, KnownToken>> = {
     '0x7f5c764cbc14f9669b88837ca1490cca17c31607': S('USDC.e', 'USDC'),
     '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': S('DAI'),
   },
-  // Solana: SPL mint (adres emitenta tokena) – Circle USDC i Tether USDT
+  // Solana: SPL mint (adres emitenta tokena) - Circle USDC i Tether USDT
   sol: {
     EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: S('USDC'),
     Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: S('USDT'),
@@ -77,7 +77,7 @@ const KNOWN: Record<string, Record<string, KnownToken>> = {
   },
 };
 
-/** Stablecoiny powiązane z dolarem – w wycenie historycznej przyjmujemy 1 USD (EURC: kurs EUR). */
+/** Stablecoiny powiązane z dolarem - w wycenie historycznej przyjmujemy 1 USD (EURC: kurs EUR). */
 export const USD_PEGGED = new Set(['USDT', 'USDC', 'DAI', 'PYUSD', 'FDUSD', 'BUSD']);
 
 export function networkOf(t: Transfer): string {

@@ -9,14 +9,14 @@ export interface EngineConfig {
   egressAllowlist: string[];
   /**
    * Pobieranie publicznych stron odkrytych w dowodach (linki z profili, wyniki wyszukiwania):
-   *  'public'    – dowolny publiczny host (GET bez danych analizy), z blokadą adresów prywatnych/wewnętrznych (SSRF),
-   *  'allowlist' – tylko hosty z allowlisty.
+   *  'public'    - dowolny publiczny host (GET bez danych analizy), z blokadą adresów prywatnych/wewnętrznych (SSRF),
+   *  'allowlist' - tylko hosty z allowlisty.
    */
   webFetch: 'public' | 'allowlist';
   userAgent: string;
   requestTimeoutMs: number;
   maxDepth: number;
-  /** Budżet czasu (ms) na zbieranie i pivotowanie w jednym przebiegu – po jego przekroczeniu analiza przechodzi do oceny zebranych dowodów. */
+  /** Budżet czasu (ms) na zbieranie i pivotowanie w jednym przebiegu - po jego przekroczeniu analiza przechodzi do oceny zebranych dowodów. */
   pivotBudgetMs: number;
   /** Maks. liczba nowych tropów z jednego dokumentu (strona z nawigacją / dokumentacja to nie profil osoby). */
   maxPivotsPerDoc: number;
@@ -37,12 +37,9 @@ export interface EngineConfig {
     njump: string;
     searxng?: string;
   };
-  /** Reddit: switch (OLCYS_REDDIT=false) and the optional registered read-only app used for app-only OAuth. */
+  /** Reddit: włącznik (OLCYS_REDDIT=false) i opcjonalna aplikacja read-only do OAuth app-only. */
   reddit: { enabled: boolean; clientId?: string; clientSecret?: string };
-  /**
-   * Offline safety net for demos: record every response to a directory, or replay a recorded run without network.
-   * Replay never touches the network; a request with no recording fails loudly instead of silently going online.
-   */
+  /** Tryb offline na pokaz: nagrywanie odpowiedzi do katalogu albo odtwarzanie bez sieci (brak nagrania = błąd). */
   recording?: { mode: 'record' | 'replay'; dir: string };
   chain: {
     /** API zgodne z Etherscan: Etherscan v2 (z kluczem) lub Blockscout (bez klucza, open source, możliwy self-hosting). */
@@ -50,7 +47,7 @@ export interface EngineConfig {
     evmApiKey?: string;
     blockscoutUrl: string;
     esploraUrl: string;
-    /** Zapasowe instancje Esplora (BTC) – używane przy limicie zapytań lub awarii podstawowej. */
+    /** Zapasowe instancje Esplora (BTC) - używane przy limicie zapytań lub awarii podstawowej. */
     esploraFallbacks: string[];
     tronGridUrl: string;
     /** JSON-RPC Solany (publiczny węzeł mainnet-beta lub własny węzeł KAS). */
@@ -61,7 +58,7 @@ export interface EngineConfig {
     liveRates: boolean;
     /**
      * Dodatkowe sieci EVM sprawdzane dla adresów 0x (ten sam adres = ten sam klucz prywatny we wszystkich sieciach EVM).
-     * Wymagają klucza Etherscan v2 (jeden klucz dla wszystkich sieci) – publiczne instancje Blockscout dla L2 blokują ruch automatyczny.
+     * Wymagają klucza Etherscan v2 (jeden klucz dla wszystkich sieci) - publiczne instancje Blockscout dla L2 blokują ruch automatyczny.
      */
     evmNetworks: string[];
   };
@@ -70,7 +67,7 @@ export interface EngineConfig {
   signing: { keyFile: string; tsaUrl?: string };
   /** Lokalne archiwum dziennych cen krypto (pusty = wyłączone). */
   priceArchiveDir?: string;
-  /** Token GitHub (tylko odczyt danych publicznych) – podnosi limit API z 60 do 5000 zapytań/h. */
+  /** Token GitHub (tylko odczyt danych publicznych) - podnosi limit API z 60 do 5000 zapytań/h. */
   githubToken?: string;
   llm?: { baseUrl: string; model: string; apiKey?: string };
 }
@@ -172,7 +169,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
   };
 }
 
-/** Niezależna „rodzina źródeł” = domena (bez www). */
+/** Niezależna "rodzina źródeł" = domena (bez www). */
 export function familyOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, '');

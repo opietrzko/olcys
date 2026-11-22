@@ -1,12 +1,12 @@
 /**
- * Logowanie analityków i role (RBAC). Domyślnie wyłączone – włącza się, gdy istnieje plik użytkowników
+ * Logowanie analityków i role (RBAC). Domyślnie wyłączone - włącza się, gdy istnieje plik użytkowników
  * (OLCYS_USERS_FILE, domyślnie data/users.json, tworzony przez `npm run user:add`). W docelowym wdrożeniu KAS
- * w to miejsce wchodzi SSO (np. OIDC / Kerberos) – role i dziennik audytu pozostają bez zmian.
+ * w to miejsce wchodzi SSO (np. OIDC / Kerberos) - role i dziennik audytu pozostają bez zmian.
  *
  * Role:
- *   analityk – tworzy i uruchamia analizy, przegląda wyniki, pobiera raporty i pakiety dowodowe,
- *   przeglad – tylko odczyt (np. kontrola, prokuratura): wyniki, raporty, pakiety, bez uruchamiania analiz,
- *   admin    – jak analityk + dziennik audytu.
+ *   analityk - tworzy i uruchamia analizy, przegląda wyniki, pobiera raporty i pakiety dowodowe,
+ *   przeglad - tylko odczyt (np. kontrola, prokuratura): wyniki, raporty, pakiety, bez uruchamiania analiz,
+ *   admin    - jak analityk + dziennik audytu.
  *
  * Hasła: scrypt (N=16384, r=8, p=1) z losową solą. Sesja: podpisany HMAC-SHA256 token w ciasteczku HttpOnly, SameSite=Strict.
  */
@@ -61,13 +61,13 @@ export class Auth {
     // bez stałego sekretu sesje wygasają przy restarcie API (bezpieczny domyślny wybór)
     this.secret = secret ? Buffer.from(secret) : randomBytes(32);
   }
-  /** Plik czytany przy każdym logowaniu – dodanie użytkownika nie wymaga restartu. */
+  /** Plik czytany przy każdym logowaniu - dodanie użytkownika nie wymaga restartu. */
   get enabled(): boolean {
     return loadUsers(this.usersFile).length > 0;
   }
   login(login: string, password: string): Session | null {
     const u = loadUsers(this.usersFile).find((x) => x.login.toLowerCase() === login.trim().toLowerCase());
-    // porównanie z hasłem-atrapą także dla nieznanego loginu – stały czas odpowiedzi
+    // porównanie z hasłem-atrapą także dla nieznanego loginu - stały czas odpowiedzi
     const ok = checkPassword(password, u?.password ?? hashPassword('x', Buffer.alloc(16)));
     return u && ok ? { login: u.login, role: u.role, name: u.name, exp: Date.now() + this.ttlMs } : null;
   }
@@ -104,7 +104,7 @@ export function readCookie(header: string | undefined, name: string): string | u
   return undefined;
 }
 
-/** Uprawnienia: metoda + ścieżka → wymagane role (null = każdy zalogowany). */
+/** Uprawnienia: metoda + ścieżka -> wymagane role (null = każdy zalogowany). */
 export function requiredRoles(method: string, path: string): Role[] | null {
   if (path.startsWith('/api/audit')) return ['admin'];
   if (method !== 'GET' && method !== 'HEAD') return ['analityk', 'admin'];

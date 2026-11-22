@@ -20,8 +20,8 @@ describe('mapa przepływów', () => {
     tr('c', CEX, me, 'ETH', 0.5), // wypłata z giełdy
     tr('d', me, CEX, 'ETH', 1), // wyjście na giełdę
     tr('e', me, RAMP, 'ETH', 0.25), // bramka fiat
-    tr('f', me, DEX, 'ETH', 0.5), // wymiana na DEX – nie cash-out
-    tr('s', me, me, 'ETH', 3), // przelew na własny adres – pomijany
+    tr('f', me, DEX, 'ETH', 0.5), // wymiana na DEX - nie cash-out
+    tr('s', me, me, 'ETH', 3), // przelew na własny adres - pomijany
     tr('g', synthetic.eth('spam'), me, 'USDT', 1_000_000, { tokenContract: synthetic.eth('fake-usdt') }), // fałszywy USDT
   ];
   const a = analyzeChain({ chain: 'ETH', address: me, transfers, labels, rates, dataSource: 'test' });

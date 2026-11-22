@@ -1,8 +1,8 @@
 /**
- * Wskaźnik Pewności (Confidence Score) – algorytm regułowy, deterministyczny i w pełni wyjaśnialny.
+ * Wskaźnik Pewności (Confidence Score) - algorytm regułowy, deterministyczny i w pełni wyjaśnialny.
  *
  *   score = clamp( BAZA(najlepsze wystąpienie) + Σ korekty , 0, 100 )
- *   BRAMKA: adres z kategorii wykluczonej (CEX, kontrakt, mikser, zbiórka…) => 0%, niezależnie od reszty.
+ *   BRAMKA: adres z kategorii wykluczonej (CEX, kontrakt, mikser, zbiórka...) => 0%, niezależnie od reszty.
  *
  * Każda reguła zapisuje: identyfikator, wartość, przesłankę i wystąpienia, na których się opiera.
  * Wersja reguł jest zapisywana z każdym wynikiem, by analizę można było odtworzyć.
@@ -44,7 +44,7 @@ export const SCORING_RULES = {
 } as const;
 
 const SECOND_LEVEL = new Set(['com.pl', 'net.pl', 'org.pl', 'co.uk', 'org.uk', 'com.au', 'co.jp', 'com.br']);
-/** Hostingi stron przypisanych do kont – strona `<login>.github.io` to ta sama usługa co profil GitHub. */
+/** Hostingi stron przypisanych do kont - strona `<login>.github.io` to ta sama usługa co profil GitHub. */
 const SERVICE_ALIASES: [RegExp, string][] = [
   [/(^|\.)github\.io$|(^|\.)githubusercontent\.com$|^gist\.github\.com$|^github(\.com)?$/, 'github.com'],
   [/(^|\.)gitlab\.io$|^gitlab(\.com)?$/, 'gitlab.com'],
@@ -55,7 +55,7 @@ const SERVICE_ALIASES: [RegExp, string][] = [
 
 /**
  * Usługa (pochodzenie) źródła na potrzeby reguły synergii: różne subdomeny jednej domeny i strony hostowane
- * na koncie danego serwisu (GitHub Pages) to JEDNA usługa – wielokrotne wystąpienie w niej nie jest niezależnym potwierdzeniem.
+ * na koncie danego serwisu (GitHub Pages) to JEDNA usługa - wielokrotne wystąpienie w niej nie jest niezależnym potwierdzeniem.
  */
 export function sourceService(family: string): string {
   const f = family.toLowerCase().replace(/^www\./, '');
@@ -94,10 +94,7 @@ export interface ScoreInput {
   classification: AddressClassification;
   /** Czy adres zweryfikowano w blockchainie (etykiety + bytecode/historia). */
   verifiedOnChain: boolean;
-  /**
-   * Whether tx counters or history were fetched, i.e. whether the institutional-address heuristic could run.
-   * false => penalty, because without that data an exchange or service would look like a personal wallet. Defaults to true.
-   */
+  /** Czy pobrano liczniki tx lub historię (heurystyka adresu instytucjonalnego). false = kara. Domyślnie true. */
   activityChecked?: boolean;
 }
 
@@ -106,7 +103,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
   const rules: AppliedRule[] = [];
   const allIds = subjectOccurrences.map((o) => o.id);
 
-  // BRAMKA – KROK 3 załącznika
+  // BRAMKA - KROK 3 załącznika
   if (EXCLUDED_CATEGORIES.has(classification.category) && !classification.inferred) {
     rules.push({
       ruleId: `GATE_${classification.category}`,
@@ -124,7 +121,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
     return { score: 0, band: 'WYKLUCZONE', gated: false, rules, rulesVersion: RULES_VERSION };
   }
 
-  // BAZA – najlepsze pojedyncze wystąpienie
+  // BAZA - najlepsze pojedyncze wystąpienie
   const best = [...subjectOccurrences].sort((a, b) => occurrenceScore(b) - occurrenceScore(a))[0];
   const baseRule = SCORING_RULES.base[best.context.category];
   rules.push({
@@ -132,7 +129,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
     label: baseRule.label,
     kind: 'base',
     delta: baseRule.value,
-    premise: `${best.family}: ${best.url} — ${best.context.reasons.join('; ')}`,
+    premise: `${best.family}: ${best.url} – ${best.context.reasons.join('; ')}`,
     occurrenceIds: [best.id],
   });
   const idRule = SCORING_RULES.identity[best.identityLink!.strength];
@@ -157,7 +154,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
     });
   }
 
-  // SYNERGIA – niezależne rodziny źródeł (wielokrotność w jednym serwisie się nie liczy)
+  // SYNERGIA - niezależne rodziny źródeł (wielokrotność w jednym serwisie się nie liczy)
   const strong = subjectOccurrences.filter((o) => (o.identityLink!.strength === 'DIRECT' || o.identityLink!.strength === 'PIVOT') && o.context.category !== 'THIRD_PARTY_REFERENCE' && o.context.category !== 'MASS_COMMENT');
   const families = [...new Set(strong.map((o) => sourceService(o.family)))];
   if (families.length >= SCORING_RULES.synergy.minFamilies) {
@@ -171,7 +168,7 @@ export function computeConfidence(input: ScoreInput): AttributionScore {
     });
   }
 
-  // WIELE OBCYCH TOŻSAMOŚCI – adres zbiórki / organizatora giveaway / scam
+  // WIELE OBCYCH TOŻSAMOŚCI - adres zbiórki / organizatora giveaway / scam
   const foreignAuthors = new Set(
     allOccurrences.filter((o) => !o.identityLink && o.authorHandle).map((o) => o.authorHandle!.toLowerCase()),
   );
