@@ -1,0 +1,25 @@
+{
+  "name": "@olcys/video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "record": "node record/record.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@remotion/bundler": "4.0.242",
+    "@remotion/cli": "4.0.242",
+    "@remotion/renderer": "4.0.242",
+    "@remotion/transitions": "4.0.242",
+    "@types/react": "18.3.18",
+    "lucide-react": "0.460.0",
+    "playwright": "1.49.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.242",
+    "typescript": "5.7.3"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "duration": 128.305,
+  "markers": {
+    "dashboard": 0.276,
+    "form": 4.399,
+    "submit": 16.628,
+    "running": 19.138,
+    "done": 59.81,
+    "graph": 64.134,
+    "telegram": 76.101,
+    "addresses": 82.916,
+    "explain": 87.29,
+    "btc": 91.64,
+    "eth": 96.472,
+    "evidence": 102.211,
+    "toDark": 106.214,
+    "dark": 108.704,
+    "graphDark": 112.727,
+    "sources": 119.126,
+    "end": 127.905
+  }
+}

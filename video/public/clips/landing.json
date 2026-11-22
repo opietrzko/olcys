@@ -1,0 +1,15 @@
+{
+  "duration": 38.546,
+  "markers": {
+    "hero": 0.314,
+    "scroll": 3.832,
+    "bottom": 12.286,
+    "toDark": 15.724,
+    "dark": 18.716,
+    "toLight": 25.755,
+    "light": 28.743,
+    "cta": 30.551,
+    "panel": 36.144,
+    "end": 38.146
+  }
+}

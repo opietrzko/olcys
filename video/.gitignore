@@ -1,0 +1,6 @@
+node_modules/
+# raw screen recordings and frame dumps (re-create with: npm run record -- landing scenA scenB stills)
+record/frames/
+record/check/
+record/explore/
+public/clips/*.mp4
