@@ -231,6 +231,38 @@ Otwórz http://localhost:5173 i kliknij **Rozpocznij analizę**.
 
 Interfejs ma motyw jasny, ciemny i systemowy (przełącznik w menu), działa na telefonie i obsługuje klawiaturę (zakładki i lista adresów strzałkami, link „Przejdź do treści”).
 
+### Zrzuty ekranu
+
+Wyniki z działającej aplikacji dla person testowych. Prawdziwy portfel ze scenariusza B jest na zrzutach zamaskowany (`0x••••…`).
+
+| | |
+|---|---|
+| ![Strona startowa](docs/img/landing.png) **Strona startowa** – przykład tropu, etapy analizy i rozpisany Wskaźnik Pewności | ![Graf powiązań](docs/img/graf.png) **Graf powiązań** – trop e-mail → Gravatar → GitHub → strona WWW → Telegram; panel „Skąd pochodzi” dla kanału odkrytego na stronie |
+| ![Wskaźnik Pewności](docs/img/wskaznik.png) **Wskaźnik Pewności** – adres 100%: profil autorski +85, pivot −5, deklaracja +5, synergia dwóch źródeł +15, cytat i kopia dowodu | ![Odrzucona pułapka](docs/img/pulapka.png) **Odrzucone trafienie** (motyw ciemny) – portfel giełdy Binance opublikowany przez badaną osobę: etykieta CEX → 0% |
+| ![Aktywność w blockchainie](docs/img/blockchain.png) **Aktywność w blockchainie** – transakcje, wpływy i wypływy w PLN po kursie NBP z dnia poprzedzającego, chronologia przepływu środków | ![Fakty, obliczenia, wnioski](docs/img/fakty.png) **Fakty, obliczenia, wnioski** – każde twierdzenie oznaczone jako fakt źródłowy, wynik obliczenia albo wniosek do weryfikacji |
+
+### Przykładowy log przebiegu
+
+Zakładka *Przebieg i parametry* dla wejścia `ksawery.kordas.dev@proton.me` (scenariusz A, fragment):
+
+```text
+05:18:10 input    Identyfikatory wejściowe: email=ksawery.kordas.dev@proton.me; maks. głębokość pivotowania 6
+05:18:11 pivot    Nowy identyfikator nick=kordas-dev (głębokość 1, źródło: https://gravatar.com/…)
+05:18:11 gravatar email=ksawery.kordas.dev@proton.me: 1 dokument(ów), nowych 1
+05:18:12 pivot    Nowy identyfikator url=https://kordas-dev.github.io (głębokość 2, źródło: https://github.com/kordas-dev)
+05:18:12 github   nick=kordas-dev: 2 dokument(ów), nowych 2
+05:18:14 web      https://kordas-dev.github.io: strona hostowana na GitHub Pages – właściciel konta GitHub „kordas-dev”
+05:18:14 pivot    Nowy identyfikator telegram=kordas_sprzedaz (głębokość 3, źródło: https://kordas-dev.github.io)
+05:18:14 telegram telegram=kordas_sprzedaz: 1 dokument(ów), nowych 1
+05:18:14 pivot    Tropy wyczerpane – 6 identyfikator(ów), najgłębszy poziom 3 z 6
+05:18:28 score    ETH:0xd3e785eff14af8454af1dce3ba63321123bce61c: UNHOSTED → 100% (BARDZO_WYSOKIE)
+05:18:29 score    BTC:bc1qj2xp3cuqeuldce3h36q3d2q7d5jrt474q8mtqz: UNHOSTED → 85% (BARDZO_WYSOKIE)
+05:18:29 score    ETH:0x165cd37b4c644c2921454429e7f9358d18a45e14: CHARITY → 0% (WYKLUCZONE)
+05:18:30 score    TRON:TPL5VC5b8Nt7Kvhq2VvvJq5nTp6y9zbZoc: UNHOSTED → 70% (PRAWDOPODOBNE)
+05:18:33 score    ETH:0x5b2095ec0ea6484c2bf656d861e163971e240435: UNHOSTED → 10% (NISKIE)
+05:18:33 done     Zakończono: 3 adres(ów) ≥60%, 1 odrzuconych
+```
+
 ### Scenariusze testowe
 
 Instrukcja krok po kroku dla jury: co wpisać, gdzie patrzeć i jakie wyniki powinny się pojawić (scenariusze A–D): [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
