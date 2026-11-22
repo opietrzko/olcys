@@ -309,6 +309,27 @@ export async function renderReportPdf(r: AnalysisResult, meta: { runId: string; 
           },
           ...a.indicators.map((i) => statement(i.basis === 'computed' ? 'COMPUTATION' : 'CONCLUSION', `${i.title} – ${i.description}`)),
         );
+        const fl = a.flows;
+        if (fl && (fl.inflows.length || fl.outflows.length)) {
+          const max = Math.max(...fl.inflows.concat(fl.outflows).map((b) => b.pln), 1);
+          const BAR = 120;
+          const row = (b: (typeof fl.inflows)[number]): Node[] => [
+            b.direction === 'IN' ? 'wpływ z' : 'wypływ do',
+            { text: [{ text: b.label, bold: b.cashOut }, b.cashOut ? { text: '  możliwe wyjście do fiat', color: C.danger, fontSize: 6.5 } : ''] },
+            { canvas: [{ type: 'rect', x: 0, y: 1, w: Math.max(1.5, (b.pln / max) * BAR), h: 7, r: 1, color: b.cashOut ? C.danger : b.category === 'UNLABELED' ? '#a3a3a3' : C.accent }] },
+            { text: num(b.pln), alignment: 'right' },
+            { text: `${b.counterpartyCount} / ${b.txCount}`, alignment: 'right' },
+            muted(b.top.slice(0, 3).map((c) => c.label ?? `${c.address.slice(0, 8)}...${c.address.slice(-6)}`).join(', '), { fontSize: 6.5 }),
+          ];
+          block.push(
+            h3('Mapa przepływów (wynik obliczenia)'),
+            table(['Kierunek', 'Kategoria kontrahenta', 'Udział', '≈PLN', 'Kontr. / tx', 'Najwięksi kontrahenci'], [...fl.inflows.map(row), ...fl.outflows.map(row)], [40, 110, BAR + 4, 52, 40, '*'], { fontSize: 7 }),
+            statement(
+              'COMPUTATION',
+              `Wypływy do giełd, bramek krypto-fiat i usług P2P: ${num(fl.cashOutPln)} PLN z ${num(fl.totalOutPln)} PLN wszystkich wypływów. ${fl.basis} Analiza obejmuje tylko bezpośrednich kontrahentów adresu.`,
+            ),
+          );
+        }
         if (timeline.length)
           block.push(
             h3('Chronologia przepływu środków'),

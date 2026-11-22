@@ -281,6 +281,8 @@ export interface ChainActivity {
   plnBasis?: string;
   /** Sieci, z których pochodzą transfery (dla EVM). */
   networks?: string[];
+  /** Mapa przepływów: wpływy i wypływy według kategorii kontrahenta (wykres Sankeya). */
+  flows?: import('./flows').FlowMap;
 }
 
 export interface RateTable {

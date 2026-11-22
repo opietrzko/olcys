@@ -70,11 +70,11 @@ KryptoTrop automatyzuje tę pracę dla analityków **Krajowej Administracji Skar
 - **Etykiety z otwartych rejestrów** – lista sankcyjna **OFAC SDN** (1030 adresów BTC/ETH/TRON/LTC/SOL) adresy **polskich giełd** (Zonda, Kanga) oraz **bramek krypto-fiat i kart krypto** (MoonPay, Transak, Ramp, Simplex, Wirex, Baanx…) z publicznych tagów Blockscout; aktualizacja jednym poleceniem `npm run labels:update`
 - **Wskaźnik Pewności** – deterministyczne, wersjonowane reguły; każdy punkt ma przesłankę i źródło
 - **Odrzucanie fałszywych trafień** – giełdy, kontrakty (Ethereum i TRON), miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia, adresy o aktywności instytucjonalnej bez etykiety, fałszywe tokeny („USDT” z nieznanego kontraktu)
-- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery i podmioty sankcjonowane, wolumen w PLN; Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x), Bitcoin, TRON, **Solana** (SOL i tokeny SPL)
+- **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery i podmioty sankcjonowane, wolumen w PLN, **mapa przepływów** (wykres Sankeya: skąd przyszły środki i dokąd poszły, z wyróżnieniem wyjścia do fiat); Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x), Bitcoin, TRON, **Solana** (SOL i tokeny SPL)
 - **Klastrowanie adresów BTC** – adresy współwydawane z badanym adresem (heurystyka wspólnego wejścia, z pominięciem CoinJoin) jako wniosek do weryfikacji
 - **Wycena pod PIT-38** – cena krypto z dnia transakcji (także starszych niż rok – notowania dzienne Binance i lokalne archiwum cen) i kurs średni NBP z ostatniego dnia roboczego przed transakcją (art. 11a ust. 1 ustawy o PIT), z numerem tabeli NBP przy każdej pozycji
 - **Analizy cykliczne** – harmonogram, porównanie przebiegów, wykrywanie podmiany adresu w czasie (także z archiwum Internetu)
-- **Raport** – rozdzielenie **faktów źródłowych**, **wyników obliczeń** i **wniosków do weryfikacji**, kopie dowodów z SHA-256, chronologia przepływu środków
+- **Raport** – rozdzielenie **faktów źródłowych**, **wyników obliczeń** i **wniosków do weryfikacji**, kopie dowodów z SHA-256, mapa i chronologia przepływu środków
 - **Opieczętowany pakiet dowodowy** – manifest SHA-256, podpis Ed25519 i kwalifikowany znacznik czasu RFC 3161 (Certum); weryfikacja `npm run verify:package`
 - **Konta analityków i role** (opcjonalnie) – logowanie, role analityk / przegląd / administrator, każda operacja w dzienniku audytu z loginem
 
@@ -239,7 +239,8 @@ Wyniki z działającej aplikacji dla person testowych. Prawdziwy portfel ze scen
 |---|---|
 | ![Strona startowa](docs/img/landing.png) **Strona startowa** – przykład tropu, etapy analizy i rozpisany Wskaźnik Pewności | ![Graf powiązań](docs/img/graf.png) **Graf powiązań** – trop e-mail → Gravatar → GitHub → strona WWW → Telegram; panel „Skąd pochodzi” dla kanału odkrytego na stronie |
 | ![Wskaźnik Pewności](docs/img/wskaznik.png) **Wskaźnik Pewności** – adres 100%: profil autorski +85, pivot −5, deklaracja +5, synergia dwóch źródeł +15, cytat i kopia dowodu | ![Odrzucona pułapka](docs/img/pulapka.png) **Odrzucone trafienie** (motyw ciemny) – portfel giełdy Binance opublikowany przez badaną osobę: etykieta CEX → 0% |
-| ![Aktywność w blockchainie](docs/img/blockchain.png) **Aktywność w blockchainie** – transakcje, wpływy i wypływy w PLN po kursie NBP z dnia poprzedzającego, chronologia przepływu środków | ![Fakty, obliczenia, wnioski](docs/img/fakty.png) **Fakty, obliczenia, wnioski** – każde twierdzenie oznaczone jako fakt źródłowy, wynik obliczenia albo wniosek do weryfikacji |
+| ![Aktywność w blockchainie](docs/img/blockchain.png) **Aktywność w blockchainie** – transakcje, wpływy i wypływy w PLN po kursie NBP z dnia poprzedzającego, chronologia przepływu środków | ![Mapa przepływów](docs/img/przeplywy.png) **Mapa przepływów** – skąd przyszły i dokąd poszły środki, według kategorii kontrahenta; po najechaniu lista kontrahentów, kliknięcie filtruje chronologię |
+| ![Fakty, obliczenia, wnioski](docs/img/fakty.png) **Fakty, obliczenia, wnioski** – każde twierdzenie oznaczone jako fakt źródłowy, wynik obliczenia albo wniosek do weryfikacji | |
 
 ### Przykładowy log przebiegu
 
@@ -479,6 +480,8 @@ Wersja reguł: `olcys-score/1.0.0`.
 | `P2P_PATTERN` | ≥4 okrągłe wpłaty stablecoin od różnych nieoznaczonych adresów (wniosek) lub kontakt z platformą P2P/escrow rozpoznaną po tagu eksploratora (obliczenie) | wniosek / obliczenie |
 | `MIXER_EXPOSURE` | kontakt z mikserem / podmiotem sankcjonowanym | obliczenie |
 | `HIGH_VOLUME` | łączny wolumen ≥20 000 USD (z przeliczeniem na PLN) | obliczenie |
+
+**Mapa przepływów.** Przy każdym adresie z historią transakcji aplikacja rysuje wykres Sankeya: po lewej wpływy, po prawej wypływy, pośrodku badany adres; grubość pasma to wartość w PLN (kurs NBP z chronologii). Bezpośredni kontrahenci są zgrupowani według kategorii etykiety: giełdy i portfele powiernicze, bramki krypto-fiat i karty, usługi P2P, DEX, mosty, miksery i podmioty sankcjonowane, kontrakty, zbiórki, adresy bez etykiety. Wypływy do giełd, bramek i P2P są wyróżnione na czerwono jako możliwe wyjście do fiat. Najechanie na pasmo pokazuje największych kontrahentów, kliknięcie zawęża chronologię przepływu do tej kategorii. Mapa jest **wynikiem obliczenia** (`packages/core/src/flows.ts`), trafia do raportu PDF (tabela z udziałami) i do pakietu dowodowego. Obejmuje jeden krok od adresu – dalsza ścieżka środków nie jest śledzona; przelewy na własny adres i tokeny spoza rejestru są pomijane.
 
 **Fałszywe tokeny:** symbol tokena może nadać każdy, a historie portfeli są pełne spamowych „USDT”. Do wyceny i wskaźników liczą się tylko tokeny z **rejestru zweryfikowanych kontraktów** (`packages/core/src/tokens.ts`: USDT, USDC, DAI, PYUSD, FDUSD, BUSD, EURC, WETH w 6 sieciach EVM i w TRON; każdy kontrakt sprawdzony wywołaniem `symbol()` w publicznym RPC). Pozostałe transfery są pokazywane z adnotacją „niezweryfikowany token – pominięty”.
 

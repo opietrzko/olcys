@@ -5,6 +5,7 @@ export * from './context';
 export * from './labels';
 export * from './scoring';
 export * from './chainAnalysis';
+export * from './flows';
 export * from './result';
 export * from './diff';
 export * from './phone';

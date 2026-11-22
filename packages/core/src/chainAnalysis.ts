@@ -9,6 +9,7 @@
 import { addressKey } from './chains';
 import type { LabelRegistry } from './labels';
 import { networkOf, resolveAsset, USD_PEGGED, EVM_NETWORKS, type ResolvedAsset } from './tokens';
+import { buildFlowMap } from './flows';
 import type { ActivityIndicator, AddressLabel, ChainActivity, RateTable, TimelineEntry, Transfer, Chain, AddressCategory } from './types';
 
 export const ACTIVITY_THRESHOLDS = {
@@ -327,6 +328,8 @@ export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
     });
   }
 
+  const counterparties = [...cps.values()].sort((a, b) => b.inUsd + b.outUsd - (a.inUsd + a.outUsd));
+
   return {
     chain,
     address,
@@ -339,7 +342,7 @@ export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
     totalOutUsd,
     totalInPln,
     totalOutPln,
-    counterparties: [...cps.values()].sort((a, b) => b.inUsd + b.outUsd - (a.inUsd + a.outUsd)),
+    counterparties,
     indicators,
     timeline,
     // bez pełnych serii historycznych (duże) – w wyniku zostaje opis źródła
@@ -347,5 +350,6 @@ export function analyzeChain(input: AnalyzeChainInput): ChainActivity {
     ignoredTokenTransfers,
     plnBasis,
     networks: [...networks],
+    flows: buildFlowMap(chain, address, timeline, counterparties, rates.usdPln),
   };
 }

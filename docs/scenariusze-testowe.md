@@ -85,6 +85,7 @@ Na co zwrócić uwagę:
 - **Silne ślady Web2 to jeszcze nie portfel osoby.** Adres `0x3963…Aa49` nie ma etykiety giełdy, ale ponad milion transakcji to profil buildera bloków albo usługi, a nie prywatnej osoby. Narzędzie nie zeruje go jak giełdy z rejestru, tylko obniża pewność do 65% i opisuje to jako *wniosek do weryfikacji*.
 - **Jak powstał wynik.** Kliknijcie adres: tabela pokazuje każdą regułę z przesłanką i źródłem, a reguły sumują się do wyniku. Link **Jak liczony jest wynik?** prowadzi do pełnej metodyki.
 - **Aktywność w blockchainie.** W szczegółach portfela `0x3963…Aa49` sekcja **Aktywność w blockchainie** pokazuje transakcje, wpływy i wypływy w PLN (kurs NBP) oraz wskaźniki wyjścia do walut tradycyjnych, np. „Znaczny łączny wolumen”. Każdy wskaźnik jest oznaczony jako *obliczenie* albo *wniosek do weryfikacji*.
+- **Mapa przepływów.** W tej samej sekcji wykres pokazuje, skąd przyszły środki i dokąd poszły, według kategorii kontrahenta (giełdy, bramki krypto-fiat, P2P, DEX, kontrakty, adresy bez etykiety). Najedźcie na pasmo *Kontrakty i tokeny*: pojawią się kontrahenci, m.in. `LidoExecutionLayerRewardsVault`. Kliknięcie pasma zawęża chronologię poniżej do tej kategorii, ponowne kliknięcie albo przycisk ✕ przywraca całość. Wypływy do giełd, bramek i P2P byłyby wyróżnione na czerwono jako możliwe wyjście do fiat; ten portfel takich wypływów nie ma.
 
 ## Scenariusz C – Tor Project: ta sama nazwa to jeszcze nie ta sama osoba
 

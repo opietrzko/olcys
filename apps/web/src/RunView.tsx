@@ -29,6 +29,7 @@ import {
 import { api, type Run } from './api';
 import { Graph, identityNodeId } from './Graph';
 import { NodeInspector } from './NodeInspector';
+import { FlowMap, flowCategoryOf, type FlowSelection } from './FlowMap';
 import { CATEGORY_LABEL, CopyButton, Empty, ID_TYPE, LINK_LABEL, Panel, Score, Stat, amount, dt, money, plural, short, Highlight } from './ui';
 
 const KIND: Record<StatementKind, { label: string; cls: string }> = {
@@ -537,7 +538,15 @@ function Pipeline({ r }: { r: AnalysisResult }) {
 function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; runId: string }) {
   // transfery tokenów spoza rejestru (spam) są domyślnie ukryte w chronologii - pokazywane na żądanie
   const [showIgnored, setShowIgnored] = useState(false);
-  const timeline = (f.activity?.timeline ?? []).filter((t) => showIgnored || t.verifiedAsset !== false);
+  // kliknięte pasmo mapy przepływów zawęża chronologię do jednej kategorii kontrahenta
+  const [flowSel, setFlowSel] = useState<FlowSelection>(null);
+  useEffect(() => setFlowSel(null), [f.key]);
+  const cpCategory = useMemo(() => new Map((f.activity?.counterparties ?? []).map((c) => [c.address.toLowerCase(), flowCategoryOf(c.category)])), [f.activity]);
+  const timeline = (f.activity?.timeline ?? []).filter(
+    (t) =>
+      (showIgnored || t.verifiedAsset !== false) &&
+      (!flowSel || (t.direction === flowSel.direction && t.counterparty.toLowerCase() !== f.address.toLowerCase() && (cpCategory.get(t.counterparty.toLowerCase()) ?? 'UNLABELED') === flowSel.category)),
+  );
   const maxAbs = Math.max(100, ...f.attribution.rules.map((x) => Math.abs(x.delta)));
   const ev = useMemo(() => new Map(r.evidence.map((e) => [e.id, e])), [r]);
   return (
@@ -670,8 +679,21 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
               <div className="small">{i.description}</div>
             </div>
           ))}
+          {f.activity.flows && (f.activity.flows.inflows.length > 0 || f.activity.flows.outflows.length > 0) && (
+            <>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                Mapa przepływów <span className="kind calc">Obliczenie</span>
+              </h4>
+              <FlowMap flows={f.activity.flows} selected={flowSel} onSelect={setFlowSel} />
+            </>
+          )}
           <h4 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             Chronologia przepływu środków
+            {flowSel && (
+              <button type="button" className="btn sm" onClick={() => setFlowSel(null)} title="Pokaż wszystkie transakcje">
+                {flowSel.direction === 'IN' ? 'Wpływy z' : 'Wypływy do'}: {f.activity.flows?.[flowSel.direction === 'IN' ? 'inflows' : 'outflows'].find((b) => b.category === flowSel.category)?.label} ✕
+              </button>
+            )}
             {f.activity.ignoredTokenTransfers ? (
               <label className="small faint" style={{ fontWeight: 400, display: 'inline-flex', gap: 6, alignItems: 'center' }}>
                 <input type="checkbox" checked={showIgnored} onChange={(e) => setShowIgnored(e.target.checked)} />
@@ -728,7 +750,7 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
               </table>
             </div>
           ) : (
-            <p className="muted small">Brak transakcji w pobranym zakresie.</p>
+            <p className="muted small">{flowSel ? "Brak transakcji w wybranej kategorii (np. tylko niezweryfikowane tokeny)." : "Brak transakcji w pobranym zakresie."}</p>
           )}
           <p className="small faint" style={{ marginTop: 10, marginBottom: 0 }}>
             {f.activity.plnBasis ?? `Wartości według kursów: ${f.activity.rates.source} (${f.activity.rates.asOf}).`}
