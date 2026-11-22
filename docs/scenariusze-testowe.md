@@ -28,6 +28,11 @@ Przygotowaliśmy dwie **fikcyjne osoby** z prawdziwymi, publicznymi kontami w In
 
 ## 1. Przygotowanie
 
+Scenariusze można przejść na dwa sposoby:
+
+- **Online, bez instalacji:** otwórzcie **[olcys.haloware.pl](https://olcys.haloware.pl)** i przejdźcie od razu do części [2. Jak uruchomić analizę](#2-jak-uruchomić-analizę).
+- **Lokalnie:** wykonajcie poniższe kroki.
+
 Wymagany jest [Node.js](https://nodejs.org) w wersji 20.11 lub nowszej.
 
 ```sh

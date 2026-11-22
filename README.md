@@ -231,35 +231,9 @@ Otwórz http://localhost:5173 i kliknij **Rozpocznij analizę**.
 
 Interfejs ma motyw jasny, ciemny i systemowy (przełącznik w menu), działa na telefonie i obsługuje klawiaturę (zakładki i lista adresów strzałkami, link „Przejdź do treści”).
 
-### Przykład: przebieg na personie testowej
+### Scenariusze testowe
 
-Wejście: tylko adres strony `https://kordas-dev.github.io/` (fikcyjna persona zespołu „Ksawery Kordas”). Fragment zakładki *Przebieg i parametry*:
-
-```text
-15:58:00 input    Identyfikatory wejściowe: url=https://kordas-dev.github.io; maks. głębokość pivotowania 6
-15:58:00 web      https://kordas-dev.github.io: strona hostowana na GitHub Pages – właściciel konta GitHub „kordas-dev”
-15:58:00 pivot    Nowy identyfikator nick=kordas-dev (głębokość 1, źródło: https://kordas-dev.github.io)
-15:58:00 pivot    Nowy identyfikator telegram=kordas_sprzedaz (głębokość 1, źródło: https://kordas-dev.github.io)
-15:58:02 github   nick=kordas-dev: 2 dokument(ów), nowych 2
-15:58:05 telegram telegram=kordas_sprzedaz: 1 dokument(ów), nowych 1
-15:58:08 pivot    Tropy wyczerpane – 5 identyfikator(ów), najgłębszy poziom 2 z 6
-15:58:13 score    BTC:bc1qj2xp3cuqeuldce3h36q3d2q7d5jrt474q8mtqz: UNHOSTED → 90% (BARDZO_WYSOKIE)
-15:58:13 score    ETH:0x165cd37b4c644c2921454429e7f9358d18a45e14: CHARITY → 0% (WYKLUCZONE)
-15:58:16 score    ETH:0xd3e785eff14af8454af1dce3ba63321123bce61c: UNHOSTED → 100% (BARDZO_WYSOKIE)
-15:58:17 score    TRON:TPL5VC5b8Nt7Kvhq2VvvJq5nTp6y9zbZoc: UNHOSTED → 70% (PRAWDOPODOBNE)
-15:58:20 score    ETH:0x5b2095ec0ea6484c2bf656d861e163971e240435: UNHOSTED → 10% (NISKIE)
-15:58:20 done     Zakończono: 3 adres(ów) ≥60%, 1 odrzuconych
-```
-
-| Adres | Wynik | Uzasadnienie (reguły) |
-|---|---|---|
-| `0xd3e7…E61C` (ETH) | **100%** | profil autorski +85, pivot −5, deklaracja własności +5, synergia GitHub + Telegram +15 |
-| `bc1qj2…mtqz` (BTC) | **90%** | strona autorska +85, deklaracja własności +5 |
-| `TPL5…Zoc` (TRON) | **70%** | ogłoszenie sprzedaży na Telegramie +70, pivot −5, „wpłać na” +5 |
-| `0x5b20…0435` (ETH) | **10%** | autor ostrzega przed scamem – adres cudzy +15, pivot −5 |
-| `0x165C…5e14` (ETH) | **0%** | bramka: adres zbiórki (etykieta) |
-
-Pełny opis scenariuszy i wyników: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+Instrukcja krok po kroku dla jury: co wpisać, gdzie patrzeć i jakie wyniki powinny się pojawić (scenariusze A–D): [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
 
 ### Analiza z linii poleceń
 
