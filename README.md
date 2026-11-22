@@ -158,6 +158,11 @@ scripts/            # CLI analizy, generator adresów do testów walidacji
 
 ## Pierwsze kroki
 
+KryptoTrop można przetestować na dwa sposoby:
+
+- **Online, bez instalacji:** otwórzcie **[olcys.haloware.pl](https://olcys.haloware.pl)** i kliknijcie **Rozpocznij analizę**.
+- **Lokalnie:** uruchomcie aplikację na własnym komputerze według instrukcji poniżej.
+
 ### Wymagania
 
 - [Node.js](https://nodejs.org) ≥ 20.11
