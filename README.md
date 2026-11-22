@@ -231,6 +231,19 @@ Otwórz http://localhost:5173 i kliknij **Rozpocznij analizę**.
 
 Interfejs ma motyw jasny, ciemny i systemowy (przełącznik w menu), działa na telefonie i obsługuje klawiaturę (zakładki i lista adresów strzałkami, link „Przejdź do treści”).
 
+### Scenariusze testowe
+
+**Testowanie zacznijcie od instrukcji krok po kroku:** [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md). Podaje, co wpisać, gdzie patrzeć i jakie wyniki powinny się pojawić (scenariusze A–D). Zrzuty i log poniżej pokazują, jak wyglądają te wyniki.
+
+| Scenariusz | Wejście | Co pokazuje |
+|---|---|---|
+| A – Kordas | e-mail `ksawery.kordas.dev@proton.me` | trop OSINT przez 4 serwisy (graf), Wskaźnik Pewności 100 / 85 / 70 / 10 / 0% |
+| B – Błażej | nick `blazejrzepdev` | pułapki 0% (Binance, USDT), adres instytucjonalny 65%, **aktywność w blockchainie i mapa przepływów** |
+| C – Tor Project | nick `torproject` | adres z nazwy ENS `torproject.eth` tylko 55%: zgodna nazwa bez wzajemnego potwierdzenia to powiązanie słabe |
+| D – dowody | dowolny przebieg | źródła z SHA-256, fakty / obliczenia / wnioski, przebieg i parametry, raport PDF, pakiet dowodowy |
+
+Wykresy blockchain (mapa przepływów, chronologia) pojawiają się tylko dla adresów z historią transakcji, czyli w scenariuszu B przy portfelu 65%. Adresy Kordasa są syntetyczne i nie mają transakcji.
+
 ### Zrzuty ekranu
 
 Wyniki z działającej aplikacji dla person testowych. Prawdziwy portfel ze scenariusza B jest na zrzutach zamaskowany (`0x••••…`).
@@ -263,10 +276,6 @@ Zakładka *Przebieg i parametry* dla wejścia `ksawery.kordas.dev@proton.me` (sc
 05:18:33 score    ETH:0x5b2095ec0ea6484c2bf656d861e163971e240435: UNHOSTED → 10% (NISKIE)
 05:18:33 done     Zakończono: 3 adres(ów) ≥60%, 1 odrzuconych
 ```
-
-### Scenariusze testowe
-
-Instrukcja krok po kroku dla jury: co wpisać, gdzie patrzeć i jakie wyniki powinny się pojawić (scenariusze A–D): [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
 
 ### Analiza z linii poleceń
 

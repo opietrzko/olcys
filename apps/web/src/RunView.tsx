@@ -761,6 +761,20 @@ function AddressDetail({ f, r, runId }: { f: AddressFinding; r: AnalysisResult; 
         </Panel>
       )}
 
+      {!f.activity && !f.attribution.gated && (
+        <Panel
+          title={
+            <>
+              <Activity size={15} aria-hidden="true" /> Aktywność w blockchainie
+            </>
+          }
+        >
+          <p className="small muted" style={{ margin: 0 }}>
+            Brak historii transakcji dla tego adresu, więc nie ma mapy przepływów ani chronologii. Wykresy pojawiają się przy adresach, które mają transakcje w blockchainie.
+          </p>
+        </Panel>
+      )}
+
       {f.cluster && (f.cluster.members.length > 0 || f.cluster.coinjoinSkipped.length > 0) && (
         <Panel
           title={
