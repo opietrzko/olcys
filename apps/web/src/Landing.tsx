@@ -120,7 +120,7 @@ export function Landing({ meta, themeToggle }: { meta: Meta | null; themeToggle:
               </a>
             </div>
             <p className="lp-hint">
-              Dane do testu, czyli fikcyjne osoby z prawdziwymi, publicznymi kontami, znajdziecie w README repozytorium w sekcji <b>„Dla jury”</b>.
+              Dane do testu, czyli fikcyjne osoby z prawdziwymi, publicznymi kontami, znajdziecie w repozytorium w pliku <b>docs/scenariusze-testowe.md</b> (link jest też na początku README).
             </p>
             <ul className="lp-facts">
               <li>
