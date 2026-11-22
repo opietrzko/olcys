@@ -55,7 +55,7 @@
 
 ---
 
-> **Dla jury: instrukcja testowania.** Krok po kroku: przygotowanie, trzy identyfikatory do wpisania i wyniki, które powinny się pojawić, w podziale na etapy obowiązkowego scenariusza: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
+> **Dla jury: instrukcja testowania.** Krok po kroku: trzy identyfikatory do wpisania i wyniki, które powinny się pojawić, w podziale na etapy obowiązkowego scenariusza: [`docs/scenariusze-testowe.md`](docs/scenariusze-testowe.md).
 
 ## O projekcie
 

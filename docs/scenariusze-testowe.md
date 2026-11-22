@@ -26,53 +26,14 @@ Przygotowaliśmy dwie **fikcyjne osoby** z prawdziwymi, publicznymi kontami w In
 
 ---
 
-## 1. Przygotowanie
+## Uruchomienie
 
 Scenariusze można przejść na dwa sposoby:
 
-- **Online, bez instalacji:** otwórzcie **[olcys.haloware.pl](https://olcys.haloware.pl)** i przejdźcie od razu do części [2. Jak uruchomić analizę](#2-jak-uruchomić-analizę).
-- **Lokalnie:** wykonajcie poniższe kroki.
+- **Online, bez instalacji:** otwórzcie **[olcys.haloware.pl](https://olcys.haloware.pl)** i przejdźcie od razu do części [Jak uruchomić analizę](#jak-uruchomić-analizę).
+- **Lokalnie:** zainstalujcie i uruchomcie projekt według [README, sekcja „Pierwsze kroki”](../README.md#pierwsze-kroki), a potem otwórzcie **http://localhost:5173**. Ustawcie w `.env` zalecane klucze `GITHUB_TOKEN` i `ETHERSCAN_API_KEY`: bez nich publiczne API szybko odrzucają zapytania (skutki opisuje część [Gdy wynik różni się od opisanego](#gdy-wynik-różni-się-od-opisanego)).
 
-Wymagany jest [Node.js](https://nodejs.org) w wersji 20.11 lub nowszej.
-
-```sh
-git clone https://github.com/opietrzko/olcys.git
-cd olcys
-npm install
-```
-
-Skopiujcie plik konfiguracji:
-
-```sh
-cp .env.example .env
-```
-
-W Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-### Zalecane: dwa darmowe klucze
-
-Aplikacja działa bez kluczy, ale publiczne API mają niskie limity zapytań, a w sieci hackathonu bywają już wyczerpane. Wpiszcie do `.env`:
-
-| Zmienna | Skąd wziąć | Po co |
-|---|---|---|
-| `GITHUB_TOKEN` | GitHub → Settings → Developer settings → Fine-grained tokens, **bez żadnych uprawnień** | profile GitHub i wyszukiwanie adresu w kodzie |
-| `ETHERSCAN_API_KEY` | darmowe konto na etherscan.io → API Keys | historia transakcji Ethereum, potrzebna do sekcji „Aktywność w blockchainie” |
-
-Bez klucza Etherscan aplikacja korzysta z publicznego Blockscout. Gdy ten odrzuci zapytania z powodu limitu, sekcja aktywności się nie pojawi, a wynik dostanie widoczną regułę o braku danych (opis w części [Gdy wynik różni się od opisanego](#gdy-wynik-różni-się-od-opisanego)).
-
-### Uruchomienie
-
-```sh
-npm run dev
-```
-
-Otwórzcie **http://localhost:5173**. Zobaczycie stronę startową KryptoTrop z przykładem tropu i opisem działania.
-
-## 2. Jak uruchomić analizę
+## Jak uruchomić analizę
 
 1. Na stronie startowej kliknijcie **Rozpocznij analizę**. Otworzy się panel analiz (później wrócicie do niego przez **Analizy** w menu po lewej).
 2. W formularzu **Nowa analiza** wybierzcie z listy rodzaj identyfikatora (np. *E-mail*, *Nick / login*) i wpiszcie wartość.
