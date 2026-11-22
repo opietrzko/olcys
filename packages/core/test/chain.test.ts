@@ -30,6 +30,35 @@ describe('wskaźniki cash-out', () => {
     expect(a.totalInPln).toBe(a.totalInUsd * 4);
   });
 
+  it('wykrywa wysyłkę na bramkę krypto-fiat, giełdę i interakcję z usługą P2P', () => {
+    const RAMP = synthetic.eth('moonpay');
+    const P2P = synthetic.eth('paxful');
+    const l = new LabelRegistry([
+      ...labels.all(),
+      { chain: 'ETH', address: RAMP, entity: 'MoonPay: Hot Wallet', category: 'OFFRAMP', source: 't' },
+      { chain: 'ETH', address: P2P, entity: 'Paxful escrow', category: 'P2P_SERVICE', source: 't' },
+    ]);
+    const transfers = [
+      tr('h1', '2025-01-01T00:00:00Z', me, RAMP, 'ETH', 1),
+      tr('h2', '2025-01-02T00:00:00Z', me, CEX, 'ETH', 1),
+      tr('h3', '2025-01-03T00:00:00Z', P2P, me, 'USDT', 500),
+    ];
+    const a = analyzeChain({ chain: 'ETH', address: me, transfers, labels: l, rates, dataSource: 'test' });
+    const offramp = a.indicators.find((i) => i.type === 'OFFRAMP');
+    expect(offramp?.counterpartyLabel).toBe('MoonPay: Hot Wallet');
+    expect(offramp?.amountUsd).toBe(2000);
+    expect(a.indicators.find((i) => i.type === 'CEX_DIRECT')?.counterpartyLabel).toBe('Binance 14');
+    expect(a.indicators.find((i) => i.type === 'P2P_PATTERN')?.counterpartyLabel).toBe('Paxful escrow');
+  });
+
+  it('wykrywa wzorzec handlu P2P: okrągłe wpłaty stablecoin od wielu nieoznaczonych osób', () => {
+    const transfers = [100, 250, 500, 1000].map((amt, i) => tr(`p${i}`, `2025-02-0${i + 1}T00:00:00Z`, synthetic.eth(`buyer${i}`), me, 'USDT', amt));
+    const a = analyzeChain({ chain: 'ETH', address: me, transfers, labels, rates, dataSource: 'test' });
+    const p2p = a.indicators.find((i) => i.type === 'P2P_PATTERN');
+    expect(p2p?.basis).toBe('inferred');
+    expect(p2p?.amountUsd).toBe(1850);
+  });
+
   it('nie oznacza adresu jako depozytowego, gdy środki nie trafiają na giełdę', () => {
     const t = [tr('h1', '2025-01-01T00:00:00Z', me, dep, 'ETH', 1)];
     const neighbours = new Map([[dep, [t[0], tr('h2', '2025-01-01T01:00:00Z', dep, synthetic.eth('other'), 'ETH', 1)]]]);

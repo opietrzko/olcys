@@ -5,16 +5,20 @@
  *     (pola „Digital Currency Address - …” w sdn.xml) → data/labels/ofac-sdn.json, kategoria SANCTIONED.
  *  2. Polskie giełdy i kantory krypto – publiczne tagi adresów w eksploratorze Blockscout (Open Labels Initiative
  *     i etykiety eksploratora) → data/labels/pl-vasp-blockscout.json, kategoria CEX.
+ *  3. Bramki krypto-fiat (on/off-ramp) i wydawcy kart krypto – te same publiczne tagi Blockscout
+ *     → data/labels/offramp-blockscout.json, kategoria OFFRAMP.
  *
  * Każdy adres przechodzi walidację sumy kontrolnej (@olcys/core). Adresy sieci, których KryptoTrop nie obsługuje
  * (np. XMR, ZEC, BCH), są pomijane i liczone w opisie zbioru.
  *
- *   npm run labels:update            – oba zbiory
+ *   npm run labels:update            – wszystkie zbiory
  *   npm run labels:update -- ofac    – tylko OFAC
  *   npm run labels:update -- pl      – tylko polskie giełdy
+ *   npm run labels:update -- offramp – tylko bramki krypto-fiat i karty
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { validateAddress, type AddressLabel } from '@olcys/core';
 import { parseSdn, REPO_ROOT } from '@olcys/engine';
 
@@ -25,6 +29,8 @@ const BLOCKSCOUT = (process.env.BLOCKSCOUT_URL ?? 'https://eth.blockscout.com').
 
 /** Polskie giełdy, kantory i bramki krypto-fiat (nazwy do wyszukania w tagach eksploratora). */
 const PL_VASPS = ['Zonda', 'BitBay', 'Kanga Exchange', 'Egera', 'Ari10', 'BitClude', 'Coinroom', 'Kriptomat', 'Bitcan', 'Cashify', 'Walutomat'];
+/** Bramki krypto-fiat (zakup/sprzedaż za PLN/EUR/USD kartą lub przelewem) i wydawcy kart krypto. */
+const OFFRAMPS = ['MoonPay', 'Transak', 'Ramp Network', 'Mercuryo', 'Banxa', 'Simplex', 'Wirex', 'Baanx', 'Paybis', 'Changelly', 'Utorg', 'Guardarian', 'Alchemy Pay'];
 
 interface Dataset {
   name: string;
@@ -67,9 +73,10 @@ interface BsItem {
   metadata?: { name?: string; tagType?: string; slug?: string } | null;
 }
 
-async function updatePl() {
+/** Publiczne tagi Blockscout dla listy podmiotów → zbiór etykiet jednej kategorii. */
+async function tagsFromBlockscout(names: string[], category: AddressLabel['category'], note: string): Promise<AddressLabel[]> {
   const labels = new Map<string, AddressLabel>();
-  for (const q of PL_VASPS) {
+  for (const q of names) {
     const r = await fetch(`${BLOCKSCOUT}/api/v2/search?q=${encodeURIComponent(q)}`, { headers: { 'user-agent': UA, accept: 'application/json' }, signal: AbortSignal.timeout(30_000) });
     if (!r.ok) {
       console.warn(`Blockscout „${q}”: HTTP ${r.status}`);
@@ -80,32 +87,51 @@ async function updatePl() {
     for (const i of items) {
       const tagName = i.metadata?.name;
       if (i.type !== 'metadata_tag' || !i.address_hash || !tagName) continue;
-      // tylko tagi z nazwą szukanego podmiotu; kontrakty (tokeny giełdy) i konta wdrażające to nie portfele giełdy
-      if (!tagName.toLowerCase().includes(q.toLowerCase().split(' ')[0]) || i.is_smart_contract_address || /deployer|token/i.test(tagName)) continue;
+      // tylko tagi z nazwą szukanego podmiotu; kontrakty (tokeny) i konta wdrażające to nie portfele usługi
+      if (!tagName.toLowerCase().includes(q.toLowerCase().split(' ')[0]) || i.is_smart_contract_address || /deployer|token|deprecated/i.test(tagName)) continue;
       const v = validateAddress(i.address_hash);
       if (!v.valid || v.chain !== 'ETH') continue;
       const key = v.canonical!.toLowerCase();
       // nazwa (tagType=name) jest dokładniejsza niż sama przynależność do protokołu
       if (labels.has(key) && i.metadata?.tagType !== 'name') continue;
-      labels.set(key, { chain: 'ETH', address: v.canonical!, entity: tagName, category: 'CEX', source: `Blockscout ${new URL(BLOCKSCOUT).host} – tag „${tagName}”`, note: 'polska giełda / kantor krypto' });
+      labels.set(key, { chain: 'ETH', address: v.canonical!, entity: tagName, category, source: `Blockscout ${new URL(BLOCKSCOUT).host} – tag „${tagName}”`, note });
       n++;
     }
     console.log(`Blockscout „${q}”: ${n} tag(ów)`);
+    await new Promise((res) => setTimeout(res, 1000)); // publiczne API – bez zalewania zapytaniami
   }
+  return [...labels.values()].sort((a, b) => a.entity.localeCompare(b.entity));
+}
+
+async function updatePl() {
   const ds: Dataset = {
     name: 'pl-vasp-blockscout',
     description: `Adresy polskich giełd i kantorów kryptowalut (${PL_VASPS.join(', ')}) według publicznych tagów eksploratora Blockscout (m.in. Open Labels Initiative). Wysyłka na taki adres to wskaźnik wyjścia do PLN.`,
     license: 'Publiczne tagi eksploratora Blockscout / Open Labels Initiative (CC0) – dane faktograficzne',
     updatedAt: new Date().toISOString(),
     sourceUrl: `${BLOCKSCOUT}/api/v2/search`,
-    labels: [...labels.values()].sort((a, b) => a.entity.localeCompare(b.entity)),
+    labels: await tagsFromBlockscout(PL_VASPS, 'CEX', 'polska giełda / kantor krypto'),
   };
   writeFileSync(join(OUT, 'pl-vasp-blockscout.json'), JSON.stringify(ds, null, 2) + '\n');
   console.log(`Polskie giełdy: zapisano ${ds.labels.length} adresów`);
 }
 
+async function updateOfframp() {
+  const ds: Dataset = {
+    name: 'offramp-blockscout',
+    description: `Adresy bramek krypto-fiat (on/off-ramp) i wydawców kart krypto (${OFFRAMPS.join(', ')}) według publicznych tagów eksploratora Blockscout. Wysyłka na taki adres to wskaźnik wyjścia do waluty tradycyjnej; sam adres nie jest przypisywany osobie.`,
+    license: 'Publiczne tagi eksploratora Blockscout / Open Labels Initiative (CC0) – dane faktograficzne',
+    updatedAt: new Date().toISOString(),
+    sourceUrl: `${BLOCKSCOUT}/api/v2/search`,
+    labels: await tagsFromBlockscout(OFFRAMPS, 'OFFRAMP', 'bramka krypto-fiat / karta krypto'),
+  };
+  writeFileSync(join(OUT, 'offramp-blockscout.json'), JSON.stringify(ds, null, 2) + '\n');
+  console.log(`Bramki krypto-fiat i karty: zapisano ${ds.labels.length} adresów`);
+}
+
 const only = process.argv[2];
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (!only || only === 'ofac') await updateOfac();
   if (!only || only === 'pl') await updatePl();
+  if (!only || only === 'offramp') await updateOfframp();
 }

@@ -1,0 +1,329 @@
+{
+  "name": "offramp-blockscout",
+  "description": "Adresy bramek krypto-fiat (on/off-ramp) i wydawców kart krypto (MoonPay, Transak, Ramp Network, Mercuryo, Banxa, Simplex, Wirex, Baanx, Paybis, Changelly, Utorg, Guardarian, Alchemy Pay) według publicznych tagów eksploratora Blockscout. Wysyłka na taki adres to wskaźnik wyjścia do waluty tradycyjnej; sam adres nie jest przypisywany osobie.",
+  "license": "Publiczne tagi eksploratora Blockscout / Open Labels Initiative (CC0) – dane faktograficzne",
+  "updatedAt": "2026-11-22T03:52:43.445Z",
+  "sourceUrl": "https://eth.blockscout.com/api/v2/search",
+  "labels": [
+    {
+      "chain": "ETH",
+      "address": "0x87E6219e4b954CE904F9249261AD0d1ef4Cd52cd",
+      "entity": "Baanx",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Baanx”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x96fC4553a00C117C5b0bED950Dd625d1c16Dc894",
+      "entity": "Changelly 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Changelly 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x7Cae12f3DD47Fe1f34492EeDF7187Db61B8e9442",
+      "entity": "Guardarian: Payouts Wallet",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Guardarian: Payouts Wallet”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
+      "entity": "Mercuryo 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Mercuryo 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xd75233704795206de38Cc58B77a1f660B5C60896",
+      "entity": "MoonPay",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xB287eaC48aB21c5FB1d3723830d60b4c797555B0",
+      "entity": "MoonPay 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xfefceE61b16B0A12bFE5A602DFc6Ff33Ea4AA440",
+      "entity": "MoonPay: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x5d324587298D3BA6Ca12EfE8A1DFb86e74416e49",
+      "entity": "MoonPay: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x8383b1eE220C628C3215f815aB50d807a130089f",
+      "entity": "MoonPay: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xadc5F2D6498935abBDeE1FD144eac23EB6D256bF",
+      "entity": "MoonPay: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x43030658f4a12fe2e238Ea0765eaeF5b824c3dFe",
+      "entity": "MoonPay: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x7F227df284F35e5A244603bb1e10814c1766bF63",
+      "entity": "MoonPay: Hot Wallet",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „MoonPay: Hot Wallet”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xD65E0Cbd31977B2E0e23c8330C8B5f020818Fc91",
+      "entity": "PAYBIS 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „PAYBIS 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xbccEC45297Ec2877Ba96AE86b2fe59F95A0522E6",
+      "entity": "PAYBIS 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „PAYBIS 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xCC0f2a0DAc16C3F7795E9D37196f5C8E2B935c4A",
+      "entity": "Ramp Network Binance Deposit 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Ramp Network Binance Deposit 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x98DB3a41bF8bF4DeD2C92A84ec0705689DdEEF8B",
+      "entity": "Ramp Network UK 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Ramp Network UK 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x8a37F0290AE85D08522d2A605617e76128Fd0712",
+      "entity": "Ramp Network US 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Ramp Network US 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6ec88a2Cb932eb46dfda0280c0eadB93b6eCa13B",
+      "entity": "Simplex",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Simplex”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x77300C71071eCa35Cb673a0b7571B2907dEB77C7",
+      "entity": "Simplex 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Simplex 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x27899ffaCe558bdE9F284Ba5C8c91ec79EE60FD6",
+      "entity": "Transak 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x3247f6b66F24F672EAcF52080e0381fA45DEb307",
+      "entity": "Transak 2",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak 2”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xE492FC3c3C49576A2075607B0D1e5732d3B52be9",
+      "entity": "Transak: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xe2Bc876555b1d485a1a9EF80c0311e815314f732",
+      "entity": "Transak: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xe5eeB641B459fBeAe1534A4bA99e00AA69d14850",
+      "entity": "Transak: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x22729A103683Bfe489606951452C0e05A4771dB2",
+      "entity": "Transak: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x01AC8488F58839752f391A116596926B047e6983",
+      "entity": "Transak: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Transak: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x38e2807330ef9cD0AA7E162ef5c3B0076Efc5b3f",
+      "entity": "Wirex",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x20483D8E79dc03C021bd3371843078A5E8F4E8b3",
+      "entity": "Wirex",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x2f13d388b85e0eCd32e7C3D7F36D1053354EF104",
+      "entity": "Wirex 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xE3f277382419535245a345e923898c2d43f7CBE5",
+      "entity": "Wirex 2",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex 2”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x935f64B44B5C48A1539C4AdA5161D27ace4205b5",
+      "entity": "Wirex 3",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex 3”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xb57decCD4B0Aa811FE1eC947c66Ee65C08617A76",
+      "entity": "Wirex 4",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex 4”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6c9BFec4BAbB1DC5AD112AA79003D9CF7261Dbda",
+      "entity": "Wirex 7",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex 7”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6966cE74E593df08e33F9eF0D8a4c0c9E0336bE5",
+      "entity": "Wirex Binance Deposit 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex Binance Deposit 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x4B8bd5ad437D43Babd20bBD618F73e3f50D9475f",
+      "entity": "Wirex Gas Supplier 1",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex Gas Supplier 1”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0xD35Bf88Abd4f72D572F645a1787E61f09B1A0268",
+      "entity": "Wirex: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x636A41D49b308C11A4a4c28c4adfB8b932EA7E01",
+      "entity": "Wirex: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x8cF8e9A59738bfDD68CF3705714616EBc085323f",
+      "entity": "Wirex: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6838A6f4459D3900e786EAB1CF6cf84F4992d08d",
+      "entity": "Wirex: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    },
+    {
+      "chain": "ETH",
+      "address": "0x6Bc30d665C0A3F82016AFEb6711d5D1B83a8da4F",
+      "entity": "Wirex: Deposit Address",
+      "category": "OFFRAMP",
+      "source": "Blockscout eth.blockscout.com – tag „Wirex: Deposit Address”",
+      "note": "bramka krypto-fiat / karta krypto"
+    }
+  ]
+}

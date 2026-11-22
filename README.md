@@ -67,7 +67,7 @@ KryptoTrop automatyzuje tę pracę dla analityków **Krajowej Administracji Skar
 
 - **Łączenie śladów OSINT** – konektory Web2 (GitHub, dev.to, Reddit, Keybase, Gravatar, Bluesky, Bitcointalk, Nostr NIP-05, Telegram, ENS, strony WWW, wyszukiwarka, wyszukiwanie adresu w kodzie GitHuba), także **kody QR w obrazach** (adres opublikowany jako grafika) i pivotowanie po odkrytych identyfikatorach (np. GitHub → strona WWW → telefon → konto-alias; strona `<login>.github.io` → konto GitHub `<login>`)
 - **Ekstrakcja adresów** – BTC, ETH/EVM, TRON, LTC, SOL z walidacją sum kontrolnych i odtwarzaniem zapisów celowo zaciemnionych
-- **Etykiety z otwartych rejestrów** – lista sankcyjna **OFAC SDN** (1030 adresów BTC/ETH/TRON/LTC/SOL) i adresy **polskich giełd** (Zonda, Kanga) z publicznych tagów Blockscout; aktualizacja jednym poleceniem `npm run labels:update`
+- **Etykiety z otwartych rejestrów** – lista sankcyjna **OFAC SDN** (1030 adresów BTC/ETH/TRON/LTC/SOL) adresy **polskich giełd** (Zonda, Kanga) oraz **bramek krypto-fiat i kart krypto** (MoonPay, Transak, Ramp, Simplex, Wirex, Baanx…) z publicznych tagów Blockscout; aktualizacja jednym poleceniem `npm run labels:update`
 - **Wskaźnik Pewności** – deterministyczne, wersjonowane reguły; każdy punkt ma przesłankę i źródło
 - **Odrzucanie fałszywych trafień** – giełdy, kontrakty (Ethereum i TRON), miksery, zbiórki, homonimy, adresy cudze, adresy publikowane przez wiele osób, nazwy ENS/Keybase bez wzajemnego potwierdzenia, adresy o aktywności instytucjonalnej bez etykiety, fałszywe tokeny („USDT” z nieznanego kontraktu)
 - **Wskaźniki wyjścia do fiat** – wysyłki na giełdy (etykiety także dla kontrahentów), wnioskowane adresy depozytowe, wymiana na stablecoiny, bramki fiat, wzorce P2P, miksery i podmioty sankcjonowane, wolumen w PLN; Ethereum + opcjonalnie Polygon, Arbitrum, BSC, Base, OP (ten sam adres 0x), Bitcoin, TRON, **Solana** (SOL i tokeny SPL)
@@ -353,7 +353,7 @@ Pivot jest dozwolony **tylko** z dokumentów należących do podmiotu (silne pow
 | CoinGecko | ceny krypto: bieżące i dzienne z ostatnich 365 dni | bez klucza |
 | Binance (dane rynkowe) | dzienne ceny zamknięcia starsze niż 365 dni (para do USDT ≈ USD; POL przed 2024-09-13 jako MATIC) | publiczne API `data-api.binance.vision`, bez klucza |
 | OFAC SDN | adresy kryptowalut z listy sankcyjnej USA → etykieta `SANCTIONED` | `npm run labels:update` (domena publiczna) |
-| Blockscout – tagi publiczne | adresy polskich giełd i kantorów (Zonda, Kanga) → etykieta `CEX` | `npm run labels:update` |
+| Blockscout – tagi publiczne | adresy polskich giełd i kantorów (Zonda, Kanga) → etykieta `CEX`; bramki krypto-fiat i wydawcy kart krypto (MoonPay, Transak, Ramp, Wirex…) → etykieta `OFFRAMP` | `npm run labels:update` |
 
 > **Ograniczenia:** wyniki SearXNG zależą od wyszukiwarek, z których korzysta (część ogranicza liczbę zapytań). GitHub bez tokena ma limit 60 zapytań/h na IP, a wyszukiwanie kodu działa tylko z tokenem i obejmuje pliki dopiero po zaindeksowaniu przez GitHub. Reddit odmawia zapytań anonimowych z wielu sieci (403) – do scenariuszy z Redditem potrzebna jest zarejestrowana aplikacja tylko do odczytu (`REDDIT_CLIENT_ID/SECRET`), a wdrożenie w KAS – zgody wynikającej z Reddit Data API Terms. NBP bywa chwilowo niedostępne. Każdy taki problem trafia do raportu jako błąd konektora, a nie jako cichy „brak wyników”.
 
@@ -368,9 +368,11 @@ Etykiety leżą w `data/labels/*.json` (ładowane przy starcie API, widoczne w z
 | `known-public-entities.json` | giełdy, kontrakty DEX/tokenów, miksery, zbiórki (49) | zestawienie zespołu |
 | `ofac-sdn.json` | adresy z listy sankcyjnej OFAC SDN (1030) – kontakt z takim adresem to wskaźnik wysokiego ryzyka | `sdn.xml` U.S. Treasury, każdy adres z walidacją sumy kontrolnej |
 | `pl-vasp-blockscout.json` | polskie giełdy i kantory (11 adresów Zonda/BitBay, Kanga) | publiczne tagi Blockscout / Open Labels Initiative |
+| `offramp-blockscout.json` | bramki krypto-fiat i karty krypto (40 adresów: MoonPay, Transak, Ramp Network, Simplex, Mercuryo, Paybis, Changelly, Guardarian, Wirex, Baanx) – wysyłka na taki adres to wskaźnik `OFFRAMP` | publiczne tagi Blockscout / Open Labels Initiative |
 
 ```sh
-npm run labels:update          # oba zbiory z aktualnych źródeł
+npm run labels:update             # wszystkie zbiory z aktualnych źródeł
+npm run labels:update -- offramp  # tylko bramki krypto-fiat i karty
 npm run labels:update -- ofac  # tylko OFAC (plik ~30 MB; OFAC_SDN_FILE=sdn.xml – plik pobrany wcześniej)
 ```
 
@@ -441,8 +443,8 @@ Wersja reguł: `olcys-score/1.0.0`.
 | `CEX_DIRECT` | wysyłka na adres z etykietą giełdy / custodial | obliczenie |
 | `CEX_DEPOSIT_INFERRED` | adres pośredni przekazał ≥90% otrzymanych środków do giełdy w ≤72 h (wzorzec „sweep” konta depozytowego) | wniosek |
 | `STABLECOIN_SWAP` | wymiana przez DEX z wpływem stablecoinów ≥1000 USD | obliczenie |
-| `OFFRAMP` | interakcja z bramką krypto-fiat, kantorem, kartą krypto | obliczenie |
-| `P2P_PATTERN` | ≥4 okrągłe wpłaty stablecoin od różnych nieoznaczonych adresów lub kontakt z usługą P2P | wniosek |
+| `OFFRAMP` | wysyłka na bramkę krypto-fiat, kantor lub wydawcę karty krypto (zbiór `offramp-blockscout.json` albo tag kontrahenta w eksploratorze) | obliczenie |
+| `P2P_PATTERN` | ≥4 okrągłe wpłaty stablecoin od różnych nieoznaczonych adresów (wniosek) lub kontakt z platformą P2P/escrow rozpoznaną po tagu eksploratora (obliczenie) | wniosek / obliczenie |
 | `MIXER_EXPOSURE` | kontakt z mikserem / podmiotem sankcjonowanym | obliczenie |
 | `HIGH_VOLUME` | łączny wolumen ≥20 000 USD (z przeliczeniem na PLN) | obliczenie |
 

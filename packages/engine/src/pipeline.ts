@@ -136,10 +136,16 @@ export function linkFor(seg: Segment, doc: EvidenceDocument, identities: Subject
 }
 
 const CEX_TAG = /(binance|kraken|coinbase|okx|okex|bybit|kucoin|bitfinex|huobi|htx|gate\.io|bitstamp|gemini|crypto\.com|zonda|bitbay|kanga|exchange|hot wallet|deposit)/;
+/** Bramki krypto-fiat (on/off-ramp), kantory internetowe i wydawcy kart krypto – sprawdzane przed CEX_TAG, bo ich tagi też zawierają „hot wallet”/„deposit”. */
+const OFFRAMP_TAG = /(moonpay|transak|ramp network|mercuryo|banxa|simplex|wirex|baanx|paybis|changelly|utorg|guardarian|alchemy pay|revolut|ari10|cashify|walutomat)/;
+/** Platformy handlu P2P / escrow. */
+const P2P_TAG = /(paxful|localcryptos|localcoinswap|localbitcoins|noones|hodl ?hodl|bisq|p2p)/;
 
 /** Etykieta z odpowiedzi API eksploratora (tagi publiczne / nazwa zweryfikowanego kontraktu). */
 export function labelFromInfo(chain: Chain, address: string, info: AddressInfo): AddressLabel | undefined {
   const tagText = info.tags.join(' ').toLowerCase();
+  if (OFFRAMP_TAG.test(tagText)) return { chain, address, entity: info.tags.join(', '), category: 'OFFRAMP', source: info.source };
+  if (P2P_TAG.test(tagText)) return { chain, address, entity: info.tags.join(', '), category: 'P2P_SERVICE', source: info.source };
   if (CEX_TAG.test(tagText)) return { chain, address, entity: info.tags.join(', '), category: 'CEX', source: info.source };
   if (/(tornado|mixer)/.test(tagText) || /tornado/i.test(info.name ?? '')) return { chain, address, entity: info.tags.join(', ') || `Kontrakt ${info.name}`, category: 'MIXER', source: info.source };
   if (info.isContract && info.name)
